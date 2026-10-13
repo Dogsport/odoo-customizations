@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>IQ Dogsport - DHL Receiver ID</title><style>body{font:15px/1.55 Arial,sans-serif;max-width:920px;margin:2rem auto;color:#27303a;padding:0 20px}h1{font-size:2rem;border-bottom:3px solid #a6230f;padding-bottom:.4rem}h2{font-size:1.25rem;color:#a6230f;margin-top:2rem}h3{font-size:1rem;margin-top:1.2rem}table{border-collapse:collapse;width:100%;font-size:14px;margin:12px 0}th,td{border:1px solid #d7dce2;padding:8px;text-align:left;vertical-align:top}th{background:#f2f2f3}figure{margin:20px 0}figure img{width:100%;height:auto;border:1px solid #d6dbe0;border-radius:6px}figcaption{color:#626d79;font-size:13px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f6f7;padding:16px;border:1px solid #ddd;font-size:12px} .note{border-left:3px solid #a6230f;padding:10px 14px;background:#faf7f7} .meta{color:#666} ol li{margin-bottom:7px}</style></head><body>
+<h1>DHL Return Receiver ID – Odoo 19</h1>
+<p class="meta">IQ Dogsport GmbH • Staging tested 13 October 2026 • Internal Knowledge article</p>
+<h2>1. The original issue</h2>
+<p>Every new DHL return had an empty <strong>DHL Return Receiver ID</strong>. Staff had to open <em>Get Receivers</em>, fetch choices, and select one manually. We wanted new German DHL returns to default to <code>deu</code> but still allow an override.</p>
+<figure><img src="images/01_before_manual.png" alt="Before: receiver empty and Get Receivers visible."><figcaption>Before: receiver empty and Get Receivers visible.</figcaption></figure>
+<h2>2. Exactly what we created</h2>
+<table><thead><tr><th>Component</th><th>Name</th><th>Reason</th></tr></thead><tbody><tr><td>One automation</td><td>DHL – Automatic Return Receiver (Staging rule 64)</td><td>Populate deu on eligible German DHL returns</td></tr><tr><td>One action</td><td>Execute Code</td><td>Check conditions and preserve manual receiver choices</td></tr><tr><td>One inherited view</td><td>IQ DHL – Conditional Receiver Buttons (Staging view 6113)</td><td>Switch button visibility</td></tr><tr><td>Existing BrowseInfo methods</td><td>Get Receivers / Print Return Label</td><td>Manual selection and API label generation; unchanged</td></tr></tbody></table>
+<p class="note">Previous rule “Auto Set Carrier” (ID 7) concerned GLS-versus-DHL carrier selection. It is not the Receiver ID automation.</p>
+<h2>3. The automation</h2>
+<p>Navigation: Settings → Technical → Automation → Automation Rules → <strong>DHL – Automatic Return Receiver</strong>.</p>
+<table><thead><tr><th>Field</th><th>Setting</th></tr></thead><tbody><tr><td>Model</td><td>Transfer (stock.picking)</td></tr><tr><td>Trigger</td><td>On create and edit</td></tr><tr><td>Before Update Domain</td><td>Match all records</td></tr><tr><td>Apply on</td><td>[(&#x27;dhl_return_receiver_id&#x27;, &#x27;=&#x27;, False)]</td></tr><tr><td>When updating</td><td>Carrier, Contact, Operation Type; do not include Receiver ID</td></tr><tr><td>Actions To Do</td><td>Execute Code</td></tr></tbody></table>
+<figure><img src="images/02_rule_settings.png" alt="Automation form from setup, showing trigger and action."><figcaption>Automation form from setup, showing trigger and action.</figcaption></figure>
+<figure><img src="images/03_receiver_domain.png" alt="Apply on domain: Receiver ID is not set."><figcaption>Apply on domain: Receiver ID is not set.</figcaption></figure>
+<h3>Why this action?</h3>
+<p>Update Record alone would not express the checks for an incoming German DHL return and preserving manual changes. Execute Code writes the existing <code>dhl_return_receiver_id</code> only when it is empty.</p>
+<figure><img src="images/04_execute_code.png" alt="Execute Code action in Odoo staging."><figcaption>Execute Code action in Odoo staging.</figcaption></figure>
+<pre><code># Model: stock.picking | Odoo Automated Action - Execute Code
+pickings = records or record or env[&#x27;stock.picking&#x27;]
+for picking in pickings:
+    if not picking.is_dhl_return:
+        continue
+    if picking.picking_type_id.code != &#x27;incoming&#x27;:
+        continue
+    if picking.carrier_id.delivery_type != &#x27;dhl_parcel_de&#x27;:
+        continue
+    if picking.state in (&#x27;done&#x27;, &#x27;cancel&#x27;):
+        continue
+    if picking.dhl_return_receiver_id:
+        continue   # Preserve manual choices
+    if picking.partner_id.country_id.code == &#x27;DE&#x27;:
+        picking.write({&#x27;dhl_return_receiver_id&#x27;: &#x27;deu&#x27;})
+        log(&#x27;DHL receiver deu assigned to %s&#x27; % picking.name, level=&#x27;info&#x27;)</code></pre>
+<h2>4. Conditional buttons (XML view)</h2>
+<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>View name</td><td>IQ DHL – Conditional Receiver Buttons</td></tr><tr><td>Model</td><td>stock.picking</td></tr><tr><td>Inheritance</td><td>Extension view</td></tr><tr><td>Inherited view</td><td>stock.picking.form.inherit.dhl (Staging parent ID 6081)</td></tr><tr><td>Website</td><td>Empty</td></tr><tr><td>Active</td><td>True</td></tr></tbody></table>
+<pre><code>&lt;data&gt;
+  &lt;xpath expr=&quot;//button[@name=&#x27;action_open_return_receiver_wizard&#x27;]&quot; position=&quot;attributes&quot;&gt;
+    &lt;attribute name=&quot;invisible&quot;&gt;not is_dhl_return or state in (&#x27;done&#x27;, &#x27;cancel&#x27;) or carrier_tracking_ref or dhl_return_receiver_id&lt;/attribute&gt;
+  &lt;/xpath&gt;
+  &lt;xpath expr=&quot;//button[@name=&#x27;action_open_return_receiver_wizard&#x27;]&quot; position=&quot;after&quot;&gt;
+    &lt;button name=&quot;action_open_return_receiver_wizard&quot;
+            type=&quot;object&quot; string=&quot;Change Receiver&quot; class=&quot;btn-secondary&quot;
+            invisible=&quot;not is_dhl_return or state in (&#x27;done&#x27;, &#x27;cancel&#x27;) or carrier_tracking_ref or not dhl_return_receiver_id&quot;/&gt;
+  &lt;/xpath&gt;
+&lt;/data&gt;</code></pre>
+<p>The XML reuses <code>action_open_return_receiver_wizard</code>. The view does not print a label; it only controls whether Get Receivers or Change Receiver is shown.</p>
+<figure><img src="images/05_view_verified.png" alt="Shell verification of the inherited view: extension, parent 6081, active, no website."><figcaption>Shell verification of the inherited view: extension, parent 6081, active, no website.</figcaption></figure>
+<table><thead><tr><th>Situation</th><th>Selection button</th></tr></thead><tbody><tr><td>No Receiver ID and no tracking</td><td>Get Receivers</td></tr><tr><td>Receiver ID assigned, no tracking</td><td>Change Receiver</td></tr><tr><td>Tracking assigned or transfer Done</td><td>Neither</td></tr></tbody></table>
+<h2>5. Proof from our tests</h2>
+<figure><img src="images/06_auto_deu.png" alt="WH1/RET/00529: deu assigned before label printing; Change Receiver shown."><figcaption>WH1/RET/00529: deu assigned before label printing; Change Receiver shown.</figcaption></figure>
+<figure><img src="images/07_manual_ggp.png" alt="WH1/RET/00529: manually selected deu_ggp is saved and not overwritten."><figcaption>WH1/RET/00529: manually selected deu_ggp is saved and not overwritten.</figcaption></figure>
+<figure><img src="images/08_label_generated.png" alt="WH1/RET/00528: sandbox return label attached, tracking generated; receipt still Ready."><figcaption>WH1/RET/00528: sandbox return label attached, tracking generated; receipt still Ready.</figcaption></figure>
+<p>Print Return Label uses BrowseInfo and DHL. It is separate from the automation. Test labels are not valid customer labels.</p>
+<h2>6. Production rollout — repeat in LIVE</h2>
+<p class="note"><strong>Essential:</strong> Odoo.sh staging database changes do not automatically transfer to the production database. Copy the settings and XML manually or deploy using a version-controlled Odoo module.</p>
+<ol>
+<li>Back up Production; verify compatible BrowseInfo DHL connector installed.</li>
+<li>Verify the actual DHL business return address, Receiver ID deu and billing contract in the DHL Business Customer Portal.</li>
+<li>Confirm approved DHL Returns production API permissions and the BrowseInfo production setup; do not use sandbox keys for live requests.</li>
+<li>Create the same one automation in Production with the same model, domain, triggers and Python code.</li>
+<li>Find the BrowseInfo parent view in Production by name (not Staging ID), create the one extension view with the XML above; leave Website empty.</li>
+<li>Check carrier rules so “Auto Set Carrier” does not override DHL to GLS.</li>
+<li>Create a new German DHL return and verify Receiver ID deu + Change Receiver before generating a label; test manual override.</li>
+<li>When authorized, print one real test label and confirm IQ Dogsport’s actual receiving address and live tracking; do not validate the receipt before goods arrive.</li>
+</ol>
+<h3>Production acceptance criteria</h3>
+<table><thead><tr><th>Item</th><th>Expected</th></tr></thead><tbody><tr><td>Before label</td><td>Receiver deu populated, tracking empty, Change Receiver visible</td></tr><tr><td>Manual change</td><td>Chosen receiver retained</td></tr><tr><td>After label</td><td>Tracking set, receiver selection buttons hidden</td></tr><tr><td>Label address</td><td>Actual IQ Dogsport address, not DHL sandbox sample</td></tr></tbody></table>
+<p class="meta">Documented from IQ Dogsport screenshots and tests on 13 October 2026. Vendor API credentials are intentionally excluded.</p>
+</body></html>
