@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IQ Dogsport - DHL Shipping &amp; Return Automations - Odoo 19</title><style>
+:root{--ink:#27303a;--muted:#626d79;--red:#a6230f;--line:#d7dce2;--pale:#faf7f7;--bg:#f3f5f7;--green:#15654d;--amber:#8b5310}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{font:15px/1.58 Arial,Helvetica,sans-serif;max-width:1000px;margin:2rem auto;color:var(--ink);padding:0 24px;background:#fff}
+h1{font-size:2rem;border-bottom:3px solid var(--red);padding-bottom:.45rem;letter-spacing:-.02em}h2{font-size:1.35rem;color:var(--red);margin-top:2.5rem;padding-top:.5rem}h3{font-size:1.04rem;margin-top:1.35rem}p{margin:.68em 0 1em}a{color:var(--red);text-decoration:none}a:hover{text-decoration:underline}
+.meta{color:var(--muted);font-size:14px}.lead{font-size:17px}.toc{background:#f7f8fa;border:1px solid var(--line);border-radius:8px;padding:16px 22px;margin:1.5rem 0}.toc ol{margin:.2em 0;columns:2;column-gap:30px;padding-left:20px}.toc li{margin-bottom:6px;break-inside:avoid}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:14px 0 20px;table-layout:fixed}th,td{border:1px solid var(--line);padding:10px 11px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#f2f2f3;color:#27303a}tr:nth-child(even) td{background:#fafbfc}figure{margin:22px 0 26px}figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:7px;object-fit:contain}figcaption{color:var(--muted);font-size:13px;margin-top:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f6f7;padding:16px;border:1px solid var(--line);border-radius:6px;font:12.5px/1.65 Consolas,'Courier New',monospace;tab-size:4}code{font-family:Consolas,'Courier New',monospace}p code,li code,td code{background:#f2f2f3;padding:1px 4px;border-radius:3px;font-size:13px}
+.note{border-left:4px solid var(--red);padding:11px 15px;background:var(--pale);margin:18px 0}.caution{border-left:4px solid #c78322;padding:11px 15px;background:#fffaf0;margin:18px 0}.ok{border-left:4px solid var(--green);padding:11px 15px;background:#f2f9f5;margin:18px 0}ul li,ol li{margin-bottom:7px}.status{color:var(--green);font-weight:700}.pending{color:var(--amber);font-weight:700}.archive{color:var(--muted);font-weight:700}.pill{display:inline-block;background:#eef7f3;color:var(--green);border-radius:18px;font-size:12px;font-weight:700;padding:4px 10px;margin-right:6px}.card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.card{padding:15px;border:1px solid var(--line);border-radius:8px;background:#fafbfc}.card b{display:block;margin-bottom:6px}.small{font-size:13px;color:var(--muted)}.footer{border-top:1px solid var(--line);margin:40px 0 25px;padding-top:12px;font-size:13px;color:var(--muted)}
+@media(max-width:690px){body{margin:1rem auto;padding:0 14px}h1{font-size:1.65rem}.toc ol{columns:1}.card-grid{grid-template-columns:1fr}table{display:block;overflow-x:auto;table-layout:auto}th,td{min-width:125px}pre{font-size:11.5px}}
+@media print{body{max-width:100%;margin:0;padding:0 16px;color:#111}a{color:#222}h2,figure,.note,.caution{break-inside:avoid}pre{font-size:10px}.toc{display:none}figure img{max-height:660px;object-fit:contain}a:after{content:''}}
+</style></head><body>
+<h1>DHL Parcel DE – Shipping &amp; Return Automations (Odoo 19)</h1>
+<p class="meta">IQ Dogsport GmbH &bull; Staging tested 13–14 October 2026 &bull; Internal Knowledge / GitHub documentation &bull; Updated 14 October 2026</p>
+<p class="lead">The working Staging configuration now uses <strong>three active automations</strong>: one to choose the domestic/international shipping method on Sales Orders, one to synchronize the method to Delivery Orders, and one to preselect the German return Receiver ID.</p>
+<p><span class="pill">3 active automations</span><span class="pill">1 inherited view</span><span class="pill">3 old rules archived</span></p>
+<div class="toc"><strong>Contents</strong><ol>
+<li><a href="#overview">Overview and current status</a></li><li><a href="#shipping">Combined carrier selection</a></li>
+<li><a href="#transfer">Delivery carrier synchronization</a></li><li><a href="#receiver">German Return Receiver ID</a></li>
+<li><a href="#buttons">Receiver button XML view</a></li><li><a href="#archived">Archived rules and original failures</a></li>
+<li><a href="#evidence">Working Staging tests</a></li><li><a href="#portal">DHL portal Receiver IDs</a></li>
+<li><a href="#production">Production checklist</a></li><li><a href="#export">Export final saved action code</a></li></ol></div>
+
+<h2 id="overview">1. Overview — exactly what is active</h2>
+<table><thead><tr><th style="width:12%">Status</th><th style="width:36%">Component</th><th style="width:15%">Model</th><th>Purpose</th></tr></thead><tbody>
+<tr><td class="status">Active</td><td>Combined DHL Shipping Method<br><span class="small">New Staging ID to verify</span></td><td><code>sale.order</code></td><td>Choose DHL Parcel DE (<code>V01PAK</code>) for Germany; DHL Parcel DE – International (<code>V53WPAK</code>) for non-German test orders when method is empty.</td></tr>
+<tr><td class="status">Active</td><td><a href="https://iq-dogsport-staging-38965432.dev.odoo.com/odoo/automations/66">ID 66 — IQ Sync DHL Carrier to Delivery</a></td><td><code>stock.picking</code></td><td>Match outgoing transfer carrier to the sales order's selected DHL carrier.</td></tr>
+<tr><td class="status">Active</td><td><a href="https://iq-dogsport-staging-38965432.dev.odoo.com/odoo/automations/64">ID 64 — DHL Automatic Return Receiver</a></td><td><code>stock.picking</code></td><td>Assign German return Receiver ID <code>deu</code>, preserving manual receiver choices.</td></tr>
+<tr><td class="status">Active view</td><td>IQ DHL – Conditional Receiver Buttons<br><span class="small">Staging view ID 6113</span></td><td><code>stock.picking</code></td><td>Display Get Receivers or Change Receiver based on receiver and tracking state.</td></tr>
+<tr><td class="archive">Archived</td><td><a href="https://iq-dogsport-staging-38965432.dev.odoo.com/odoo/automations/8">ID 8 — Shipping add</a></td><td><code>sale.order</code></td><td>Old Germany-only fixed DHL rule; replaced by combined code.</td></tr>
+<tr><td class="archive">Archived</td><td><a href="https://iq-dogsport-staging-38965432.dev.odoo.com/odoo/automations/65">ID 65 — Shipping add – DHL International</a></td><td><code>sale.order</code></td><td>Old international fixed DHL rule; replaced by combined code.</td></tr>
+<tr><td class="archive">Archived</td><td>ID 7 — Auto Set Carrier</td><td><code>stock.picking</code></td><td>Previously forced a single carrier on transfers; conflicted with international shipments.</td></tr>
+</tbody></table>
+<div class="caution"><strong>Source integrity:</strong> The new combined automation's exact Staging ID and the final code saved in automation 66 have not been exported into this article. Where code is not verified, it is explicitly labeled as a <em>reference example</em>. Do not assume those examples are byte-for-byte copies of the active Odoo actions.</div>
+
+<h2 id="shipping">2. Combined automation — automatic DHL shipping method</h2>
+<p><strong>Original problem:</strong> the first two Sales Order rules assigned fixed delivery methods by country. Two rules worked but were more complicated to maintain. They were consolidated into one <em>On create</em> Execute Code action in Staging.</p>
+<table><tbody><tr><th style="width:30%">Setting</th><th>Value</th></tr>
+<tr><td>Model</td><td>Sales Order (<code>sale.order</code>)</td></tr><tr><td>Trigger</td><td>On create</td></tr>
+<tr><td>Apply on</td><td>Delivery Method is not set; Delivery Address Country is set</td></tr>
+<tr><td>Action type</td><td>Execute Code (one combined conditional action)</td></tr>
+<tr><td>Germany</td><td><code>DE</code> → DHL Parcel DE / <code>V01PAK</code></td></tr>
+<tr><td>Staging international</td><td>Country not <code>DE</code> → DHL Parcel DE – International / <code>V53WPAK</code></td></tr>
+<tr><td>Safety rule</td><td>Do not overwrite a Delivery Method already selected on the Sales Order</td></tr></tbody></table>
+<h3>Reference Python code (must verify against saved action)</h3>
+<pre><code class="language-python"># Reference example - NOT verified against final saved Odoo action
+# Model: sale.order | Trigger: On create
+orders = records or record or env['sale.order']
+for order in orders:
+    if order.carrier_id:
+        continue  # Preserve a previously selected shipping method
+    country = order.partner_shipping_id.country_id
+    if not country:
+        continue
+    carrier_name = (
+        'DHL Parcel DE' if country.code == 'DE'
+        else 'DHL Parcel DE – International'
+    )
+    carriers = env['delivery.carrier'].search([
+        ('name', '=', carrier_name),
+        ('delivery_type', '=', 'dhl_parcel_de'),
+    ])
+    if len(carriers) != 1:
+        log('DHL carrier not unique: %s' % carrier_name, level='warning')
+        continue
+    order.write({'carrier_id': carriers.id})</code></pre>
+<div class="caution"><strong>Production limitation:</strong> A blank carrier on a new Shopify order does not necessarily mean the customer selected DHL. This defaulting logic must be reconciled with the Shopify-to-Odoo shipping mapping, GLS choices and supported countries before going live. Do not automatically offer DHL to every country merely because its code is not DE.</div>
+
+<h2 id="transfer">3. Automation 66 — copy the selected DHL carrier to the outgoing delivery</h2>
+<p><strong>Original failure:</strong> Sales Order <code>S00462</code> for Austria contained DHL International, but <code>WH1/OUT/06242</code> displayed GLS Germany. Investigation confirmed no general default carrier, <code>Propagate Carrier = True</code> on the stock rule, and correctly linked stock moves.</p>
+<p>Automation 66 repairs the mismatch on outgoing deliveries. It must select the <strong>exact DHL carrier record</strong> from the sales order and avoid changing completed shipments or shipments already carrying a tracking number.</p>
+<figure><img src="images/11_previous_gls_incorrect_transfer.png" alt="Before carrier synchronization: the Austrian transfer had an incorrect carrier selection." loading="lazy"><figcaption>Before carrier synchronization: the Austrian transfer had an incorrect carrier selection.</figcaption></figure> 
+<h3>Reference Python code (not verified final saved code)</h3>
+<pre><code class="language-python"># Reference example - NOT verified against final saved Odoo action
+# Model: stock.picking | Trigger: On create and edit
+pickings = records or record or env['stock.picking']
+for picking in pickings:
+    if picking.picking_type_id.code != 'outgoing':
+        continue
+    if picking.state in ('done', 'cancel'):
+        continue
+    if picking.carrier_tracking_ref:
+        continue
+    so = picking.sale_id
+    if not so or not so.carrier_id:
+        continue
+    if so.carrier_id.delivery_type != 'dhl_parcel_de':
+        continue  # Do not turn GLS orders into DHL orders
+    if picking.carrier_id.id != so.carrier_id.id:
+        picking.write({'carrier_id': so.carrier_id.id})
+        log('Carrier synchronized: %s -&gt; %s' %
+            (picking.name, so.carrier_id.name), level='info')</code></pre>
+<p>Do not add a second conflicting transfer rule. If a warehouse operator intentionally changes a carrier, the automation's behavior around that manual override should be tested before Production.</p>
+
+<h2 id="receiver">4. Automation 64 — automatic German Return Receiver ID</h2>
+<p><strong>Original issue:</strong> the DHL Return Receiver ID was empty on new returns. Warehouse staff had to open Get Receivers and manually select an entry for each German return.</p>
+<figure><img src="images/01_before_manual.png" alt="Before automation 64: new DHL return without a Receiver ID; Get Receivers was shown." loading="lazy"><figcaption>Before automation 64: new DHL return without a Receiver ID; Get Receivers was shown.</figcaption></figure>
+<table><tbody><tr><th style="width:31%">Setting</th><th>Configured value</th></tr>
+<tr><td>Model</td><td>Transfer (<code>stock.picking</code>)</td></tr>
+<tr><td>Trigger</td><td>On create and edit</td></tr>
+<tr><td>Before Update Domain</td><td>Match all records</td></tr>
+<tr><td>Apply on</td><td><code>[('dhl_return_receiver_id', '=', False)]</code></td></tr>
+<tr><td>When updating</td><td>Carrier, Contact, Operation Type — do not monitor Receiver ID itself</td></tr>
+<tr><td>Action</td><td>Execute Code</td></tr>
+<tr><td>Result</td><td>Incoming DHL return from Germany → <code>deu</code> if receiver is blank</td></tr></tbody></table>
+<figure><img src="images/02_rule_settings.png" alt="Automation 64 in Odoo Staging: trigger, model, and Execute Code action." loading="lazy"><figcaption>Automation 64 in Odoo Staging: trigger, model, and Execute Code action.</figcaption></figure>
+<figure><img src="images/03_receiver_domain.png" alt="Apply on domain: DHL Return Receiver ID is not set." loading="lazy"><figcaption>Apply on domain: DHL Return Receiver ID is not set.</figcaption></figure>
+<figure><img src="images/04_execute_code.png" alt="Execute Code action for the automatic German DHL Return Receiver rule." loading="lazy"><figcaption>Execute Code action for the automatic German DHL Return Receiver rule.</figcaption></figure>
+<h3>Documented Python implementation</h3>
+<pre><code class="language-python"># Documented German DHL return-receiver logic
+# Model: stock.picking | Execute Code
+pickings = records or record or env['stock.picking']
+for picking in pickings:
+    if not picking.is_dhl_return:
+        continue
+    if picking.picking_type_id.code != 'incoming':
+        continue
+    if picking.carrier_id.delivery_type != 'dhl_parcel_de':
+        continue
+    if picking.state in ('done', 'cancel'):
+        continue
+    if picking.dhl_return_receiver_id:
+        continue  # Preserve manual receiver selection
+    if picking.partner_id.country_id.code == 'DE':
+        picking.write({'dhl_return_receiver_id': 'deu'})
+        log('DHL receiver deu assigned to %s' %
+            picking.name, level='info')</code></pre>
+<p><code>is_dhl_return</code> is a non-stored computed field, so the automation checks it in Python rather than placing it inside an Odoo search domain. The existing-receiver guard is essential: a manually chosen receiver is not overwritten.</p>
+<figure><img src="images/06_auto_deu.png" alt="German return WH1/RET/00529: Receiver ID deu populated automatically; Change Receiver is visible." loading="lazy"><figcaption>German return WH1/RET/00529: Receiver ID deu populated automatically; Change Receiver is visible.</figcaption></figure>
+<figure><img src="images/07_manual_ggp.png" alt="WH1/RET/00529: manually selected sandbox receiver deu_ggp was retained." loading="lazy"><figcaption>WH1/RET/00529: manually selected sandbox receiver deu_ggp was retained.</figcaption></figure>
+<figure><img src="images/08_label_generated.png" alt="WH1/RET/00528: sandbox return label attached and tracking generated." loading="lazy"><figcaption>WH1/RET/00528: sandbox return label attached and tracking generated.</figcaption></figure>
+
+<h2 id="buttons">5. One inherited XML view — Get Receivers / Change Receiver</h2>
+<p>This <strong>is not a fourth automation</strong>. The inherited extension view controls button visibility; BrowseInfo's existing methods still handle receiver lookup and label generation.</p>
+<table><tbody><tr><th style="width:32%">Setting</th><th>Value</th></tr>
+<tr><td>View</td><td>IQ DHL – Conditional Receiver Buttons (Staging ID 6113)</td></tr>
+<tr><td>Model</td><td><code>stock.picking</code></td></tr><tr><td>Mode</td><td>Extension</td></tr>
+<tr><td>Parent</td><td><code>stock.picking.form.inherit.dhl</code> (Staging ID 6081)</td></tr>
+<tr><td>Website</td><td>Empty</td></tr><tr><td>Active</td><td>True</td></tr></tbody></table>
+<h3>Documented XML</h3><pre><code class="language-xml">&lt;data&gt;
+  &lt;xpath expr="//button[@name='action_open_return_receiver_wizard']" position="attributes"&gt;
+    &lt;attribute name="invisible"&gt;not is_dhl_return or state in ('done', 'cancel') or carrier_tracking_ref or dhl_return_receiver_id&lt;/attribute&gt;
+  &lt;/xpath&gt;
+  &lt;xpath expr="//button[@name='action_open_return_receiver_wizard']" position="after"&gt;
+    &lt;button name="action_open_return_receiver_wizard"
+            type="object" string="Change Receiver" class="btn-secondary"
+            invisible="not is_dhl_return or state in ('done', 'cancel') or carrier_tracking_ref or not dhl_return_receiver_id"/&gt;
+  &lt;/xpath&gt;
+&lt;/data&gt;</code></pre>
+<div class="note"><strong>XML detail:</strong> keep each <code>invisible</code> expression on a single line inside the saved Odoo XML. A multiline expression previously caused an indentation error.</div>
+<figure><img src="images/05_view_verified.png" alt="Read-only Shell verification: view 6113, extension mode, parent 6081, active, no website." loading="lazy"><figcaption>Read-only Shell verification: view 6113, extension mode, parent 6081, active, no website.</figcaption></figure>
+<table><thead><tr><th>State</th><th>Button</th></tr></thead><tbody>
+<tr><td>No Receiver ID and no tracking</td><td>Get Receivers</td></tr>
+<tr><td>Receiver ID present, no tracking</td><td>Change Receiver</td></tr>
+<tr><td>Tracking assigned, or Done/Cancelled</td><td>Neither</td></tr></tbody></table>
+
+<h2 id="archived">6. Old rules — archived, not deleted</h2>
+<table><thead><tr><th style="width:14%">ID</th><th style="width:34%">Name</th><th>Reason for archive</th></tr></thead><tbody>
+<tr><td>8</td><td>Shipping add</td><td>Previous fixed Germany-only Sales Order carrier assignment; combined with international rule.</td></tr>
+<tr><td>65</td><td>Shipping add – DHL International</td><td>Previous separate non-DE Sales Order carrier assignment; replaced by combined logic.</td></tr>
+<tr><td>7</td><td>Auto Set Carrier</td><td>Fixed transfer-carrier assignment could override the sales order selection; replaced by selective synchronization.</td></tr>
+</tbody></table>
+<figure><img src="images/09_international_rule_archived.png" alt="ID 65 Shipping add – DHL International: archived after consolidation." loading="lazy"><figcaption>ID 65 Shipping add – DHL International: archived after consolidation.</figcaption></figure>
+<figure><img src="images/10_fixed_carrier_rule_archived.png" alt="ID 7 Auto Set Carrier: archived after the fixed-carrier conflict was identified." loading="lazy"><figcaption>ID 7 Auto Set Carrier: archived after the fixed-carrier conflict was identified.</figcaption></figure>
+<p>Keep these archived for rollback and audit. Do not reactivate them while the combined rule and automation 66 are active.</p>
+
+<h2 id="evidence">7. Test evidence — domestic and international shipping</h2>
+<table><thead><tr><th>Test</th><th>Evidence</th><th>Outcome</th></tr></thead><tbody>
+<tr><td>Italy outgoing</td><td><code>S00456</code> / <code>WH1/OUT/06236</code></td><td>International label generated after correcting carrier to international.</td></tr>
+<tr><td>Austria outgoing</td><td><code>S00464</code> / <code>WH1/OUT/06244</code></td><td>DHL International selected; sandbox international label generated.</td></tr>
+<tr><td>Germany outgoing</td><td><code>S00465</code> / <code>WH1/OUT/06245</code></td><td>DHL Domestic selected; sandbox domestic label generated.</td></tr>
+<tr><td>Combined rule</td><td>Two fresh DE/international orders, 14 October</td><td>User confirmed automatic assignment on Sales Order and Transfer was correct.</td></tr>
+<tr><td>German DHL return</td><td>New return created in Staging</td><td><code>deu</code> selected without manual receiver step; return proceeded.</td></tr>
+<tr><td>International DHL return</td><td>New return created in Staging</td><td>Prompted to choose Receiver ID; return succeeded after manual selection.</td></tr></tbody></table>
+<figure><img src="images/12_austria_carrier_correct.png" alt="Austria, WH1/OUT/06244: transfer shows DHL Parcel DE – International." loading="lazy"><figcaption>Austria, WH1/OUT/06244: transfer shows DHL Parcel DE – International.</figcaption></figure>
+<figure><img src="images/13_austria_sandbox_label.png" alt="Austria: DHL PAKET INTERNATIONAL sandbox label with MUSTER marking." loading="lazy"><figcaption>Austria: DHL PAKET INTERNATIONAL sandbox label with MUSTER marking.</figcaption></figure>
+<figure><img src="images/14_germany_carrier_correct.png" alt="Germany, WH1/OUT/06245: transfer shows DHL Parcel DE." loading="lazy"><figcaption>Germany, WH1/OUT/06245: transfer shows DHL Parcel DE.</figcaption></figure>
+<figure><img src="images/15_germany_sandbox_label.png" alt="Germany: DHL PAKET sandbox label with MUSTER marking." loading="lazy"><figcaption>Germany: DHL PAKET sandbox label with MUSTER marking.</figcaption></figure>
+<p class="small">DHL sandbox labels are for integration testing only. They do not constitute proof of a Production contract or live postage.</p>
+
+<h2 id="portal">8. DHL Returns Portal — receiver availability (14 October)</h2>
+<p>The DHL Business Customer Portal currently shows only one <strong>Retoure Online</strong> receiver:</p>
+<table><thead><tr><th>Service</th><th>Sender country</th><th>Receiver ID</th><th>Destination</th></tr></thead><tbody>
+<tr><td>Retoure Online</td><td>Germany</td><td><code>deu</code></td><td>IQ Dogsport GmbH, Langenwiesen 2, 85276 Pfaffenhofen</td></tr>
+<tr><td>Retoure Selbstzahler</td><td>Germany</td><td><code>deu_SZ</code></td><td>IQ Dogsport GmbH, Langenwiesen 2, 85276 Pfaffenhofen (address corrected 14 October)</td></tr></tbody></table>
+<figure><img src="images/16_dhl_returns_online_deu.png" alt="Production DHL portal: one DHL Retoure Online receiver, Germany / deu." loading="lazy"><figcaption>Production DHL portal: one DHL Retoure Online receiver, Germany / deu.</figcaption></figure>
+<figure><img src="images/17_dhl_selfpayer_address_updated.png" alt="DHL Retoure Selbstzahler: corrected company address for receiver deu_SZ." loading="lazy"><figcaption>DHL Retoure Selbstzahler: corrected company address for receiver deu_SZ.</figcaption></figure>
+<div class="caution"><strong>International return receivers:</strong> Austria, Italy and France are not listed for the production DHL account. Successful international return testing used the Staging/sandbox workflow and does not establish availability in live DHL.</div>
+<div class="note"><strong>Returns cost policy:</strong> Customers must pay return shipping costs; IQ Dogsport should not bear them. A label generated through IQ Dogsport's business contract may be billed to IQ Dogsport first unless DHL provides an appropriate customer-pay option. Management will decide later whether such an international service should be offered. No new international receivers should be assumed until that decision and DHL confirmation.</div>
+
+<h2 id="production">9. Production rollout — do not deploy Staging blindly</h2>
+<ol>
+<li>Export and archive the <strong>exact saved</strong> Python of the combined automation and automation 66; identify the new combined automation's ID.</li>
+<li>Back up Production and check BrowseInfo DHL connector compatibility and delivery-method configurations.</li>
+<li>Review actual Shopify shipping preferences and Emipro carrier mapping. Customer-selected GLS must not silently turn into DHL.</li>
+<li>Restrict DHL availability to supported destinations; verify international billing number and product <code>V53WPAK</code>; domestic remains <code>V01PAK</code>.</li>
+<li>Verify DHL production credentials/API entitlements and legitimate customer charge arrangements before any live label use.</li>
+<li>Create or migrate the three verified automations and one inherited button view in Production; note that Odoo IDs may differ between environments.</li>
+<li>Keep obsolete fixed-carrier automations inactive and check existing Production automations for conflicts.</li>
+<li>Test a DE sale, an international sale, and an explicit GLS sale from order to outgoing picking, without generating labels until carrier values are correct.</li>
+<li>Test a German return (auto receiver <code>deu</code>) and the manual Change Receiver workflow before validating incoming goods.</li>
+<li>Only after approval, test a controlled real DHL label, check receiver and address, tracking, label printing and billing.</li>
+</ol>
+<div class="caution"><strong>Reminder:</strong> Odoo Staging changes do not automatically appear in Production. GitHub <code>Dogsport/odoo-customizations</code> is a documentation repository, not an Odoo deployment pipeline.</div>
+
+<h2 id="export">10. Export the exact saved code (read-only Shell)</h2>
+<p>To make the technical record complete, run this in Odoo Staging Shell and replace the two reference examples in this HTML with the code actually saved in your actions.</p>
+<pre><code class="language-python"># READ ONLY: export the actual saved automation source in Staging.
+for aid in [64, 66]:
+    a = env['base.automation'].sudo().browse(aid)
+    print('Automation:', a.id, a.name, 'active:', a.active,
+          'trigger:', a.trigger)
+    for action in a.action_server_ids:
+        print('Action:', action.name, '| type:', action.state)
+        if action.state == 'code':
+            print(action.code)
+
+# Identify the combined automation (ID is not yet documented).
+for a in env['base.automation'].sudo().search([
+    ('model_id.model', '=', 'sale.order'),
+    ('active', '=', True),
+]):
+    print('Sale automation:', a.id, a.name, a.trigger)</code></pre>
+<p class="small">This command prints automation code only to the Shell output and does not change database records. Avoid copying API keys, passwords, client secrets or tokens into the GitHub article.</p>
+
+<div class="footer">IQ Dogsport GmbH &bull; Odoo 19 Staging internal technical documentation &bull; 14 October 2026.<br>
+Sources: Odoo screenshots, test reports and DHL Business Customer Portal screenshots supplied during the integration. This document does not authorize Production deployment.</div>
+</body></html>
