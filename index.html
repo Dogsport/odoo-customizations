@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IQ Dogsport Docs</title>
+<style>
+  :root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+  header{background:var(--ink);color:#fff;padding:36px 20px}
+  .in{max-width:1000px;margin:0 auto}
+  .eyebrow{font:700 12px Arial;letter-spacing:1.5px;text-transform:uppercase;color:#f4aaaa}
+  h1{font:900 34px/1.15 Arial,sans-serif;margin:8px 0 6px;letter-spacing:-.5px}
+  header p{margin:0;color:#ddd}
+  main{max-width:1000px;margin:0 auto;padding:28px 20px 60px}
+  h2{font:800 20px Arial,sans-serif;margin:28px 0 12px;padding-top:6px;border-top:3px solid var(--accent);display:inline-block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  a.card{display:block;background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px 18px;color:var(--ink);text-decoration:none;transition:border-color .15s,transform .15s}
+  a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .card b{display:block;font:700 16px/1.3 Arial,sans-serif;margin-bottom:4px}
+  .card span{color:var(--muted);font-size:14px}
+  .card em{display:inline-block;margin-top:8px;font:700 11px Arial;font-style:normal;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}
+  footer{color:var(--muted);font-size:13px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="in">
+    <div class="eyebrow">IQ Dogsport GmbH · internal documentation</div>
+    <h1>Odoo &amp; Shopify customizations</h1>
+    <p>How our Odoo and Shopify setups work: what was configured, why, and how to repeat it.</p>
+  </div>
+</header>
+<main>
+  <h2>Shopify</h2>
+  <div class="grid">
+    <a class="card" href="shopify/product-merge/">
+      <b>Product merge</b>
+      <span>Colour products → one product with variants. Odoo SKU check, import, connector, Judge.me groups, go-live, troubleshooting.</span>
+      <em>MFJ 3.0 Unisex · Damen</em>
+    </a>
+    <a class="card" href="shopify/winter-insider-campaign-2026/">
+      <b>Winter Insider Campaign 2026</b>
+      <span>Free MagDock voucher for winter-model buyers: Flow, segment, discount code, order email, newsletter.</span>
+      <em>Oct 2026</em>
+    </a>
+  </div>
+
+  <h2>Odoo · DHL</h2>
+  <div class="grid">
+    <a class="card" href="dhl-automations.html">
+      <b>DHL shipping &amp; return automations</b>
+      <span>Carrier selection, carrier sync to deliveries, return Receiver IDs (Odoo 19).</span>
+      <em>Staging</em>
+    </a>
+    <a class="card" href="DHL_Receiver_ID_Odoo_Knowledge.html">
+      <b>DHL Receiver ID – knowledge</b>
+      <span>How DHL return Receiver IDs work in Odoo.</span>
+      <em>Reference</em>
+    </a>
+    <a class="card" href="IQ_Dogsport_DHL_Automations_Updated_2026-10-14.pdf">
+      <b>DHL automations (PDF)</b>
+      <span>Printable version, updated 14.10.2026.</span>
+      <em>PDF</em>
+    </a>
+  </div>
+
+  <footer>Maintained by Hamza Mohsin · source: github.com/Dogsport/odoo-customizations</footer>
+</main>
+</body>
+</html>

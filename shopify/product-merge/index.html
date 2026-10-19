@@ -1,0 +1,574 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Product Merge Process</title>
+<style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px}header .in{max-width:1100px;margin:0 auto}
+.eyebrow{font:700 12px Arial;letter-spacing:1.5px;text-transform:uppercase;color:#f4aaaa}
+header h1{font:900 30px/1.15 Arial;margin:8px 0 6px}header a{color:#ddd}
+.layout{max-width:1100px;margin:0 auto;padding:24px 20px 60px;display:grid;grid-template-columns:230px 1fr;gap:24px}
+nav{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:4px}
+nav a{color:var(--ink);text-decoration:none;font-size:14px;padding:6px 10px;border-radius:4px}nav a:hover{background:#ebe8e3;color:var(--accent)}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 22px 14px;margin-bottom:18px;min-width:0}
+h1,h2,h3{font-family:Arial,sans-serif}section h1{font-size:24px;border-bottom:3px solid var(--accent);display:inline-block;padding-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0;display:block;overflow-x:auto}th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}th{background:#efede9}
+code{font:13px ui-monospace,Menlo,monospace;background:#efede9;padding:1px 5px;border-radius:3px}
+pre{background:#1d1d1b;color:#f2f2f2;padding:14px;border-radius:6px;overflow:auto}pre code{background:none;color:inherit;padding:0}
+a{color:var(--accent)}
+@media (max-width:760px){.layout{grid-template-columns:1fr}nav{position:static;flex-direction:row;flex-wrap:wrap}}
+</style></head><body>
+<header><div class="in"><div class="eyebrow">IQ Dogsport · Shopify · Odoo · Judge.me</div><h1>Product merge: colour products → one product with variants</h1><a href="../../index.html">← All documentation</a></div></header>
+<div class="layout"><nav><a href="#readme">Overview</a><a href="#steps-01-odoo-check">1 · Odoo check</a><a href="#steps-02-shopify-new-product">2 · New Shopify product</a><a href="#steps-03-odoo-connector">3 · Odoo connector</a><a href="#steps-04-judgeme-reviews">4 · Judge.me reviews</a><a href="#steps-05-go-live">5 · Go live</a><a href="#steps-06-after-go-live">6 · After go-live</a><a href="#troubleshooting">Troubleshooting</a><a href="#merges-mfj-3-0-unisex-readme">Merge: MFJ 3.0 Unisex</a><a href="#merges-mfj-3-0-damen-readme">Merge: MFJ 3.0 Damen</a><a href="#templates-merge-checklist">Template: merge checklist</a></nav><main><section id="readme" class="card"><h1>Product merge: colour products → one product with variants</h1>
+<p>How we merge several Shopify products (one per colour) into <strong>one product</strong>
+with the options <strong>Farbe</strong> and <strong>Größe</strong>, without breaking the Odoo stock sync,
+the reviews or the old URLs.</p>
+<p>Owner: Hamza Mohsin · First done: MFJ 3.0 Unisex (October 2026)</p>
+<h2>How it works in one picture</h2>
+<pre><code>ODOO (stays as it is)                  SHOPIFY
+3 products, e.g.                        1 new product &quot;IQ Multifunktionsjacke 3.0 Damen&quot;
+  Women Black   MJD3.BK.XS…4XL  ──┐      Farbe × Größe = 24 variants
+  Women Blue    MJD3.BL.XS…4XL  ──┼──►   linked per variant by SKU
+  Women Olive   MJD3.OL.XS…4XL  ──┘      (Emipro connector)
+
+Old Shopify products (Schwarz, Olive, Blau) → Draft, never deleted
+  - keep their reviews (Judge.me product group)
+  - their URLs redirect to the new product
+</code></pre>
+<p><strong>Key rule:</strong> Odoo is the source of truth for stock. The connector matches
+Shopify variants to Odoo variants <strong>by SKU (Internal Reference)</strong>. That's why
+the new product keeps <strong>exactly the same SKUs</strong> as the old ones, and nothing
+is merged in Odoo.</p>
+<h2>Steps (in this order)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Step</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Check Odoo: every SKU exists once</td>
+<td><a href="#steps-01-odoo-check">steps/01-odoo-check.md</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Build and import the new Shopify product (Draft)</td>
+<td><a href="#steps-02-shopify-new-product">steps/02-shopify-new-product.md</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Link the new product in Odoo and sync stock</td>
+<td><a href="#steps-03-odoo-connector">steps/03-odoo-connector.md</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Reviews: Judge.me product group</td>
+<td><a href="#steps-04-judgeme-reviews">steps/04-judgeme-reviews.md</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Go live: handles, status, redirects</td>
+<td><a href="#steps-05-go-live">steps/05-go-live.md</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td>After go-live: collections, checks, clean-up</td>
+<td><a href="#steps-06-after-go-live">steps/06-after-go-live.md</a></td>
+</tr>
+<tr>
+<td>–</td>
+<td>Problems we hit and how we fixed them</td>
+<td><a href="#troubleshooting">troubleshooting.md</a></td>
+</tr>
+</tbody>
+</table>
+<h2>Merges done</h2>
+<table>
+<thead>
+<tr>
+<th>Merge</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MFJ 3.0 Unisex</td>
+<td>Live</td>
+<td><a href="#merges-mfj-3-0-unisex-readme">merges/mfj-3-0-unisex</a></td>
+</tr>
+<tr>
+<td>MFJ 3.0 Damen</td>
+<td>Built as Draft, go-live pending</td>
+<td><a href="#merges-mfj-3-0-damen-readme">merges/mfj-3-0-damen</a></td>
+</tr>
+</tbody>
+</table>
+<h2>Never do this</h2>
+<ul>
+<li>Never <strong>delete</strong> the old products: their reviews disappear from the group.</li>
+<li>Never change <strong>SKUs</strong> of merged variants.</li>
+<li>In Odoo, never use <strong>"Update/Export product"</strong> or <strong>"Unpublish"</strong> on a merged product. Only <strong>Export stock</strong>.</li>
+<li>Never leave old and new products <strong>Active at the same time</strong> (duplicate listings).</li>
+</ul></section><section id="steps-01-odoo-check" class="card"><h1>Step 1: Odoo check – every SKU exists once</h1>
+<p><strong>Why:</strong> the Emipro connector links Shopify variants to Odoo variants by SKU.
+If a SKU exists twice in Odoo, the connector may pick the wrong (empty) product,
+and Shopify shows "Ausverkauft" (sold out).</p>
+<h2>Do</h2>
+<ol>
+<li>Odoo → Sales (or Inventory) → Products → <strong>Product Variants</strong> (list view).</li>
+<li>Search <strong>Internal Reference</strong> with the SKU prefix, e.g. <code>MJD3</code> or <code>MFJ3</code>.</li>
+<li>Turn on the <strong>Archived</strong> filter too.</li>
+<li>Count: the number of rows must equal the number of variants you will create
+   (e.g. 3 colours × 8 sizes = 24). Each SKU exactly <strong>once</strong>.</li>
+</ol>
+<h2>If a SKU exists twice</h2>
+<ul>
+<li>Find the duplicate: usually 0 stock, no attribute values, created by the connector.</li>
+<li>Check its smart buttons (Sold, In/Out). Never delete; it may have history.</li>
+<li>Rename its Internal Reference to <code>…-ALT</code> and <strong>archive</strong> it.</li>
+</ul>
+<h2>Don't</h2>
+<ul>
+<li>Don't merge the Odoo products. 3 Odoo products behind 1 Shopify product is correct.</li>
+<li>Don't create new fields in Odoo for this.</li>
+</ul></section><section id="steps-02-shopify-new-product" class="card"><h1>Step 2: Build and import the new Shopify product (Draft)</h1>
+<p><strong>Why a new product instead of editing an old one:</strong> the old products stay
+untouched and live until the switch, so nothing breaks while we build.</p>
+<h2>1. Export the old products</h2>
+<p>Shopify → Products → tick the old colour products → <strong>Export</strong> → <em>Selected products</em> →
+<em>CSV for Excel</em>.</p>
+<h2>2. Build the import CSV</h2>
+<p>One product, all variants. From the export:
+- <strong>Handle:</strong> a temporary one, e.g. <code>iq-multifunktionsjacke-3-0-damen-neu</code>
+- <strong>Title:</strong> without colour, e.g. <code>IQ Multifunktionsjacke 3.0 Damen</code>
+- <strong>Option1 Name = Farbe</strong>, <strong>Option2 Name = Größe</strong>
+- Colour values exactly as in the theme swatch list: <code>Schwarz</code>, <code>Graublau</code>, <code>Olive</code>
+- Copy per variant: <strong>SKU, barcode, price, compare-at price, cost, weight</strong> (unchanged)
+- <strong>Variant Inventory Qty: empty</strong> (Odoo sends stock later)
+- <strong>Status: draft</strong>
+- Vendor <code>IQ Dogsport</code>, Type <code>Bekleidung</code>, tags from the old products
+- Images: all images of the old products; each colour's first image as its variant image
+- Remove product-level values that belong to one colour (e.g. <code>Color</code> metafield, review count)</p>
+<p>Example: <a href="merges/mfj-3-0-damen/MFJ3-Damen-new-product-import.csv">../merges/mfj-3-0-damen/MFJ3-Damen-new-product-import.csv</a></p>
+<h2>3. Import</h2>
+<p>Products → <strong>Import</strong> → upload → <strong>don't</strong> tick "Overwrite products with matching handles" →
+preview must show 1 product with all variants → <strong>Import products</strong>.</p>
+<h2>4. Check and complete the product</h2>
+<ul>
+<li>Status <strong>Draft</strong>, all variants, price, images</li>
+<li><strong>Category</strong> (often empty after import): e.g. <em>Sport Jackets</em></li>
+<li><strong>Vendor</strong> <code>IQ Dogsport</code> (not "IQ Dogsport GmbH")</li>
+<li><strong>Description:</strong> no fixed review numbers ("aus 102 Bewertungen" → "Alle Bewertungen lesen")</li>
+<li><strong>Publishing:</strong> tick all sales channels (Online Store etc.). Status stays Draft.
+  Needed so Judge.me can see the product.</li>
+<li><strong>Variant Galerie</strong> metafield per variant: that colour's images, front view first</li>
+</ul></section><section id="steps-03-odoo-connector" class="card"><h1>Step 3: Link the new product in Odoo and sync stock</h1>
+<h2>How the connector works</h2>
+<p>The connector keeps a <strong>link row per Shopify variant</strong>, each pointing to one
+Odoo variant (matched by SKU). Before the old links are removed, one Odoo
+variant has <strong>two</strong> links:</p>
+<pre><code>Odoo variant MJD3.OL.M (stock)
+  ├─ link → OLD Shopify product &quot;Damen Olive&quot;, variant M
+  └─ link → NEW Shopify product &quot;Damen&quot;, variant Olive / M
+</code></pre>
+<p><strong>Export stock</strong> sends each Odoo variant's free stock (on hand − reserved)
+to <strong>all</strong> its links. So old and new products show the same numbers during
+the changeover.</p>
+<h2>Do</h2>
+<ol>
+<li>Copy the new product's ID from the Shopify admin URL (<code>…/products/1234567890</code>).</li>
+<li>Odoo → <strong>Shopify → Operations → Import products</strong> → Product IDs = that ID → Execute.
+   If needed: Queues → Product Data Queue → <strong>Process</strong>.</li>
+<li>Odoo → <strong>Shopify → Products</strong> → search the Shopify Template Id → <strong>Variants</strong> tab:</li>
+<li>one line per variant (e.g. 24)</li>
+<li>each line → the right Odoo variant with the same SKU</li>
+<li><strong>Operations → Export stock</strong>. Check <strong>Logs</strong> for errors.</li>
+<li>Shopify: the new product's total stock = the old products' total.</li>
+</ol>
+<h2>Notes</h2>
+<ul>
+<li>"Product Template" on the record shows only one Odoo product name. It's just a label.</li>
+<li>Line titles may still show old product names. That's cosmetic, don't "fix" it with an export.</li>
+<li>Shopify shows <strong>on hand − reserved</strong>, so small differences to Odoo "On Hand" are normal.</li>
+</ul></section><section id="steps-04-judgeme-reviews" class="card"><h1>Step 4: Reviews – Judge.me product group</h1>
+<p>Judge.me can <strong>no longer move reviews</strong> between products (confirmed by Judge.me
+support, Shopify rules). Instead we use a <strong>static product group</strong>: every product
+in the group shows all reviews of the group, with verified badges. Included in
+our plan (Awesome).</p>
+<h2>Do</h2>
+<ol>
+<li>Shopify → Apps → Judge.me → <strong>Settings → Product groups</strong> → <strong>Create static product group</strong>.</li>
+<li>Name, e.g. <code>MFJ 3.0 Damen</code>.</li>
+<li><strong>Add products manually</strong> → remove the filter <strong>"In store: Yes"</strong> (otherwise Draft
+   products are hidden) → search a short term, e.g. <code>Multifunktionsjacke 3.0 Damen</code>.</li>
+<li>Tick the <strong>new</strong> product and <strong>all old</strong> colour products → Add → <strong>Save</strong>.</li>
+<li>Wait 2–5 minutes, reload. Old products show the group total. The new product may show
+   0 in this list; check its product page in <strong>Preview</strong> instead.</li>
+</ol>
+<h2>If the new product isn't found</h2>
+<ul>
+<li>It must be published to a sales channel (Draft is fine) → save it once → wait.</li>
+<li>Still missing: ask Judge.me support (Fin chat) to sync the product ID.</li>
+</ul>
+<h2>Rules</h2>
+<ul>
+<li>Never delete the old products. Their reviews are what the group shows.</li>
+<li>Don't also import the review CSV, or reviews show twice.</li>
+<li>Each review shows "Bewertung für [old product]". After go-live that link redirects to the new product.</li>
+</ul></section><section id="steps-05-go-live" class="card"><h1>Step 5: Go live – handles, status, redirects</h1>
+<p>Takes about 2 minutes. Do the steps directly after each other.</p>
+<h2>Before</h2>
+<ul>
+<li>New product: all checks from steps 2–4 done, Preview looks right.</li>
+<li>Decide the final URL. We keep the old main product's URL (it has the Google ranking),
+  e.g. <code>iq-multifunktionsjacke-3-0-unisex</code>.</li>
+</ul>
+<h2>Do</h2>
+<ol>
+<li><strong>Old main product</strong> (e.g. Schwarz) → Search engine listing → handle → add <code>-alt</code>
+   (e.g. <code>iq-multifunktionsjacke-3-0-unisex-alt</code>) → <strong>untick "Create URL redirect"</strong> → Save.</li>
+<li><strong>New product</strong> → handle = the freed URL (e.g. <code>iq-multifunktionsjacke-3-0-unisex</code>) → Save.
+   "Create URL redirect" may stay ticked (temporary handle → final handle).</li>
+<li><strong>New product</strong> → Status <strong>Active</strong>.</li>
+<li><strong>Old products</strong> → Status <strong>Draft</strong> (all of them).</li>
+<li><strong>Online Store → Navigation → URL Redirects</strong> → create, each pointing to the new URL:</li>
+<li><code>/products/&lt;old-main&gt;-alt</code></li>
+<li><code>/products/&lt;old-olive-handle&gt;</code></li>
+<li><code>/products/&lt;old-blau-handle&gt;</code>
+   Test the <code>/en/</code> versions; add them only if they show 404.</li>
+</ol>
+<h2>Errors we saw</h2>
+<ul>
+<li><strong>"Handle already in use"</strong>: the old product still has it. Do step 1 first.</li>
+<li><strong>"Target can't redirect to another redirect"</strong>: a redirect already exists <em>from</em> the
+  target URL. Delete it in URL Redirects first (no chains A → B → C).</li>
+</ul>
+<h2>Rollback</h2>
+<p>New product → Draft; old products → Active; swap the handles back. Odoo keeps
+syncing both, as long as the old links in Odoo are not removed yet.</p></section><section id="steps-06-after-go-live" class="card"><h1>Step 6: After go-live</h1>
+<h2>Same day</h2>
+<ul>
+<li>☐ Open the old URLs (DE + EN) in a private window: they land on the new product.</li>
+<li>☐ <strong>Collections:</strong> manually sorted collections put new products <strong>last</strong>.
+      Products → Collections → each collection → drag the new product to the old position.</li>
+<li>☐ Product page: colour switch, gallery, reviews count, stock per variant.</li>
+<li>☐ Odoo → Shopify → <strong>Logs</strong>: no new errors.</li>
+</ul>
+<h2>After a few days without problems (with Florian)</h2>
+<ul>
+<li>☐ Odoo: in each <strong>old</strong> Shopify product record → Variants tab → 🗑 every line.
+      This only removes the link. From now on stock goes only to the new product.</li>
+<li>☐ Shopware redirects: point directly to the new URL (no double redirect).</li>
+<li>☐ EN translations, Google Merchant feed check.</li>
+</ul>
+<h2>Keep</h2>
+<ul>
+<li>Old products stay as <strong>Draft</strong> forever (reviews, order history).</li>
+<li>Odoo products stay as they are.</li>
+</ul></section><section id="troubleshooting" class="card"><h1>Troubleshooting</h1>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shopify shows "Ausverkauft" although Odoo has stock</td>
+<td>Shopify variant linked to a duplicate Odoo product with the same SKU (0 stock)</td>
+<td>Step 1: rename duplicate to <code>-ALT</code> + archive; delete wrong variant lines in the Odoo Shopify record; re-import the Shopify product by ID</td>
+</tr>
+<tr>
+<td>Odoo log <code>INVALID_INVENTORY_ITEM</code></td>
+<td>A link points to a Shopify variant that was deleted</td>
+<td>Delete that variant line (🗑) in the Odoo Shopify product record</td>
+</tr>
+<tr>
+<td>Odoo queue "SKU missing"</td>
+<td>Variant created in Shopify before the SKU existed in Odoo</td>
+<td>Create the variant/SKU in Odoo first, then import again</td>
+</tr>
+<tr>
+<td>New product stock lower than old products</td>
+<td>Not all variants linked yet / export ran too early</td>
+<td>Check Variants tab (one line per variant), run Export stock again</td>
+</tr>
+<tr>
+<td>Small difference Shopify vs Odoo On Hand</td>
+<td>Shopify gets on hand − reserved (open orders)</td>
+<td>Normal</td>
+</tr>
+<tr>
+<td>New product not found in Judge.me</td>
+<td>Not published to a sales channel, or filter "In store: Yes"</td>
+<td>Publish (Draft is fine), remove the filter, wait; else ask Judge.me support</td>
+</tr>
+<tr>
+<td>New product shows 0 reviews in the group list</td>
+<td>The list counts own reviews only</td>
+<td>Check the product page in Preview</td>
+</tr>
+<tr>
+<td>"Handle already in use"</td>
+<td>Old product still has the handle</td>
+<td>Rename old handle to <code>-alt</code> first</td>
+</tr>
+<tr>
+<td>"Target can't redirect to another redirect"</td>
+<td>Redirect exists from the target URL</td>
+<td>Delete that redirect first</td>
+</tr>
+<tr>
+<td>New product at the end of a collection</td>
+<td>Collection sorted manually</td>
+<td>Drag it up in each collection</td>
+</tr>
+</tbody>
+</table>
+<h2>Example: IQ Mini keychain (16.10.2026)</h2>
+<p>4 Odoo variants for 2 SKUs: the connector had created duplicates
+("IQ Mini-Apportierholz Schlüsselanhänger" without attribute). Fixed by renaming
+them to <code>IQD-APH-HETZ-ALT</code> / <code>IQD-APH-LIGHT-ALT</code>, deleting the 3 wrong lines and
+re-importing Shopify product 12141783613704.</p></section><section id="merges-mfj-3-0-unisex-readme" class="card"><h1>MFJ 3.0 Unisex merge</h1>
+<p>Status: <strong>live</strong> (October 2026)</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New product</td>
+<td>IQ Multifunktionsjacke 3.0 Unisex, Shopify ID <strong>12351067619592</strong></td>
+</tr>
+<tr>
+<td>URL</td>
+<td><code>/products/iq-multifunktionsjacke-3-0-unisex</code></td>
+</tr>
+<tr>
+<td>Variants</td>
+<td>21 = Schwarz, Graublau, Olive × S–4XL</td>
+</tr>
+<tr>
+<td>SKUs</td>
+<td><code>IQD-EKL-MFJ3.BK.*</code>, <code>IQD-EKL-MFJ3.BL.*</code>, <code>IQD-EKL-MFJ3.OL.*</code></td>
+</tr>
+<tr>
+<td>Odoo</td>
+<td>3 products (Unisex Black, Blue Limited Edition, Olive) – unchanged</td>
+</tr>
+<tr>
+<td>Reviews</td>
+<td>Judge.me group "MFJ 3.0 Unisex", 197 reviews, 4.9 ★</td>
+</tr>
+</tbody>
+</table>
+<h2>Old products (Draft, keep)</h2>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Shopify ID</th>
+<th>Handle now</th>
+<th>Reviews</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unisex Schwarz</td>
+<td>10709800583432</td>
+<td><code>iq-multifunktionsjacke-3-0-unisex-alt</code></td>
+<td>134</td>
+</tr>
+<tr>
+<td>Unisex Olive</td>
+<td>10709815886088</td>
+<td><code>iq-multifunktionsjacke-3-0-unisex-olive</code></td>
+<td>56</td>
+</tr>
+<tr>
+<td>Unisex Blau Limited Edition</td>
+<td>10709844721928</td>
+<td><code>iq-multifunktionsjacke-3-0-unisex-blau-limited-edition</code></td>
+<td>7</td>
+</tr>
+</tbody>
+</table>
+<h2>Redirects → <code>/products/iq-multifunktionsjacke-3-0-unisex</code></h2>
+<ul>
+<li><code>/products/iq-multifunktionsjacke-3-0-unisex-alt</code></li>
+<li><code>/products/iq-multifunktionsjacke-3-0-unisex-olive</code></li>
+<li><code>/products/iq-multifunktionsjacke-3-0-unisex-blau-limited-edition</code></li>
+</ul>
+<h2>Open</h2>
+<ul>
+<li>☐ Unlink the old Shopify records in Odoo (with Florian)</li>
+<li>☐ Collections order (Herren done; check the others)</li>
+<li>☐ Barcode format Odoo vs Shopify (with Florian)</li>
+</ul>
+<h2>Files</h2>
+<ul>
+<li>The review backup CSV (197 reviews pointing to the new product) is <strong>not</strong> stored in Git,
+  because it contains customer names and email addresses. Keep it on the company drive.</li>
+</ul></section><section id="merges-mfj-3-0-damen-readme" class="card"><h1>MFJ 3.0 Damen merge</h1>
+<p>Status: <strong>built as Draft, go-live pending</strong> (October 2026)</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New product</td>
+<td>IQ Multifunktionsjacke 3.0 Damen (temporary handle <code>iq-multifunktionsjacke-3-0-damen-neu</code>)</td>
+</tr>
+<tr>
+<td>Variants</td>
+<td>24 = Schwarz, Graublau, Olive × XS–4XL</td>
+</tr>
+<tr>
+<td>SKUs</td>
+<td><code>IQD-EKL-MJD3.BK.*</code>, <code>IQD-EKL-MJD3.BL.*</code>, <code>IQD-EKL-MJD3.OL.*</code></td>
+</tr>
+<tr>
+<td>Price</td>
+<td>279,90 € (cost 88,70 €)</td>
+</tr>
+<tr>
+<td>Odoo</td>
+<td>3 products (Women Black, Women – Blue Limited Edition, Women – Olive), 8 variants each – unchanged, each SKU once</td>
+</tr>
+<tr>
+<td>Stock check</td>
+<td>New product 252 available = old products together</td>
+</tr>
+<tr>
+<td>Reviews</td>
+<td>Judge.me group "MFJ 3.0 Damen", 156 reviews, 4.94 ★</td>
+</tr>
+</tbody>
+</table>
+<h2>Old products (keep, set to Draft at go-live)</h2>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Shopify ID</th>
+<th>Handle</th>
+<th>Reviews</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Damen Schwarz</td>
+<td>10709800354056</td>
+<td><code>iq-multifunktionsjacke-3-0-damen-schwarz</code></td>
+<td>88</td>
+</tr>
+<tr>
+<td>Damen Olive</td>
+<td>10709816344840</td>
+<td><code>iq-multifunktionsjacke-3-0-damen-olive</code></td>
+<td>55</td>
+</tr>
+<tr>
+<td>Damen Blau Limited Edition</td>
+<td>10709844885768</td>
+<td><code>iq-multifunktionsjacke-3-0-damen-blau-limited-edition</code></td>
+<td>13</td>
+</tr>
+</tbody>
+</table>
+<h2>To do before go-live</h2>
+<ul>
+<li>☐ Decide final URL: <code>…-damen-schwarz</code> (original task) or <code>…-damen</code> + redirect</li>
+<li>☐ Variant Galerie per colour (front view first)</li>
+<li>☐ Publish to sales channels (still Draft)</li>
+<li>☐ Description: remove "aus 102 Bewertungen" / "Alle 102 Bewertungen lesen"</li>
+<li>☐ Odoo: import new product by ID, check 24 lines, Export stock</li>
+<li>☐ Go live (step 5), collections (step 6)</li>
+</ul>
+<h2>Files</h2>
+<ul>
+<li><code>MFJ3-Damen-new-product-import.csv</code>: the import file used (stock left empty on purpose)</li>
+</ul></section><section id="templates-merge-checklist" class="card"><h1>Merge checklist – <product name></h1>
+<p>Copy this file to <code>merges/&lt;product&gt;/README.md</code> for each new merge.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New product</td>
+<td></td>
+</tr>
+<tr>
+<td>Shopify ID</td>
+<td></td>
+</tr>
+<tr>
+<td>Final URL</td>
+<td></td>
+</tr>
+<tr>
+<td>Variants</td>
+<td></td>
+</tr>
+<tr>
+<td>SKU pattern</td>
+<td></td>
+</tr>
+<tr>
+<td>Odoo products</td>
+<td></td>
+</tr>
+<tr>
+<td>Judge.me group</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Old products</h2>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Shopify ID</th>
+<th>Handle</th>
+<th>Reviews</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>Steps</h2>
+<ul>
+<li>☐ 1 Odoo: each SKU exists once (Archived filter on)</li>
+<li>☐ 2 Shopify: import CSV built (same SKUs, stock empty, Draft)</li>
+<li>☐ 2 Imported; category, vendor, description, channels, Variant Galerie</li>
+<li>☐ 3 Odoo: imported by Shopify ID, one line per variant, Export stock, totals match</li>
+<li>☐ 4 Judge.me group created, reviews visible in Preview</li>
+<li>☐ 5 Old main handle → <code>-alt</code> (no redirect), new handle set, new Active, old Draft</li>
+<li>☐ 5 Redirects created and tested (DE + EN)</li>
+<li>☐ 6 Collections re-sorted</li>
+<li>☐ 6 After a few days: old links removed in Odoo (with Florian)</li>
+</ul></section></main></div>
+</body></html>
