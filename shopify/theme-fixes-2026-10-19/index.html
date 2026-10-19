@@ -1,0 +1,202 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Theme fixes 19.10.2026</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto} pre code{background:none;color:inherit}
+a{color:var(--accent)}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Shopify theme fixes – 19.10.2026</h1></div></header>
+<main>
+<p>Small storefront fixes on iq-dogsport.de (FoxTheme). Every code change is marked with <code>[Hamza 2026-10-19]</code>.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Fix</th>
+<th>Where</th>
+<th>File in this folder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Judge.me "Mehr anzeigen" button looks like the add-to-cart button (black pill, no border, slide hover)</td>
+<td>Theme settings → Custom CSS</td>
+<td><code>judgeme-load-more-button.css</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Unit price (€/kg) small and grey in one line after the price – product page only</td>
+<td>Theme settings → Custom CSS</td>
+<td><code>product-unit-price.css</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>"Fit &amp; Sizing" tab hidden when <code>custom.grosentabelle</code> is empty (≈80 products)</td>
+<td><code>snippets/product-information-blocks.liquid</code></td>
+<td><code>product-information-blocks.collapsible-tab.liquid</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>English shop showed German option names (Farbe, Größe, Schwarz …) on the merged MFJ 3.0 products</td>
+<td>Translate &amp; Adapt (no code)</td>
+<td>–</td>
+</tr>
+</tbody>
+</table>
+<h2>1. Judge.me "Mehr anzeigen" button</h2>
+<ul>
+<li><strong>Problem:</strong> the review "load more" button had Judge.me's own style and no visible hover.</li>
+<li><strong>Why the first hover didn't work:</strong> the theme button doesn't change colour on hover. It slides two layers (<code>::before</code>, <code>::after</code>) in from the left (<code>translate(-100%)</code> → <code>translate(0)</code>, <code>.3s cubic-bezier(.75,0,.125,1)</code>, <code>::after</code> delayed <code>.175s</code>). Changing <code>#151515</code> → <code>#333</code> was barely visible.</li>
+<li><strong>Fix:</strong> the same <code>::before</code>/<code>::after</code> slide on <code>.jm-load-more-pagination .jm-button--primary</code>, using the theme variables <code>--color-button-before</code>, <code>--color-button-hover-background</code>, <code>--color-button-hover-text</code> (with fallbacks). Border removed.</li>
+<li><strong>Key detail:</strong> <code>position:relative; overflow:hidden; isolation:isolate</code> on the button keeps the layers inside the pill and behind the text.</li>
+</ul>
+<h2>2. Unit price on the product page</h2>
+<ul>
+<li><strong>Problem:</strong> "€39,50/KG" showed on its own line, large and uppercase.</li>
+<li><strong>Fix:</strong> CSS scoped with <code>[id^="price-template--"][id$="__main"]</code> – only the price block of the main product section has this id, so collection cards, sticky add-to-cart bar, recently viewed and cart keep their style.</li>
+<li>Variant: one line below instead of inline → change <code>display: flex</code> to <code>display: block</code>.</li>
+</ul>
+<h2>3. "Fit &amp; Sizing" tab only when a size chart is linked</h2>
+<ul>
+<li><strong>Request:</strong> Florian Knabl, 19.10.2026.</li>
+<li><strong>Problem:</strong> the collapsible tab "Fit &amp; Sizing" shows the page linked in metafield <code>custom.grosentabelle</code>. Without a linked page the tab still showed its heading with nothing underneath (books, treats, clickers, several T-shirts).</li>
+<li><strong>Fix:</strong> in <code>snippets/product-information-blocks.liquid</code>, directly after <code>{%- when 'collapsible_tab' -%}</code>: build the tab content (<code>content</code> + <code>custom_liquid</code> + <code>page.content</code>); if it has no text <strong>and</strong> no <code>&lt;img&gt;</code>, <code>&lt;iframe&gt;</code>, <code>&lt;video&gt;</code> or Judge.me widget (<code>jdgm</code>) → <code>continue</code> (block skipped).</li>
+<li>The <code>jdgm</code> exception keeps the <strong>Bewertungen</strong> tab, which only contains the Judge.me widget (filled by JavaScript, so no text in Liquid).</li>
+<li>Generic: any collapsible tab that is completely empty is hidden; tabs with content are unchanged. Applies to DE and EN (same template).</li>
+</ul>
+<p><strong>Test (DE + EN):</strong>
+- [ ] <code>/products/iq-unisex-t-shirt-slogan-schwarz</code> → no "Fit &amp; Sizing", Bewertungen still there
+- [ ] <code>/products/iq-dogsport-hose-unisex</code> → "Fit &amp; Sizing" opens with the size chart
+- [ ] <code>/en/…</code> for both
+- [ ] One book + one treat product → no empty tab</p>
+<h2>4. English option names on merged products</h2>
+<ul>
+<li><strong>Cause:</strong> the merged products were created by CSV import. Option names and values (Farbe, Größe, Schwarz, Graublau, Olive) have no English translation, so <code>/en/</code> shows German.</li>
+<li><strong>Fix:</strong> Translate &amp; Adapt → English → Products → product → <em>Product options</em>: Farbe → Color, Größe → Size, Schwarz → Black, Graublau → Blue-grey, Olive → Olive. Sizes unchanged.</li>
+<li>Products: IQ Multifunktionsjacke 3.0 Damen, IQ Multifunktionsjacke 3.0 Unisex (+ every future merged product → added to the merge checklist).</li>
+<li>Safe: translations are display only – SKUs, Odoo sync and Judge.me are not affected. The colour-image code recognises <code>Color</code> as well.</li>
+</ul>
+<h2>Rollback</h2>
+<ul>
+<li>CSS: delete the block from Theme settings → Custom CSS.</li>
+<li>Liquid: remove the lines marked <code>[Hamza 2026-10-19]</code> from <code>snippets/product-information-blocks.liquid</code> (or restore the duplicated theme).</li>
+</ul><hr><h2 id="judgeme-load-more-button.css">judgeme-load-more-button.css</h2><p><a href="judgeme-load-more-button.css">Open raw file</a></p><pre><code>/* Where: Online Store → Themes → Customize → Theme settings → Custom CSS */
+/* [Hamza 2026-10-19] Judge.me &quot;Mehr anzeigen&quot; button styled like the add-to-cart button */
+.jm-load-more-pagination .jm-button.jm-button--primary {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  z-index: 0;
+  background: #151515 !important;
+  color: #ffffff !important;
+  border: none !important; /* [Hamza 2026-10-19] no border, like the theme button */
+  border-radius: 999px !important;
+  min-height: 52px;
+  min-width: 280px;
+  padding: 14px 40px !important;
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+.jm-load-more-pagination .jm-button.jm-button--primary .jm-text {
+  position: relative;
+  z-index: 1;
+  color: inherit !important;
+  font: inherit !important;
+  letter-spacing: inherit;
+}
+
+/* [Hamza 2026-10-19] slide hover like the theme button (::before + ::after slide in from the left) */
+.jm-load-more-pagination .jm-button.jm-button--primary::before,
+.jm-load-more-pagination .jm-button.jm-button--primary::after {
+  content: &quot;&quot; !important;
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: -5px;
+  right: -5px;
+  z-index: -1;
+  font-size: 0;
+  transform: translate(-100%);
+  transition: transform 0.3s cubic-bezier(0.75, 0, 0.125, 1);
+  pointer-events: none;
+}
+.jm-load-more-pagination .jm-button.jm-button--primary::before {
+  background-color: var(--color-button-before, #a6230f);
+}
+.jm-load-more-pagination .jm-button.jm-button--primary::after {
+  background-color: rgb(var(--color-button-hover-background, 51, 51, 51));
+}
+.jm-load-more-pagination .jm-button.jm-button--primary:hover::before,
+.jm-load-more-pagination .jm-button.jm-button--primary:hover::after,
+.jm-load-more-pagination .jm-button.jm-button--primary:focus-visible::before,
+.jm-load-more-pagination .jm-button.jm-button--primary:focus-visible::after {
+  transform: translate(0);
+}
+.jm-load-more-pagination .jm-button.jm-button--primary:hover::after,
+.jm-load-more-pagination .jm-button.jm-button--primary:focus-visible::after {
+  transition-delay: 0.175s;
+}
+.jm-load-more-pagination .jm-button.jm-button--primary:hover,
+.jm-load-more-pagination .jm-button.jm-button--primary:focus-visible {
+  background: #151515 !important;
+  color: rgb(var(--color-button-hover-text, 255, 255, 255)) !important;
+}
+
+@media (max-width: 749px) {
+  .jm-load-more-pagination .jm-button.jm-button--primary { width: 100%; min-width: 0; }
+}
+</code></pre><h2 id="product-unit-price.css">product-unit-price.css</h2><p><a href="product-unit-price.css">Open raw file</a></p><pre><code>/* Where: Online Store → Themes → Customize → Theme settings → Custom CSS */
+/* [Hamza 2026-10-19] Product page only: unit price small, grey and in one line after the price */
+/* Scoped to the main product price block (id=&quot;price-template--…__main&quot;), so cards, sticky bar and cart are unchanged */
+[id^=&quot;price-template--&quot;][id$=&quot;__main&quot;] .f-price {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: .5em;
+}
+[id^=&quot;price-template--&quot;][id$=&quot;__main&quot;] .f-price .f-price__unit-wrapper {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  color: #6b6b6b !important;
+}
+[id^=&quot;price-template--&quot;][id$=&quot;__main&quot;] .f-price .f-price__unit,
+[id^=&quot;price-template--&quot;][id$=&quot;__main&quot;] .f-price .f-price__unit span {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  text-transform: none !important;
+  color: inherit !important;
+}
+</code></pre><h2 id="product-information-blocks.collapsible-tab.liquid">product-information-blocks.collapsible-tab.liquid</h2><p><a href="product-information-blocks.collapsible-tab.liquid">Open raw file</a></p><pre><code>{%- comment -%}
+  File: snippets/product-information-blocks.liquid  (excerpt, around line 160)
+  Change: the lines marked [Hamza 2026-10-19] were added directly after
+          {%- when &#x27;collapsible_tab&#x27; -%}. Nothing else in the file changed.
+{%- endcomment -%}
+        {%- when &#x27;collapsible_tab&#x27; -%}
+          {%- comment -%} [Hamza 2026-10-19] hide the tab if it has no content (e.g. Fit &amp; Sizing without custom.grosentabelle) {%- endcomment -%}
+          {%- capture iq_tab_body -%}{{ block.settings.content }}{{ block.settings.custom_liquid }}{{ block.settings.page.content }}{%- endcapture -%}
+          {%- assign iq_tab_text = iq_tab_body | strip_html | strip -%}
+          {%- if iq_tab_text == blank -%}
+            {%- unless iq_tab_body contains &#x27;&lt;img&#x27; or iq_tab_body contains &#x27;&lt;iframe&#x27; or iq_tab_body contains &#x27;&lt;video&#x27; or iq_tab_body contains &#x27;jdgm&#x27; -%}
+              {%- continue -%}
+            {%- endunless -%}
+          {%- endif -%}
+          &lt;div
+            class=&quot;product__block product__block--{{ block.type }}&quot;
+            {{ block.shopify_attributes }}
+          &gt;
+            {%- comment -%} … rest of the block unchanged … {%- endcomment -%}
+</code></pre></main></body></html>

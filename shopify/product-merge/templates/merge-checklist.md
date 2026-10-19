@@ -25,5 +25,6 @@ Copy this file to `merges/<product>/README.md` for each new merge.
 - [ ] 4 Judge.me group created, reviews visible in Preview
 - [ ] 5 Old main handle → `-alt` (no redirect), new handle set, new Active, old Draft
 - [ ] 5 Redirects created and tested (DE + EN)
+- [ ] 5 English translation of option names/values (Translate & Adapt → Product options) <!-- [Hamza 2026-10-19] -->
 - [ ] 6 Collections re-sorted
 - [ ] 6 After a few days: old links removed in Odoo (with Florian)

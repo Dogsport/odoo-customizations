@@ -1,0 +1,19 @@
+{%- comment -%}
+  File: snippets/product-information-blocks.liquid  (excerpt, around line 160)
+  Change: the lines marked [Hamza 2026-10-19] were added directly after
+          {%- when 'collapsible_tab' -%}. Nothing else in the file changed.
+{%- endcomment -%}
+        {%- when 'collapsible_tab' -%}
+          {%- comment -%} [Hamza 2026-10-19] hide the tab if it has no content (e.g. Fit & Sizing without custom.grosentabelle) {%- endcomment -%}
+          {%- capture iq_tab_body -%}{{ block.settings.content }}{{ block.settings.custom_liquid }}{{ block.settings.page.content }}{%- endcapture -%}
+          {%- assign iq_tab_text = iq_tab_body | strip_html | strip -%}
+          {%- if iq_tab_text == blank -%}
+            {%- unless iq_tab_body contains '<img' or iq_tab_body contains '<iframe' or iq_tab_body contains '<video' or iq_tab_body contains 'jdgm' -%}
+              {%- continue -%}
+            {%- endunless -%}
+          {%- endif -%}
+          <div
+            class="product__block product__block--{{ block.type }}"
+            {{ block.shopify_attributes }}
+          >
+            {%- comment -%} … rest of the block unchanged … {%- endcomment -%}

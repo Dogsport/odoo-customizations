@@ -1,0 +1,26 @@
+/* Where: Online Store → Themes → Customize → Theme settings → Custom CSS */
+/* [Hamza 2026-10-19] Product page only: unit price small, grey and in one line after the price */
+/* Scoped to the main product price block (id="price-template--…__main"), so cards, sticky bar and cart are unchanged */
+[id^="price-template--"][id$="__main"] .f-price {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: .5em;
+}
+[id^="price-template--"][id$="__main"] .f-price .f-price__unit-wrapper {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  color: #6b6b6b !important;
+}
+[id^="price-template--"][id$="__main"] .f-price .f-price__unit,
+[id^="price-template--"][id$="__main"] .f-price .f-price__unit span {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  text-transform: none !important;
+  color: inherit !important;
+}
