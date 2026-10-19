@@ -34,6 +34,12 @@ a{color:var(--accent)}
 <td><code>product-unit-price.css</code></td>
 </tr>
 <tr>
+<td>2b</td>
+<td>Same unit-price style on the collection grid cards</td>
+<td>Theme settings → Custom CSS</td>
+<td><code>collection-card-unit-price.css</code></td>
+</tr>
+<tr>
 <td>3</td>
 <td>"Fit &amp; Sizing" tab hidden when <code>custom.grosentabelle</code> is empty (≈80 products)</td>
 <td><code>snippets/product-information-blocks.liquid</code></td>
@@ -59,6 +65,13 @@ a{color:var(--accent)}
 <li><strong>Problem:</strong> "€39,50/KG" showed on its own line, large and uppercase.</li>
 <li><strong>Fix:</strong> CSS scoped with <code>[id^="price-template--"][id$="__main"]</code> – only the price block of the main product section has this id, so collection cards, sticky add-to-cart bar, recently viewed and cart keep their style.</li>
 <li>Variant: one line below instead of inline → change <code>display: flex</code> to <code>display: block</code>.</li>
+</ul>
+<h2>2b. Unit price on collection cards</h2>
+<ul>
+<li><strong>Problem:</strong> on collection cards "€49,50/KG" showed on its own line below the price, uppercase. The general <code>.f-price</code> rule in Custom CSS never applied there, because <code>custom.css:919</code> (<code>body:not(.product-template) .product-card:not(.product-card--list) .f-price</code>) and <code>iq-collection…css:166</code> are more specific.</li>
+<li><strong>Fix:</strong> same style as on the product page, scoped to <code>body.collection-template.iq-collection-standard #ProductsList .product-card .f-price</code> (the same scope as the existing collection CSS). <code>justify-content: center</code> keeps the centred card layout; <code>flex-wrap</code> moves the unit price to a second line on narrow mobile cards.</li>
+<li><strong>Scope check (DevTools console):</strong> <code>document.querySelectorAll('body.collection-template.iq-collection-standard #ProductsList .product-card .f-price').length</code> → number of grid cards on a collection page (9 on the test collection = "9 Produkte"); <strong>0</strong> on home page, product page and search.</li>
+<li>Variant: unit price below the price instead of inline → <code>flex-direction: column; align-items: center</code>.</li>
 </ul>
 <h2>3. "Fit &amp; Sizing" tab only when a size chart is linked</h2>
 <ul>
@@ -175,6 +188,35 @@ a{color:var(--accent)}
 }
 [id^=&quot;price-template--&quot;][id$=&quot;__main&quot;] .f-price .f-price__unit,
 [id^=&quot;price-template--&quot;][id$=&quot;__main&quot;] .f-price .f-price__unit span {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  text-transform: none !important;
+  color: inherit !important;
+}
+</code></pre><h2 id="collection-card-unit-price.css">collection-card-unit-price.css</h2><p><a href="collection-card-unit-price.css">Open raw file</a></p><pre><code>/* Where: Online Store → Themes → Customize → Theme settings → Custom CSS */
+/* [Hamza 2026-10-19] Collection grid only: unit price small, grey and in one line after the price */
+/* Scoped like iq-collection css: only body.collection-template.iq-collection-standard #ProductsList – home, search, recently viewed, product page unchanged */
+body.collection-template.iq-collection-standard #ProductsList .product-card .f-price {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  justify-content: center !important;
+  column-gap: .4em;
+  row-gap: 0;
+}
+body.collection-template.iq-collection-standard #ProductsList .product-card .f-price .f-price__unit-wrapper {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  color: #6b6b6b !important;
+}
+body.collection-template.iq-collection-standard #ProductsList .product-card .f-price .f-price__unit,
+body.collection-template.iq-collection-standard #ProductsList .product-card .f-price .f-price__unit span {
   font-size: inherit !important;
   font-weight: inherit !important;
   text-transform: none !important;

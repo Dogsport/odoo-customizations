@@ -6,6 +6,7 @@ Small storefront fixes on iq-dogsport.de (FoxTheme). Every code change is marked
 |---|---|---|---|
 | 1 | Judge.me "Mehr anzeigen" button looks like the add-to-cart button (black pill, no border, slide hover) | Theme settings → Custom CSS | `judgeme-load-more-button.css` |
 | 2 | Unit price (€/kg) small and grey in one line after the price – product page only | Theme settings → Custom CSS | `product-unit-price.css` |
+| 2b | Same unit-price style on the collection grid cards | Theme settings → Custom CSS | `collection-card-unit-price.css` |
 | 3 | "Fit & Sizing" tab hidden when `custom.grosentabelle` is empty (≈80 products) | `snippets/product-information-blocks.liquid` | `product-information-blocks.collapsible-tab.liquid` |
 | 4 | English shop showed German option names (Farbe, Größe, Schwarz …) on the merged MFJ 3.0 products | Translate & Adapt (no code) | – |
 
@@ -19,6 +20,12 @@ Small storefront fixes on iq-dogsport.de (FoxTheme). Every code change is marked
 - **Problem:** "€39,50/KG" showed on its own line, large and uppercase.
 - **Fix:** CSS scoped with `[id^="price-template--"][id$="__main"]` – only the price block of the main product section has this id, so collection cards, sticky add-to-cart bar, recently viewed and cart keep their style.
 - Variant: one line below instead of inline → change `display: flex` to `display: block`.
+
+## 2b. Unit price on collection cards
+- **Problem:** on collection cards "€49,50/KG" showed on its own line below the price, uppercase. The general `.f-price` rule in Custom CSS never applied there, because `custom.css:919` (`body:not(.product-template) .product-card:not(.product-card--list) .f-price`) and `iq-collection…css:166` are more specific.
+- **Fix:** same style as on the product page, scoped to `body.collection-template.iq-collection-standard #ProductsList .product-card .f-price` (the same scope as the existing collection CSS). `justify-content: center` keeps the centred card layout; `flex-wrap` moves the unit price to a second line on narrow mobile cards.
+- **Scope check (DevTools console):** `document.querySelectorAll('body.collection-template.iq-collection-standard #ProductsList .product-card .f-price').length` → number of grid cards on a collection page (9 on the test collection = "9 Produkte"); **0** on home page, product page and search.
+- Variant: unit price below the price instead of inline → `flex-direction: column; align-items: center`.
 
 ## 3. "Fit & Sizing" tab only when a size chart is linked
 - **Request:** Florian Knabl, 19.10.2026.
