@@ -1,0 +1,37 @@
+{%- comment -%} [Hamza 2026-10-16] added: MagDock voucher box for orders with Winterparka Unisex or Zip-off-Wintermantel Damen {%- endcomment -%}
+{%- assign iq_magdock = false -%}
+{%- comment -%} [Hamza 2026-10-16] added: only orders placed during the campaign (until Sun 18.10.2026 23:59) get the voucher {%- endcomment -%}
+{%- assign iq_campaign_end = '2026-10-18 23:59:59 +0200' | date: '%s' | plus: 0 -%}
+{%- assign iq_order_time = created_at | date: '%s' | plus: 0 -%}
+{%- for line in line_items -%}
+  {%- if line.product.handle == 'iq-winter-parka-unisex' or line.product.handle == 'iq-zipp-off-wintermantel-damen' -%}
+    {%- assign iq_magdock = true -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if iq_magdock and iq_order_time <= iq_campaign_end -%}
+<table class="row section">
+  <tr>
+    <td class="section__cell">
+      <center>
+        <table class="container">
+          <tr>
+            <td>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#151515;">
+                <tr>
+                  <td style="padding:22px;font:14px/22px Arial,Helvetica,sans-serif;color:#eeeeee;">
+                    <div style="font:bold 12px/18px Arial,Helvetica,sans-serif;letter-spacing:1.5px;color:#ffb5aa;">DEIN INSIDER-GESCHENK</div>
+                    <div style="font:900 22px/28px Arial,Helvetica,sans-serif;color:#ffffff;margin:8px 0;">IQ Futtertasche MagDock gratis (Wert 35,90 &euro;)</div>
+                    Dein pers&ouml;nlicher Gutscheincode:<br>
+                    <span style="display:inline-block;margin:10px 0;padding:10px 16px;background:#ffffff;color:#151515;font:bold 18px Arial,Helvetica,sans-serif;letter-spacing:1px;">MAGDOCK-INSIDER</span><br>
+                    Sobald die MagDock erh&auml;ltlich ist, legst Du sie in den Warenkorb und gibst den Code im Checkout ein. G&uuml;ltig mit der E-Mail-Adresse dieser Bestellung, eine MagDock pro Kunde, bis 31.03.2027. Versandkosten k&ouml;nnen anfallen.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </td>
+  </tr>
+</table>
+{%- endif -%}
