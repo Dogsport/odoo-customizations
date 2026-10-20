@@ -1,0 +1,188 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scrap Orders Integration</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto} pre code{background:none;color:inherit}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Scrap Orders → Defekt- &amp; Reparaturfälle</h1></div></header>
+<main>
+<p><strong>20 October 2026 · Production: iq-dogsport.odoo.com (live) · Staging: iq-dogsport-staging-38965432.dev.odoo.com</strong>
+<strong>Prepared for Hamza Mohsin, IQ Dogsport GmbH</strong></p>
+<h2>1. Summary</h2>
+<p>Extended the existing Defekt- &amp; Reparaturfälle (Defect &amp; Repair Case) tracking system to also cover Odoo's native Scrap Orders feature. Goal: when defective stock is scrapped into the Defektlager location, a claim case is automatically created so the Production Partner can be billed for the loss, using the exact same Payer / Claim Status / Production Partner / Cost mechanics already in place for Returns and Repairs — no parallel system, no duplicated logic.</p>
+<p>Built and tested in staging first (test records SP/00001–00011 on "IQ Performance Leggings," several size variants), then rolled out to production (live claims SP/00001–00003 against Holfelder GmbH, Defektlager).</p>
+<h2>2. New fields</h2>
+<h3>2.1 Scrap Orders (<code>stock.scrap</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Field name</th>
+<th>Label</th>
+<th>Type</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x_studio_payer</code></td>
+<td>Payer</td>
+<td>selection</td>
+<td>Production Partner / IQ Dogsport / Customer — chosen by staff on the Scrap Order itself</td>
+</tr>
+<tr>
+<td>(related)</td>
+<td>Available Stock</td>
+<td>related: Product → Quantity On Hand</td>
+<td>Live stock check while picking a product to scrap</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Case model (<code>x_iq_service_case</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Field name</th>
+<th>Label</th>
+<th>Type</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x_studio_source_scrap_order</code></td>
+<td>Source Scrap Order</td>
+<td>many2one → stock.scrap</td>
+<td>Links the case back to the originating Scrap Order</td>
+</tr>
+<tr>
+<td><code>x_studio_scrap_reason</code></td>
+<td>Scrap Reason</td>
+<td>char</td>
+<td>Copied from the Scrap Order's Scrap Reason tags</td>
+</tr>
+<tr>
+<td>(related)</td>
+<td>Scrapped Quantity</td>
+<td>related: Source Scrap Order → Quantity (<code>scrap_qty</code>)</td>
+<td>Shows how many units were disposed, without opening the Scrap Order</td>
+</tr>
+</tbody>
+</table>
+<h2>3. Automation rule — "IQ – Scrap zu Fall"</h2>
+<ul>
+<li><strong>Model:</strong> Scrap</li>
+<li><strong>Trigger:</strong> On create and edit</li>
+<li><strong>Apply on:</strong> Status = Done</li>
+<li><strong>Before Update Domain:</strong> Match all records</li>
+<li><strong>When updating:</strong> Status</li>
+</ul>
+<pre><code class="language-python">try:
+    DEFECT_LOCATIONS = ['Defektlager', 'Defektlager - Kunde']
+    PAYER_MAP = {
+        'Production Partner': 'supplier',
+        'IQ Dogsport': 'iq',
+        'Customer': 'customer',
+    }
+
+    if record.state == 'done' and record.scrap_location_id.name in DEFECT_LOCATIONS:
+        Case = env['x_iq_service_case']
+        company = env.company
+        product = record.product_id
+
+        # Same vendor-detection logic as the production 'guess_supplier' function
+        suppliers = env['res.partner']
+        for seller in product.seller_ids:
+            if seller.company_id and seller.company_id != company:
+                continue
+            if seller.product_id and seller.product_id != product:
+                continue
+            partner = seller.partner_id.commercial_partner_id
+            if partner == company.partner_id:
+                continue
+            suppliers |= partner
+        production_partner = suppliers if len(suppliers) == 1 else env['res.partner']
+
+        amount = 0.0
+        if production_partner:
+            seller = product._select_seller(partner_id=production_partner, quantity=record.scrap_qty)
+            if seller:
+                amount = seller.price * record.scrap_qty
+
+        vals = {
+            'x_studio_source_scrap_order': record.id,
+            'x_product_id': product.id,
+            'x_customer_id': False,
+            'x_supplier_id': production_partner.id or False,
+            'x_payer': PAYER_MAP.get(record.x_studio_payer, False),
+            'x_cost_total': amount,
+            'x_studio_scrap_reason': ', '.join(record.scrap_reason_tag_ids.mapped('name')),
+            'x_company_id': company.id,
+            'x_claim_status': 'not_submitted',
+        }
+
+        existing = Case.search([('x_studio_source_scrap_order', '=', record.id)], limit=1)
+        if existing:
+            existing.write(vals)
+            case = existing
+        else:
+            case = Case.create(vals)
+
+        already = env['ir.attachment'].search([
+            ('res_model', '=', 'x_iq_service_case'), ('res_id', '=', case.id),
+        ]).mapped('name')
+        for att in env['ir.attachment'].search([
+            ('res_model', '=', 'stock.scrap'), ('res_id', '=', record.id),
+        ]):
+            if att.name not in already:
+                env['ir.attachment'].create({
+                    'name': att.name, 'type': att.type, 'datas': att.datas,
+                    'res_model': 'x_iq_service_case', 'res_id': case.id, 'mimetype': att.mimetype,
+                })
+except Exception as e:
+    record.message_post(body=&quot;Scrap-to-Case automation error: %s&quot; % str(e))
+</code></pre>
+<p>Production Partner detection mirrors the existing <code>guess_supplier()</code> function already used by "IQ - Push Claim Total to Case" (filters by company, by exact product variant, collapses to <code>commercial_partner_id</code>, requires exactly one match) — no new vendor-detection logic was invented.</p>
+<h2>4. Modified existing compute fields</h2>
+<p>Both fields below already existed and are used across Repair- and Return-based cases. Each was extended with one additional branch so Scrap-originated cases are treated consistently — nothing changed for existing Repair/Return cases.</p>
+<h3>4.1 <code>x_decision</code> ("Decision After Review")</h3>
+<p>Dependencies: <code>x_repair_id, x_return_id, x_return_id.x_studio_entscheidung_nach_prufung, x_studio_source_scrap_order</code></p>
+<pre><code class="language-python">for record in self:
+    if record.x_repair_id:
+        record['x_decision'] = 'Reparatur'
+    elif record.x_return_id.x_studio_entscheidung_nach_prufung == 'Defektlager':
+        record['x_decision'] = 'Defektlager'
+    elif record.x_studio_source_scrap_order:
+        record['x_decision'] = 'Defektlager'
+    else:
+        record['x_decision'] = False
+</code></pre>
+<h3>4.2 <code>x_lager_id</code> ("Lager")</h3>
+<p>Was a simple Related Field mirroring <code>x_return_id.location_dest_id</code>. Converted to a custom compute so it also works for Scrap-originated cases, while preserving identical behavior for Return-based cases.</p>
+<p>Dependencies: <code>x_return_id, x_return_id.location_dest_id, x_studio_source_scrap_order, x_studio_source_scrap_order.scrap_location_id</code></p>
+<pre><code class="language-python">for record in self:
+    if record.x_return_id:
+        record['x_lager_id'] = record.x_return_id.location_dest_id.id
+    elif record.x_studio_source_scrap_order:
+        record['x_lager_id'] = record.x_studio_source_scrap_order.scrap_location_id.id
+    else:
+        record['x_lager_id'] = False
+</code></pre>
+<h2>5. How it works end to end</h2>
+<ol>
+<li>Staff scraps a defective product via Inventory → Operations → Scrap Orders, picking Scrap Location = "Defektlager" or "Defektlager - Kunde," and selecting a Payer.</li>
+<li>On Validate (Draft → Done), the automation fires, identifies the Production Partner from the product's vendor pricelist, computes cost as unit price × scrapped quantity, and creates (or updates) a case.</li>
+<li>The case appears in Defekt- &amp; Reparaturfälle with Claim Status = Not Submitted, ready to be worked the same way as any Return- or Repair-based claim (submit, mark Accepted/Rejected, etc.).</li>
+<li>Decision and Lager columns automatically show "Defektlager," and Scrapped Quantity shows the disposed unit count — all without a parallel display system.</li>
+</ol>
+<h2>6. Known limitations / open items</h2>
+<ul>
+<li>A single Scrap Order can only hold one product variant. A defect spanning multiple sizes/variants requires one Scrap Order (and resulting case) per variant — there is currently no mechanism to group several Scrap Orders under one combined claim.</li>
+<li>Scrap-originated cases never populate <code>x_repair_id</code> / <code>x_return_id</code>, so Decision is always either "Defektlager" or blank (never "Reparatur") for this path — expected, since scrapped goods aren't repaired.</li>
+<li>Old test records in both staging and production (SP/00001–00011 staging; SP/00001–00003 production) should be reviewed and either kept as real claims or cleaned up, depending on which were genuine defects vs. pure tests.</li>
+</ul>
+<h2>7. Test results</h2>
+<p><strong>Staging:</strong> SP/00001–00011 (IQ Performance Leggings, multiple size variants) — Production Partner, cost, Claim Status, Decision, Lager, and Scrapped Quantity all confirmed correct end to end.</p>
+<p><strong>Production:</strong> SP/00001–00003 (live, Holfelder GmbH, Defektlager) — 606 units, €12,152.70 total claim value, correctly grouped and visible in the "1. To submit" favourite alongside existing Return/Repair claims.</p></main></body></html>
