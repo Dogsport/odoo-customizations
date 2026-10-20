@@ -1,0 +1,171 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DHL Production Rollout</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto} pre code{background:none;color:inherit}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>DHL Parcel DE – Production rollout</h1></div></header>
+<main>
+<p><strong>Status 20.10.2026: carriers live in Production, automations partly created, full switch GLS → DHL planned</strong>
+Odoo 19 Production (iq-dogsport.odoo.com) · BrowseInfo module <code>bi_delivery_dhl_de_connector</code> · Staging tests: see <a href="../../dhl-automations.html">DHL automations</a></p>
+<blockquote>
+<p>Credentials (passwords, client secret, tokens), bank details and full billing numbers are intentionally <strong>not</strong> stored here.</p>
+</blockquote>
+<h2>1. Decision</h2>
+<p>IQ Dogsport switches <strong>completely from GLS to DHL</strong>. Customers do not choose a carrier; DHL is set automatically:
+- Germany → <strong>DHL Parcel DE</strong> (V01PAK)
+- all other countries → <strong>DHL Parcel DE – International</strong> (V53WPAK)</p>
+<h2>2. Done today (20.10.2026)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Module <code>bi_delivery_dhl_de_connector</code> committed to the Odoo.sh repo (<code>main</code>) and installed in Production</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Carrier <strong>DHL Parcel DE</strong>: Production environment, <code>api-eu.dhl.com</code>, portal user, client ID/secret, token, EKP, participation <code>01</code>, V01PAK, label thermal 103×199 (910-300-610)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Carrier <strong>DHL Parcel DE – International</strong> (duplicate of DHL Parcel DE): same login/EKP, participation <code>01</code>, V53WPAK, label thermal 103×199</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DHL developer app <code>Odoo_dhl_connect</code>: Shipping, Tracking <strong>and Returns</strong> enabled for Production</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>5</td>
+<td>View <strong>IQ DHL – Conditional Receiver Buttons</strong> (Get Receivers / Change Receiver)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Automation <strong>DHL – Automatic Return Receiver</strong> (receiver <code>deu</code> on German DHL returns)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>7</td>
+<td>DHL thermal labels 103×199 ordered in the DHL portal (500 pcs)</td>
+<td>✅ ordered, waiting for delivery</td>
+</tr>
+</tbody>
+</table>
+<h3>DHL contract (from the Business Customer Portal)</h3>
+<table>
+<thead>
+<tr>
+<th>Billing number (procedure)</th>
+<th>Product</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>…01 01</code></td>
+<td>DHL Paket</td>
+<td>DHL Parcel DE</td>
+</tr>
+<tr>
+<td><code>…53 01</code></td>
+<td>DHL Paket International + Retoure International</td>
+<td>DHL Parcel DE – International</td>
+</tr>
+<tr>
+<td><code>…07 01</code></td>
+<td>DHL Retoure Online</td>
+<td>German returns (receiver <code>deu</code>)</td>
+</tr>
+<tr>
+<td><code>…08 01</code></td>
+<td>DHL Retoure with pickup</td>
+<td>not used in Odoo</td>
+</tr>
+</tbody>
+</table>
+<p>Billing number = EKP (10 digits) + procedure (2) + participation (2). Booked products: Paket National, Paket International, Retoure National, Retoure Selbstzahler, Retoure International.</p>
+<h2>3. How carriers work today (GLS) – findings</h2>
+<p>Example: Shopify order <code>#IQD-98668</code> → delivery <code>WH1/OUT/06482</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Carrier</th>
+<th>Set by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shopify checkout</td>
+<td>"GLS Deutschland" (only option)</td>
+<td>customer</td>
+</tr>
+<tr>
+<td>Odoo import (Emipro)</td>
+<td>matches <code>shipping_lines.source</code> = <code>shopify</code> + <code>code</code> = <code>GLS Deutschland</code> with <strong>Shopify Carrier Info</strong> on the Odoo method "GLS Deutschland" (Fixed Price → only the price line)</td>
+<td>Emipro</td>
+</tr>
+<tr>
+<td>Sales order carrier</td>
+<td><strong>GLS Germany</strong></td>
+<td>automation <strong>"Shipping add"</strong> (Sales Order, on create, if carrier empty → GLS Germany)</td>
+</tr>
+<tr>
+<td>Delivery</td>
+<td>GLS Germany → label + tracking on <strong>Validate</strong>, tracking sent to Shopify with Tracking Company "GLS"</td>
+<td>inherited from the order</td>
+</tr>
+</tbody>
+</table>
+<p>If Emipro finds no matching Source/Code, it creates a new <em>Fixed Price</em> method automatically (this is where "GLS EU", "GLS Welt Zone …" came from). A Fixed Price method cannot create labels.</p>
+<h2>4. Still to do</h2>
+<h3>4.1 Automations (create with TEST GUARD = only orders of the test contact)</h3>
+<ul>
+<li class="todo">☐ <strong>IQ Sync DHL Carrier to Delivery</strong> – Transfer, on create and edit: outgoing delivery gets the order's DHL carrier (skips done/cancelled/with tracking).</li>
+<li class="todo">☐ <strong>Combined DHL Shipping Method</strong> – Sales Order, on create and edit: empty or <strong>GLS</strong> carrier → DHL Parcel DE (DE) / DHL Parcel DE – International (other countries). Keeps non-GLS methods (e.g. Direct Sales) and orders with tracking.</li>
+</ul>
+<h3>4.2 Tests (after the labels arrive; own address, cancel every label the same day)</h3>
+<ul>
+<li class="todo">☐ DE order → DHL Parcel DE → label on 103×199 roll → tracking → Cancel Shipment → check <em>Shipment overview</em> in the DHL portal</li>
+<li class="todo">☐ AT order → DHL International → label → cancel</li>
+<li class="todo">☐ DE return → receiver <code>deu</code> automatic, <em>Change Receiver</em> keeps manual choice → return label → delete in <em>Returns overview</em></li>
+<li class="todo">☐ Token: does the module renew it automatically after expiry?</li>
+<li class="todo">☐ Address without separate house number (e.g. "Street13") – does DHL accept it?</li>
+</ul>
+<h3>4.3 Switch day</h3>
+<ul>
+<li class="todo">☐ Back up Production (Odoo.sh)</li>
+<li class="todo">☐ Remove the TEST GUARD lines from both automations</li>
+<li class="todo">☐ Archive automation <strong>"Shipping add"</strong> (do not delete)</li>
+<li class="todo">☐ Shopify → Shipping and delivery: rename "GLS Deutschland" → <strong>DHL Paket</strong>; all other zones → <strong>DHL Paket International</strong> (prices unchanged unless Florian decides otherwise)</li>
+<li class="todo">☐ Odoo → both DHL carriers → <em>Shopify Carrier Info</em>: Source <code>shopify</code>, Code <code>DHL Paket</code> / <code>DHL Paket International</code>, Tracking Company = DHL (Germany)</li>
+<li class="todo">☐ Test order through Shopify → order + delivery = DHL, label, tracking in Shopify</li>
+<li class="todo">☐ Check the first 10–20 real orders; open GLS deliveries with labels stay GLS</li>
+<li class="todo">☐ After 1–2 days: archive GLS carriers (keep for history)</li>
+</ul>
+<h3>4.4 Open decisions (Florian)</h3>
+<ul>
+<li>Return costs: customer pays → Retoure Selbstzahler (<code>deu_SZ</code>) for normal returns, <code>deu</code> (paid by IQ) only for defects/warranty?</li>
+<li>International returns (billed to IQ via <code>…53 01</code>) – offer or not?</li>
+<li>Customer shipping prices per zone for DHL (DHL contract prices from the account manager).</li>
+<li>Non-EU shipping (CH, UK, NO …): customs data (HS code, country of origin) on products.</li>
+</ul>
+<h2>5. Security</h2>
+<ul>
+<li>DHL portal password and client secret were visible in screenshots during setup → <strong>change the portal password</strong> after go-live and update both carriers.</li>
+<li>Never commit credentials, tokens, invoices or bank details to this repository (it is public).</li>
+</ul></main></body></html>
