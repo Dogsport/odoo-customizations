@@ -9,3 +9,4 @@
 
 ## Odoo
 - [GLS: 3 labels instead of 4 – S00461](odoo/gls-extra-package-s00461/README.md)
+- [Deliveries: release only by authorised users](odoo/delivery-validation-restrictions/README.md)

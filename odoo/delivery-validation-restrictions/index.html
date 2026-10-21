@@ -1,0 +1,232 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delivery release restrictions</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto} pre code{background:none;color:inherit}
+a{color:var(--accent)}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Deliveries: only authorised users release Waiting deliveries (21.10.2026)</h1></div></header>
+<main>
+<p><strong>Status 21.10.2026: Studio changes live and tested · Automation rule live, Barcode test open.</strong>
+Odoo 19 Production (iq-dogsport.odoo.com) · Inventory → Delivery Orders (<code>stock.picking</code>, outgoing).</p>
+<h2>1. Why</h2>
+<ul>
+<li>Deliveries were moved from <strong>Waiting → Ready</strong> and then validated by the shared user <strong>Office</strong> (e.g. WH1/OUT/06785 on 21.10.2026: Waiting → Ready at 10:38, label created at 10:56).</li>
+<li>A Waiting delivery should only be released by people who know the order is really ready to ship. Customs (<strong>Zoll</strong>) deliveries need their papers before they leave.</li>
+<li>Hiding buttons is not enough: the <strong>Barcode app</strong> has its own Validate and does not use the form buttons. So there is also a server-side rule.</li>
+</ul>
+<h2>2. Overview</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>What</th>
+<th>Where</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>New group <strong>Check Availability erlaubt</strong></td>
+<td>Settings → Users &amp; Companies → Groups</td>
+<td>The users allowed to release Waiting deliveries</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Check Availability</strong> button only for the group</td>
+<td>Studio → Delivery form</td>
+<td>Office doesn't see it</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Grey <strong>Validate</strong> button (Waiting) only for the group</td>
+<td>Studio → Delivery form</td>
+<td>Office can't validate a Waiting delivery in the form</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Automation rule <strong>Waiting-Lieferung: nur berechtigte Benutzer</strong></td>
+<td>Settings → Technical → Automation Rules</td>
+<td>Blocks Waiting → Done for everyone outside the group, in every app (form, Barcode, list)</td>
+</tr>
+</tbody>
+</table>
+<p>Unchanged: the highlighted <strong>Validate</strong> on <strong>Ready</strong> deliveries is visible for everyone, so Office can still ship deliveries that are Ready.</p>
+<h2>3. Group "Check Availability erlaubt"</h2>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Check Availability erlaubt</td>
+</tr>
+<tr>
+<td>Record ID</td>
+<td>150</td>
+</tr>
+<tr>
+<td>External ID</td>
+<td><code>studio_customization.group_check_availability_erlaubt</code></td>
+</tr>
+<tr>
+<td>Users (5)</td>
+<td>Anastasiia Derkach, Christina Helm, Dr. Florian Knabl, Elena Kistritz, Hamza Mohsin</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why the External ID:</strong> Studio only accepts groups with an External ID. Without it, Studio shows <em>"Only groups with an external ID can be used here"</em>. A group created in the UI has none, so one was added manually:
+Settings → Technical → Sequences &amp; Identifiers → External Identifiers → New → Module <code>studio_customization</code>, Name <code>group_check_availability_erlaubt</code>, Model <code>res.groups</code>, Record ID <code>150</code>.</p>
+<p><strong>Add or remove a user:</strong> open the group → tab <em>Users</em>. No Studio change needed.</p>
+<h2>4. Studio: buttons on the delivery form</h2>
+<p>Changed on the form view of <strong>Transfers</strong> (<code>stock.picking</code>) with Studio, on a Waiting delivery.</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Method</th>
+<th>Before</th>
+<th>After</th>
+<th>Invisible condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Check Availability</strong></td>
+<td><code>action_assign</code></td>
+<td>Allow visibility to groups: <em>Role / User</em> (everyone)</td>
+<td><strong>Check Availability erlaubt</strong></td>
+<td>unchanged: <code>not show_check_availability</code></td>
+</tr>
+<tr>
+<td><strong>Validate</strong> (grey, class <code>o_btn_validate</code>, shown in Waiting)</td>
+<td><code>button_validate</code></td>
+<td>everyone</td>
+<td><strong>Check Availability erlaubt</strong></td>
+<td>unchanged (conditional)</td>
+</tr>
+<tr>
+<td><strong>Validate</strong> (highlighted, shown in Ready)</td>
+<td><code>button_validate</code></td>
+<td>everyone</td>
+<td>unchanged</td>
+<td>unchanged</td>
+</tr>
+</tbody>
+</table>
+<p>Why groups and not a condition: Studio's <em>Invisible</em> condition only knows the record, not the user's groups. <code>uid in [ids]</code> would work but hard-codes user IDs. The <strong>Responsible</strong> field is the assigned user, not the current user, so it can't be used either.</p>
+<h3>Result (tested 21.10.2026)</h3>
+<table>
+<thead>
+<tr>
+<th>User</th>
+<th>Waiting delivery</th>
+<th>Ready delivery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Office</td>
+<td>no Check Availability, no Validate</td>
+<td>Validate ✅</td>
+</tr>
+<tr>
+<td>5 users in the group</td>
+<td>Check Availability + Validate</td>
+<td>Validate ✅</td>
+</tr>
+</tbody>
+</table>
+<h2>5. Automation rule: no Waiting → Done outside the group</h2>
+<p>The Barcode app validates without the form buttons, so the rule checks <strong>who</strong> changes the status, not which screen is used.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Waiting-Lieferung: nur berechtigte Benutzer</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Transfer</td>
+</tr>
+<tr>
+<td>Trigger</td>
+<td>On create and edit</td>
+</tr>
+<tr>
+<td>When updating</td>
+<td>Status</td>
+</tr>
+<tr>
+<td>Before Update Domain</td>
+<td>Status = <strong>Waiting</strong></td>
+</tr>
+<tr>
+<td>Apply on</td>
+<td>Status = <strong>Done</strong></td>
+</tr>
+<tr>
+<td>Action</td>
+<td>Execute Code</td>
+</tr>
+</tbody>
+</table>
+<p>The two domains make the rule fire <strong>only</strong> when a delivery goes directly from Waiting to Done. Validating a Ready delivery is not affected. Receipts and internal transfers are skipped by the code (<code>outgoing</code> only).</p>
+<pre><code class="language-python">if not env.user.has_group('studio_customization.group_check_availability_erlaubt'):
+    for rec in records:
+        if rec.picking_type_id.code == 'outgoing':
+            raise UserError('LIEFERUNG %s ist noch nicht freigegeben (Status Waiting). Bitte warten, bis sie Ready ist, oder an Florian, Anastasiia, Elena, Christina oder Hamza weitergeben. / This delivery is not released yet.' % rec.name)
+</code></pre>
+<p><code>UserError</code> stops the save, so the delivery stays as it was and no label is created.</p>
+<h3>Test still open: Barcode app</h3>
+<p>As <strong>Office</strong> in the Barcode app: open a Waiting delivery, scan, Validate.</p>
+<ul>
+<li>Error message → done.</li>
+<li>Goes through → the Barcode app moved it to Ready first. Then change <em>Apply on</em> to Status <strong>in Ready, Done</strong>. Risk: if Office validates a <strong>receipt</strong>, Odoo may reserve waiting deliveries as Office and the rule would block the receipt. Test a receipt as Office afterwards.</li>
+</ul>
+<p>If pick/pack steps are used later, add <strong>Waiting Another Operation</strong> to the Before Update Domain.</p>
+<h2>6. Related rules</h2>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Blocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Block delivery if not paid (existing)</td>
+<td>Unpaid Shopify orders, except whitelisted B2B customers and the allowed users</td>
+</tr>
+<tr>
+<td>Waiting-Lieferung: nur berechtigte Benutzer (new)</td>
+<td>Waiting → Done outside the group</td>
+</tr>
+</tbody>
+</table>
+<h3>Planned: Zoll deliveries (not created yet)</h3>
+<ul>
+<li>Field <strong>Versandhinweise</strong>: <code>x_studio_many2many_field_8oe_1jp7bngnk</code> (tags, <code>crm.tag</code>). Only visible while the delivery is Waiting (<code>invisible: state != "confirmed"</code>).</li>
+<li>Field <strong>Paperwork Done</strong>: <code>x_studio_paperwork_done</code> – read-only in the form, so not usable as a manual tick without a view change.</li>
+<li>Idea: keep the tag <strong>Zoll</strong>, add a second tag <strong>Zollpapiere OK</strong> when the papers are ready. A rule blocks Validate for Zoll deliveries without <em>Zollpapiere OK</em>. No new field needed.</li>
+</ul>
+<h2>7. Rollback</h2>
+<ol>
+<li><strong>Buttons:</strong> Studio → click the button → <em>Allow visibility to groups</em> → remove <em>Check Availability erlaubt</em>, add <em>Role / User</em> back.</li>
+<li><strong>Automation rule:</strong> archive it (Settings → Technical → Automation Rules).</li>
+<li><strong>Group:</strong> can stay. Delete it only after both steps above, otherwise the buttons are hidden for everyone.</li>
+</ol></main></body></html>

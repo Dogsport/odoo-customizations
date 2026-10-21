@@ -83,5 +83,13 @@ window.IQ_LOG = [
     summary: "Missing box on a finished delivery: repacking a Done delivery doesn't work in Odoo 19; fix with an extra GLS label.",
     status: "Done",
     link: "odoo/gls-extra-package-s00461/"
+    },
+  {
+    date: "2026-10-21",
+    area: "Odoo · Shipping",
+    title: "Deliveries: release only by authorised users",
+    summary: "Group Check Availability erlaubt (5 users); Check Availability and Waiting-Validate hidden for others in Studio; automation blocks Waiting → Done outside the group, also in the Barcode app.",
+    status: "Live",
+    link: "odoo/delivery-validation-restrictions/"
   }
 ];
