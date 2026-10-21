@@ -1,0 +1,557 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Welcome-IQ discount</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto} pre code{background:none;color:inherit}
+a{color:var(--accent)}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Welcome-IQ discount – only IQ products (21.10.2026)</h1></div></header>
+<main>
+<p><strong>Status 21.10.2026: live and tested.</strong> Asana: <em>Welcome-IQ Rabatt: Banner, Popup und Willkommensmail anpassen</em> (ToDo IT Hamza) · requested by Patricia Knabl.</p>
+<h2>1. Why</h2>
+<p>The newsletter code <strong>Welcome-IQ</strong> gave 10 % on <strong>every product</strong>: no end date, no total limit, one use per customer (262 uses until 21.10.2026). That included:</p>
+<ul>
+<li>other brands with thin margins (Top-Matic, Nikwax, Jolly Pets, Kynovital)</li>
+<li>new products on their launch day (e.g. the new winter coats)</li>
+</ul>
+<p>Goal: 10 % only on <strong>IQ Dogsport's own products</strong>, new products can be excluded, and every text in the shop says so.</p>
+<h2>2. How it works now</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What Shopify checks</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Customer enters <code>Welcome-IQ</code> at checkout</td>
+<td>–</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Is the product in the collection <strong>Welcome-Rabatt</strong>?</td>
+<td>yes → 10 % on this product</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Product not in the collection (other brand, or tag <code>no-discount</code>)</td>
+<td>no discount on this product</td>
+</tr>
+</tbody>
+</table>
+<p>The collection updates itself. A new IQ product gets the 10 % automatically. A product with the tag <code>no-discount</code> drops out automatically.</p>
+<h3>Collection "Welcome-Rabatt"</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Type</td>
+<td>Automated, match <strong>all</strong> conditions</td>
+</tr>
+<tr>
+<td>Condition 1</td>
+<td>Vendor <strong>is equal to</strong> <code>IQ Dogsport</code> OR <code>IQ Dogsport GmbH</code> (both spellings exist)</td>
+</tr>
+<tr>
+<td>Condition 2</td>
+<td>Tag <strong>does not include</strong> <code>no-discount</code></td>
+</tr>
+<tr>
+<td>Sales channels</td>
+<td><strong>0</strong> (hidden – customers don't see it as a category)</td>
+</tr>
+<tr>
+<td>Products</td>
+<td>151 → <strong>149</strong> after tagging the two winter coats</td>
+</tr>
+</tbody>
+</table>
+<h3>Discount "Welcome-IQ" (new)</h3>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Type</td>
+<td><strong>Amount off products</strong> (product discount)</td>
+</tr>
+<tr>
+<td>Code</td>
+<td><code>Welcome-IQ</code></td>
+</tr>
+<tr>
+<td>Value</td>
+<td>10 %</td>
+</tr>
+<tr>
+<td>Applies to</td>
+<td>Specific collections → <strong>Welcome-Rabatt</strong></td>
+</tr>
+<tr>
+<td>Eligibility</td>
+<td>All customers · Online Store</td>
+</tr>
+<tr>
+<td>Minimum</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Max. uses</td>
+<td>one use per customer</td>
+</tr>
+<tr>
+<td>Combinations</td>
+<td>none</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>from 21.10.2026, no end date</td>
+</tr>
+</tbody>
+</table>
+<h3>Old discount → "Welcome-IQ-ALT"</h3>
+<ul>
+<li>Type <strong>Amount off order</strong> (whole cart). This type <strong>cannot be limited to a collection</strong>, so it had to be replaced, not edited.</li>
+<li>Renamed to <code>Welcome-IQ-ALT</code> and <strong>deactivated</strong> (Jan 6 – Oct 21, 262 uses). Kept for the history and reports.</li>
+<li>Note: "one use per customer" counts per discount, so a customer who used the old code can use the new one once.</li>
+</ul>
+<h3>Excluded products (tag <code>no-discount</code>)</h3>
+<ul>
+<li>IQ Winterparka Unisex</li>
+<li>IQ Zip-off-Wintermantel Damen</li>
+</ul>
+<p><strong>To exclude another product:</strong> Products → product → Tags → add <code>no-discount</code> → Save.</p>
+<h2>3. Texts updated</h2>
+<table>
+<thead>
+<tr>
+<th>Where</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home page → section <strong>IQ Insider Anmeldung</strong> (live theme)</td>
+<td>New line under "10 % zum Start." – DE: <em>Auf Deine erste Bestellung. Gültig für IQ Produkte, ausgenommen Neuheiten.</em> · EN: <em>On your first order. Valid on IQ products, excluding new arrivals.</em></td>
+</tr>
+<tr>
+<td>Flow <strong>10% Rabatt für Newsletter-Anmeldung</strong> → Send marketing email</td>
+<td>"Gültig für deine erste Bestellung." → <em>Gültig für deine erste Bestellung auf IQ Produkte, ausgenommen Neuheiten.</em></td>
+</tr>
+</tbody>
+</table>
+<h3>Section code</h3>
+<p>File in this folder: <code>iq-insider-anmeldung.liquid</code> (the full section file as it is live). Three additions to the previous version:</p>
+<ol>
+<li>CSS class <code>.iq-insider__note</code> (small grey line, 14 px, <code>#52524F</code>)</li>
+<li>The note line under the offer heading, DE/EN by <code>request.locale</code></li>
+<li>Two new settings in block <strong>Inhalt 2</strong>: <code>text_36</code> <em>Hinweis EN</em>, <code>text_37</code> <em>Hinweis DE</em>. Empty → the default text above is shown.</li>
+</ol>
+<p>To change the text later without code: Customize → IQ Insider box → block <strong>Inhalt 2</strong> → <em>Hinweis DE / Hinweis EN</em>.</p>
+<p>Gotcha: Shopify rejects a section setting <strong>label longer than 70 characters</strong> (<code>FileSaveError … label is too long</code>).</p>
+<p>The Flow email contains the code as <strong>plain text</strong> (<code>WELCOME-IQ</code>), so it works with the new discount without relinking.</p>
+<h2>4. Test (21.10.2026, incognito)</h2>
+<table>
+<thead>
+<tr>
+<th>Cart</th>
+<th>Price</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nikwax Tech Wash</td>
+<td>11,90 €</td>
+<td>no discount ✅</td>
+</tr>
+<tr>
+<td>IQ Summer Vest 3.0</td>
+<td>129,90 € → <strong>116,91 €</strong></td>
+<td>10 % ✅</td>
+</tr>
+<tr>
+<td>IQ Zip-off-Wintermantel Damen</td>
+<td>349,00 €</td>
+<td>no discount ✅</td>
+</tr>
+<tr>
+<td><strong>Total discount</strong></td>
+<td><strong>12,99 €</strong></td>
+<td>= 10 % of the vest only ✅</td>
+</tr>
+</tbody>
+</table>
+<h2>5. Good to know</h2>
+<ul>
+<li><strong>New arrivals:</strong> the Flow <em>Tag 'new' für neue Produkte (60 Tage)</em> tags new products <code>new</code>, but the collection only excludes <code>no-discount</code>. A new IQ product gets the 10 % unless it is tagged <code>no-discount</code>.</li>
+<li><strong>Draft themes:</strong> the section change is only in the live theme. If a draft theme (e.g. <em>ENTWURF IQ Outlet</em>) is published, copy <code>iq-insider-anmeldung.liquid</code> into it first.</li>
+<li><strong>Hidden sections</strong> on the home page (<em>Newsletter Banner</em>, a second <em>Newsletter</em>) may still have the old 10 % text. Check them before turning them on.</li>
+<li><strong>Open:</strong> deadline for the code (Patricia). Then add one sentence to the welcome email.</li>
+</ul>
+<h2>6. Rollback</h2>
+<ol>
+<li>Discounts → <code>Welcome-IQ</code> (new) → rename to e.g. <code>Welcome-IQ-NEU</code> → deactivate.</li>
+<li><code>Welcome-IQ-ALT</code> → rename back to <code>Welcome-IQ</code> → reactivate.</li>
+<li>Section: Edit code → section file → <em>Older versions</em>.</li>
+</ol><hr><h2 id="iq-insider-anmeldung.liquid">iq-insider-anmeldung.liquid</h2><p><a href="iq-insider-anmeldung.liquid">Open raw file</a></p><pre><code>{% assign iq_part_1 = section.blocks | where: &#x27;type&#x27;, &#x27;part1&#x27; | first %}
+{% assign iq_part_2 = section.blocks | where: &#x27;type&#x27;, &#x27;part2&#x27; | first %}
+{%- assign iq_en = false -%}
+{%- if request.locale.iso_code == &#x27;en&#x27; -%}
+  {%- assign iq_en = true -%}
+{%- endif -%}
+
+&lt;style&gt;
+.iq-insider,.iq-insider *{box-sizing:border-box}
+.iq-insider{background:#FFFFFF;color:#171717;font-family:Archivo,Arial,sans-serif}
+.iq-insider .iq-insider__inner.page-width{width:100%;max-width:1360px;margin:0 auto;padding:40px 20px;display:grid;gap:28px}
+.iq-insider .iq-insider__eyebrow{margin:0 0 12px;color:#A51D1B;font:700 12px/1.4 Archivo,Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase}
+.iq-insider .iq-insider__heading{margin:0;font-family:Montserrat,Arial,sans-serif;font-style:italic;font-weight:800;font-size:clamp(26px,3vw,32px);line-height:1.15;letter-spacing:-.03em;text-transform:uppercase;color:#171717}
+.iq-insider .iq-insider__heading span{color:#A51D1B}
+.iq-insider .iq-insider__intro{max-width:48ch;margin:16px 0 0;font-size:15px;line-height:1.6;color:#52524F}
+.iq-insider .iq-insider__benefits{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:10px}
+.iq-insider .iq-insider__benefits li{position:relative;margin:0;padding-left:26px;font-size:15px;line-height:1.5}
+.iq-insider .iq-insider__benefits li::before{content:&quot;→&quot;;position:absolute;left:0;top:0;width:18px;color:#A51D1B;font:700 19px/1.18 Archivo,Arial,sans-serif}
+.iq-insider .iq-insider__benefits strong{font-weight:700}
+.iq-insider .iq-insider__form-area{min-width:0;margin:0;padding:0;background:transparent;color:#171717;border:0;border-radius:0;box-shadow:none}
+.iq-insider .iq-insider__form-area .iq-insider__eyebrow{color:#A51D1B}
+.iq-insider .iq-insider__offer{margin:0 0 20px;color:#171717;font:700 24px/1.2 Archivo,Arial,sans-serif;text-transform:none;letter-spacing:0}
+.iq-insider .iq-insider__note{margin:-12px 0 20px;font-size:14px;line-height:1.5;color:#52524F}
+.iq-insider .iq-insider__form{width:100%;margin:0}
+.iq-insider .iq-insider__form-row{display:grid;gap:12px}
+.iq-insider .iq-insider__label{display:block;margin:0 0 8px;color:#171717;font-size:13.5px;line-height:1.4}
+.iq-insider .iq-insider__input{display:block;width:100%;min-width:0;min-height:52px;padding:14px 18px;border:1px solid #DCDBD7;border-radius:40px;background:#FFF;color:#171717;font:400 16px/1.4 Archivo,Arial,sans-serif;appearance:none}
+.iq-insider .iq-insider__input::placeholder{color:#666;opacity:1}
+.iq-insider .iq-insider__submit{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:52px;padding:14px 18px;border:1px solid #A51D1B;border-radius:var(--buttons-radius,2px);background:#A51D1B;color:#FFF;cursor:pointer;font:700 13px/1.5 Archivo,Arial,sans-serif;letter-spacing:.15em;text-transform:uppercase}
+.iq-insider .iq-insider__submit:hover{background:#851715;border-color:#851715}
+.iq-insider .iq-insider__input:focus-visible,.iq-insider .iq-insider__submit:focus-visible{outline:2px solid #171717;outline-offset:3px}
+.iq-insider .iq-insider__legal{margin-top:14px;font-size:12px;line-height:1.6;color:#62625D}
+.iq-insider .iq-insider__legal p{margin:0}
+.iq-insider .iq-insider__legal a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.iq-insider .iq-insider__message{margin:14px 0 0;font-size:14px;line-height:1.5;color:#171717}
+.iq-insider .iq-insider__message--error{color:#A51D1B}
+@media(min-width:990px){
+.iq-insider .iq-insider__heading span{display:block;margin-top:4px}
+.iq-insider .iq-insider__inner.page-width{padding:56px 32px;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(32px,4vw,64px);align-items:center}
+.iq-insider .iq-insider__form-area{padding:0}
+}
+&lt;/style&gt;
+
+&lt;section class=&quot;iq-insider&quot;&gt;
+  &lt;div class=&quot;iq-insider__inner page-width&quot;&gt;
+
+    &lt;div class=&quot;iq-insider__copy&quot;&gt;
+      &lt;p class=&quot;iq-insider__eyebrow&quot;&gt;{{ iq_part_1.settings.text_3 | escape }}&lt;/p&gt;
+      &lt;h2 class=&quot;iq-insider__heading rich-text__heading h2&quot;&gt;
+        {% if iq_en %}{{ iq_part_1.settings.text_4 | escape }} &lt;span&gt;{{ iq_part_1.settings.text_5 | escape }}&lt;/span&gt;{% else %}{{ iq_part_1.settings.text_6 | escape }} &lt;span&gt;{{ iq_part_1.settings.text_7 | escape }}&lt;/span&gt;{% endif %}
+      &lt;/h2&gt;
+      &lt;p class=&quot;iq-insider__intro&quot;&gt;
+        {% if iq_en %}{{ iq_part_1.settings.text_8 | escape }}
+        {% else %}{{ iq_part_1.settings.text_9 | escape }}{% endif %}
+      &lt;/p&gt;
+      &lt;ul class=&quot;iq-insider__benefits&quot;&gt;
+        {% if iq_en %}
+          &lt;li&gt;&lt;strong&gt;{{ iq_part_1.settings.text_10 | escape }}&lt;/strong&gt; {{ iq_part_1.settings.text_11 | escape }}&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;{{ iq_part_1.settings.text_12 | escape }}&lt;/strong&gt; {{ iq_part_1.settings.text_13 | escape }}&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;{{ iq_part_1.settings.text_14 | escape }}&lt;/strong&gt; {{ iq_part_1.settings.text_15 | escape }}&lt;/li&gt;
+        {% else %}
+          &lt;li&gt;&lt;strong&gt;{{ iq_part_1.settings.text_16 | escape }}&lt;/strong&gt; {{ iq_part_1.settings.text_17 | escape }}&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;{{ iq_part_1.settings.text_18 | escape }}&lt;/strong&gt; {{ iq_part_1.settings.text_19 | escape }}&lt;/li&gt;
+          &lt;li&gt;&lt;strong&gt;{{ iq_part_1.settings.text_20 | escape }}&lt;/strong&gt; {{ iq_part_2.settings.text_21 | escape }}&lt;/li&gt;
+        {% endif %}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;iq-insider__form-area&quot;&gt;
+      &lt;p class=&quot;iq-insider__eyebrow&quot;&gt;{% if iq_en %}{{ iq_part_2.settings.text_22 | escape }}{% else %}{{ iq_part_2.settings.text_23 | escape }}{% endif %}&lt;/p&gt;
+      &lt;h3 class=&quot;iq-insider__offer&quot;&gt;{% if iq_en %}{{ iq_part_2.settings.text_24 | escape }}{% else %}{{ iq_part_2.settings.text_25 | escape }}{% endif %}&lt;/h3&gt;
+      {%- liquid
+        if iq_en
+          assign iq_note = iq_part_2.settings.text_36 | default: &#x27;On your first order. Valid on IQ products, excluding new arrivals.&#x27;
+        else
+          assign iq_note = iq_part_2.settings.text_37 | default: &#x27;Auf Deine erste Bestellung. Gültig für IQ Produkte, ausgenommen Neuheiten.&#x27;
+        endif
+      -%}
+      &lt;p class=&quot;iq-insider__note&quot;&gt;{{ iq_note | escape }}&lt;/p&gt;
+      {% assign iq_form_id = &#x27;IQInsiderForm-&#x27; | append: section.id %}
+      {% form &#x27;customer&#x27;, id: iq_form_id, class: &#x27;iq-insider__form&#x27; %}
+        &lt;input type=&quot;hidden&quot; name=&quot;contact[tags]&quot; value=&quot;newsletter,homepage&quot;&gt;
+
+        &lt;label for=&quot;IQInsiderEmail-{{ section.id }}&quot; class=&quot;iq-insider__label&quot;&gt;
+            {% if iq_en %}{{ iq_part_2.settings.text_26 | escape }}{% else %}{{ iq_part_2.settings.text_27 | escape }}{% endif %}
+        &lt;/label&gt;
+        &lt;div class=&quot;iq-insider__form-row&quot;&gt;
+          &lt;input
+            id=&quot;IQInsiderEmail-{{ section.id }}&quot;
+            class=&quot;iq-insider__input&quot;
+            type=&quot;email&quot; name=&quot;contact[email]&quot;
+            value=&quot;{% if customer %}{{ customer.email | escape }}{% endif %}&quot;
+            autocorrect=&quot;off&quot; autocapitalize=&quot;off&quot; autocomplete=&quot;email&quot; required
+            {% if form.errors %}aria-invalid=&quot;true&quot; aria-describedby=&quot;IQInsiderError-{{ section.id }}&quot;{% endif %}
+            placeholder=&quot;{% if iq_en %}Email address{% else %}E-Mail-Adresse{% endif %}&quot;
+          &gt;
+          &lt;button class=&quot;iq-insider__submit&quot; type=&quot;submit&quot;&gt;
+            {% if iq_en %}{{ iq_part_2.settings.text_28 | escape }} &lt;span aria-hidden=&quot;true&quot;&gt;→&lt;/span&gt;{% else %}{{ iq_part_2.settings.text_29 | escape }} &lt;span aria-hidden=&quot;true&quot;&gt;→&lt;/span&gt;{% endif %}
+          &lt;/button&gt;
+        &lt;/div&gt;
+
+        {% if form.posted_successfully? %}
+          &lt;p class=&quot;iq-insider__message iq-insider__message--success&quot; role=&quot;status&quot;&gt;
+            {% if iq_en %}{{ iq_part_2.settings.text_30 | escape }}{% else %}{{ iq_part_2.settings.text_31 | escape }}{% endif %}
+          &lt;/p&gt;
+        {% endif %}
+
+        {% if form.errors %}
+          &lt;div id=&quot;IQInsiderError-{{ section.id }}&quot; class=&quot;iq-insider__message iq-insider__message--error&quot; role=&quot;alert&quot;&gt;
+            {{ form.errors | default_errors }}
+          &lt;/div&gt;
+        {% endif %}
+
+        &lt;div class=&quot;iq-insider__legal&quot;&gt;
+          {% if iq_en %}
+            &lt;p&gt;{{ iq_part_2.settings.text_32 | escape }} &lt;a href=&quot;{% if request.locale.iso_code == &#x27;en&#x27; %}{{ iq_part_1.settings.link_1 }}{% else %}{{ iq_part_1.settings.link_1 }}{% endif %}&quot;&gt;{{ iq_part_2.settings.text_33 | escape }}&lt;/a&gt;.&lt;/p&gt;
+          {% else %}
+            &lt;p&gt;{{ iq_part_2.settings.text_34 | escape }} &lt;a href=&quot;{% if request.locale.iso_code == &#x27;en&#x27; %}{{ iq_part_1.settings.link_2 }}{% else %}{{ iq_part_1.settings.link_2 }}{% endif %}&quot;&gt;{{ iq_part_2.settings.text_35 | escape }}&lt;/a&gt;.&lt;/p&gt;
+          {% endif %}
+        &lt;/div&gt;
+
+      {% endform %}
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+&lt;/section&gt;
+{% schema %}
+{
+  &quot;name&quot;: &quot;IQ Insider Anmeldung&quot;,
+  &quot;settings&quot;: [],
+  &quot;blocks&quot;: [
+    {
+      &quot;type&quot;: &quot;part1&quot;,
+      &quot;name&quot;: &quot;Inhalt 1: /en/policies/pr&quot;,
+      &quot;limit&quot;: 1,
+      &quot;settings&quot;: [
+        {
+          &quot;type&quot;: &quot;url&quot;,
+          &quot;id&quot;: &quot;link_1&quot;,
+          &quot;label&quot;: &quot;Linkziel DE: /en/policies/privacy-policy&quot;
+        },
+        {
+          &quot;type&quot;: &quot;url&quot;,
+          &quot;id&quot;: &quot;link_2&quot;,
+          &quot;label&quot;: &quot;Linkziel DE: /policies/privacy-policy&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_3&quot;,
+          &quot;label&quot;: &quot;Text: IQ INSIDER&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_4&quot;,
+          &quot;label&quot;: &quot;Überschrift: More knowledge.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_5&quot;,
+          &quot;label&quot;: &quot;Überschrift: One step ahead.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_6&quot;,
+          &quot;label&quot;: &quot;Überschrift: Mehr Wissen.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_7&quot;,
+          &quot;label&quot;: &quot;Überschrift: Früher dran.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_8&quot;,
+          &quot;label&quot;: &quot;Text: Training insights, an early look at new drops and benef&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_9&quot;,
+          &quot;label&quot;: &quot;Text: Trainingswissen, neue Drops vorab und Vorteile, die nur&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_10&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: Training knowledge&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_11&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: from real-world experience&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_12&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: New drops&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_13&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: — be among the first to hear&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_14&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: Exclusive discounts&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_15&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: for IQ Insiders&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_16&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: Trainingswissen&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_17&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: aus der Praxis&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_18&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: Neue Drops&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_19&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: vorab entdecken&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_20&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: Exklusive Rabatte&quot;
+        }
+      ]
+    },
+    {
+      &quot;type&quot;: &quot;part2&quot;,
+      &quot;name&quot;: &quot;Inhalt 2: nur für IQ Insi&quot;,
+      &quot;limit&quot;: 1,
+      &quot;settings&quot;: [
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_21&quot;,
+          &quot;label&quot;: &quot;Listenpunkt: nur für IQ Insider&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_22&quot;,
+          &quot;label&quot;: &quot;Text: Your welcome benefit&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_23&quot;,
+          &quot;label&quot;: &quot;Text: Dein Willkommensvorteil&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_24&quot;,
+          &quot;label&quot;: &quot;Überschrift: 10% to get started.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_25&quot;,
+          &quot;label&quot;: &quot;Überschrift: 10 % zum Start.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_26&quot;,
+          &quot;label&quot;: &quot;Überschrift: Email address&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_27&quot;,
+          &quot;label&quot;: &quot;Überschrift: E-Mail-Adresse&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_28&quot;,
+          &quot;label&quot;: &quot;Überschrift: Become an IQ Insider&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_29&quot;,
+          &quot;label&quot;: &quot;Überschrift: IQ Insider werden&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_30&quot;,
+          &quot;label&quot;: &quot;Text: Thank you. You&#x27;re on the list.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_31&quot;,
+          &quot;label&quot;: &quot;Text: Danke. Du bist dabei.&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_32&quot;,
+          &quot;label&quot;: &quot;Text: By signing up you accept our&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_33&quot;,
+          &quot;label&quot;: &quot;Linktext: privacy policy&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_34&quot;,
+          &quot;label&quot;: &quot;Text: Mit Deiner Anmeldung akzeptierst Du unsere&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_35&quot;,
+          &quot;label&quot;: &quot;Linktext: Datenschutzbestimmungen&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_36&quot;,
+          &quot;label&quot;: &quot;Hinweis EN (unter 10% zum Start)&quot;
+        },
+        {
+          &quot;type&quot;: &quot;textarea&quot;,
+          &quot;id&quot;: &quot;text_37&quot;,
+          &quot;label&quot;: &quot;Hinweis DE (unter 10 % zum Start)&quot;
+        }
+      ]
+    }
+  ],
+  &quot;presets&quot;: [
+    {
+      &quot;name&quot;: &quot;IQ Insider Anmeldung&quot;,
+      &quot;blocks&quot;: [
+        {
+          &quot;type&quot;: &quot;part1&quot;
+        },
+        {
+          &quot;type&quot;: &quot;part2&quot;
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}</code></pre></main></body></html>

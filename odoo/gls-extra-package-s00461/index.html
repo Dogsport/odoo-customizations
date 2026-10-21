@@ -1,0 +1,68 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GLS extra package S00461</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto} pre code{background:none;color:inherit}
+a{color:var(--accent)}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>GLS: 3 labels instead of 4 – order S00461 (21.10.2026)</h1></div></header>
+<main>
+<p><strong>Status 21.10.2026: solved outside Odoo.</strong> Delivery WH1/OUT/06806 · B2B order to Finland · carrier GLS Germany.</p>
+<p>Customer address and tracking numbers are intentionally <strong>not</strong> stored here.</p>
+<h2>1. Problem</h2>
+<p>The order was packed in <strong>3 packages</strong> (PACK0000059–61), validated, and GLS created <strong>3 labels</strong>. It should have been <strong>4 boxes / 4 labels</strong>.</p>
+<p>The delivery was already <strong>Done</strong>, so Odoo locks the packages and does not create new labels.</p>
+<h2>2. What we tried in Odoo (does not work)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Try</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Clear <em>Tracking Reference</em> (Additional Info)</td>
+<td><strong>Send to Shipper</strong> button appears again</td>
+</tr>
+<tr>
+<td>2</td>
+<td><em>Details</em> on a done line → set <em>Destination Package</em> to a new PACK0000062</td>
+<td>Saved on the line ("The done move line has been corrected"), but the <strong>Packages</strong> list still shows only 3 packages</td>
+</tr>
+<tr>
+<td>3</td>
+<td><em>Unpack</em> on PACK0000061</td>
+<td>Package content empty (computed 0 kg). Delivery lines unchanged. <strong>No stock impact</strong> (goods are already at <em>Customers</em>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Finding:</strong> on a finished delivery in Odoo 19, the package records of the delivery do not update when you change the destination package on done lines. <em>Send to Shipper</em> would then send mixed data. <strong>Don't use this route.</strong></p>
+<p>Clean-up after the tries:</p>
+<ul>
+<li>Tracking Reference set back to the 3 original GLS numbers (this also hides <em>Send to Shipper</em> again)</li>
+<li>Changed lines (WMD.S, WPU.S) set back to their original packages</li>
+<li>PACK0000062 left empty (harmless)</li>
+</ul>
+<h2>3. Fix (outside Odoo)</h2>
+<ol>
+<li>Repack the goods physically into 4 boxes. Keep the 3 existing labels.</li>
+<li>Create <strong>one extra label</strong> in the GLS portal (shipping section, not the tracking overview).</li>
+<li><strong>Log note</strong> on the delivery: 4th tracking number + what is in the 4th box.</li>
+<li>Send the customer the 4th tracking number.</li>
+</ol>
+<h3>GLS portal: why there is no "Cancel"</h3>
+<ul>
+<li>Labels created by Odoo appear in the GLS <strong>tracking overview</strong> (status <em>Preadvice</em> = data sent, parcel not scanned yet). That view only offers <em>Export</em>, <em>Proof of delivery</em>, <em>Start inquiry</em>.</li>
+<li><em>Start inquiry</em> on a preadvice parcel gave the error <em>"Beim Laden der Klärungsfälle zum Paket kam es zu einem Fehler"</em>. Inquiries are for parcels GLS has already handled.</li>
+<li>To cancel a label: GLS customer service (<code>versand-service@gls-germany.com</code>), only before it is scanned.</li>
+<li>An unscanned label is normally not charged on a business account, but this depends on the GLS contract. A label that is cancelled must never go on a box.</li>
+</ul>
+<h2>4. Next time</h2>
+<p>Before clicking <strong>Validate</strong>: <strong>Put in Pack</strong> once per physical box. Odoo creates one package and one GLS label per box.</p>
+<p>If the delivery is already Done and a box is missing → go straight to step 3 (extra label in the GLS portal + log note). Don't edit the done delivery.</p></main></body></html>
