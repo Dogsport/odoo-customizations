@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily log</title>
+<style>
+  :root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f;--soft:#f9e9e6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+  header{background:var(--ink);color:#fff;padding:28px 20px}
+  header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+  .in{max-width:1000px;margin:0 auto}
+  h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 4px}
+  header p{margin:0;color:#ddd}
+  main{max-width:1000px;margin:0 auto;padding:24px 16px 60px}
+  h2{font:800 20px Arial,sans-serif;margin:32px 0 12px;padding-top:6px;border-top:3px solid var(--accent);display:inline-block}
+
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .bar h3{margin:0;font:800 20px Arial,sans-serif;flex:1}
+  .bar button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font:600 14px Arial,sans-serif;cursor:pointer;color:var(--ink)}
+  .bar button:hover{border-color:var(--accent)}
+  .bar button:focus-visible,.day:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .dow{font:700 11px Arial;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:center;padding:4px 0}
+  .day{min-height:92px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 7px;text-align:left;font:inherit;color:inherit;display:flex;flex-direction:column;gap:3px;cursor:default}
+  .day.empty{background:transparent;border-color:transparent}
+  .day .n{font:700 13px Arial;color:var(--muted)}
+  .day.today .n{color:#fff;background:var(--ink);border-radius:10px;padding:0 7px;align-self:flex-start}
+  .day.has{cursor:pointer}
+  .day.has:hover{border-color:var(--accent)}
+  .day.sel{border:2px solid var(--accent);padding:5px 6px}
+  .chip{font-size:11.5px;line-height:1.3;background:var(--soft);color:var(--accent);border-radius:4px;padding:2px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .more{font-size:11px;color:var(--muted)}
+
+  .entries{display:grid;gap:10px}
+  .entry{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+  .entry .meta{font:700 11px Arial;letter-spacing:1px;text-transform:uppercase;color:var(--accent)}
+  .entry b{display:block;font:700 16px/1.3 Arial,sans-serif;margin:4px 0}
+  .entry p{margin:0;color:var(--muted);font-size:14px}
+  .entry a{color:var(--accent);font-size:14px;font-weight:600}
+  .none{color:var(--muted)}
+
+  .group{margin-top:18px}
+  .group h4{margin:0 0 8px;font:700 15px Arial,sans-serif}
+
+  footer{color:var(--muted);font-size:13px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+
+  @media(max-width:640px){
+    .cal{gap:3px}
+    .day{min-height:52px;padding:4px}
+    .chip{display:none}
+    .day.has::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:auto}
+    .more{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="in">
+    <a href="../">← All documentation</a>
+    <h1>Daily log</h1>
+    <p>What was done on which day. Click a day to see the tasks.</p>
+  </div>
+</header>
+<main>
+  <div class="bar">
+    <button type="button" id="prev" aria-label="Previous month">←</button>
+    <h3 id="month"></h3>
+    <button type="button" id="today">Today</button>
+    <button type="button" id="next" aria-label="Next month">→</button>
+  </div>
+  <div class="cal" id="cal"></div>
+
+  <h2 id="dayTitle">Selected day</h2>
+  <div class="entries" id="dayList"></div>
+
+  <h2>All days</h2>
+  <div id="all"></div>
+
+  <footer>Data: <code>daily/log.js</code> · dates are the day the work was documented · Maintained by Hamza Mohsin</footer>
+</main>
+
+<script src="log.js"></script>
+<script>
+(function(){
+  var log = (window.IQ_LOG || []).slice().sort(function(a,b){return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;});
+  var byDate = {};
+  log.forEach(function(e){ (byDate[e.date] = byDate[e.date] || []).push(e); });
+
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+  function pad(n){ return (n < 10 ? "0" : "") + n; }
+  function key(y,m,d){ return y + "-" + pad(m+1) + "-" + pad(d); }
+  function fmt(k){ var p = k.split("-"); return p[2] + "." + p[1] + "." + p[0]; }
+  function weekday(k){ var p = k.split("-"); var d = new Date(+p[0], +p[1]-1, +p[2]); return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()]; }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+
+  var now = new Date();
+  var todayKey = key(now.getFullYear(), now.getMonth(), now.getDate());
+  var dates = Object.keys(byDate).sort();
+  var selected = byDate[todayKey] ? todayKey : (dates[dates.length-1] || todayKey);
+  var p0 = selected.split("-");
+  var viewY = +p0[0], viewM = +p0[1] - 1;
+
+  function entryHtml(e){
+    var link = e.link ? '<a href="../' + esc(e.link) + '">Open documentation →</a>' : '';
+    return '<div class="entry"><div class="meta">' + esc(e.area) + (e.status ? ' · ' + esc(e.status) : '') + '</div>' +
+           '<b>' + esc(e.title) + '</b><p>' + esc(e.summary) + '</p>' + link + '</div>';
+  }
+
+  function renderDay(){
+    var list = byDate[selected] || [];
+    document.getElementById("dayTitle").textContent = weekday(selected) + ", " + fmt(selected) + (list.length ? " · " + list.length + (list.length === 1 ? " task" : " tasks") : "");
+    document.getElementById("dayList").innerHTML = list.length ? list.map(entryHtml).join("") : '<p class="none">Nothing logged on this day.</p>';
+  }
+
+  function renderCal(){
+    document.getElementById("month").textContent = MONTHS[viewM] + " " + viewY;
+    var cal = document.getElementById("cal");
+    var html = DOW.map(function(d){ return '<div class="dow">' + d + '</div>'; }).join("");
+    var first = new Date(viewY, viewM, 1);
+    var offset = (first.getDay() + 6) % 7;
+    var days = new Date(viewY, viewM + 1, 0).getDate();
+    for (var i = 0; i < offset; i++) html += '<div class="day empty" aria-hidden="true"></div>';
+    for (var d = 1; d <= days; d++){
+      var k = key(viewY, viewM, d), list = byDate[k] || [];
+      var cls = "day" + (list.length ? " has" : "") + (k === todayKey ? " today" : "") + (k === selected ? " sel" : "");
+      var chips = list.slice(0,2).map(function(e){ return '<span class="chip" title="' + esc(e.title) + '">' + esc(e.title) + '</span>'; }).join("");
+      if (list.length > 2) chips += '<span class="more">+' + (list.length - 2) + ' more</span>';
+      if (list.length) {
+        html += '<button type="button" class="' + cls + '" data-k="' + k + '" aria-label="' + fmt(k) + ', ' + list.length + ' tasks"><span class="n">' + d + '</span>' + chips + '</button>';
+      } else {
+        html += '<div class="' + cls + '"><span class="n">' + d + '</span></div>';
+      }
+    }
+    cal.innerHTML = html;
+  }
+
+  function renderAll(){
+    var out = dates.slice().reverse().map(function(k){
+      return '<div class="group"><h4>' + weekday(k) + ', ' + fmt(k) + '</h4><div class="entries">' + byDate[k].map(entryHtml).join("") + '</div></div>';
+    }).join("");
+    document.getElementById("all").innerHTML = out || '<p class="none">No entries yet.</p>';
+  }
+
+  document.getElementById("cal").addEventListener("click", function(ev){
+    var b = ev.target.closest("button.day");
+    if (!b) return;
+    selected = b.getAttribute("data-k");
+    renderCal(); renderDay();
+    document.getElementById("dayTitle").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+  document.getElementById("prev").addEventListener("click", function(){ viewM--; if (viewM < 0){ viewM = 11; viewY--; } renderCal(); });
+  document.getElementById("next").addEventListener("click", function(){ viewM++; if (viewM > 11){ viewM = 0; viewY++; } renderCal(); });
+  document.getElementById("today").addEventListener("click", function(){ viewY = now.getFullYear(); viewM = now.getMonth(); selected = todayKey; renderCal(); renderDay(); });
+
+  renderCal(); renderDay(); renderAll();
+})();
+</script>
+</body>
+</html>
