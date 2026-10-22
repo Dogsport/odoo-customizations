@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overtime threshold notification — odoo-customizations</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#c9d1d9;
+    --muted:#8b949e; --accent:#58a6ff; --live:#2ea043; --open:#d29922; --code-bg:#0d1117;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#ffffff; --panel:#f6f8fa; --border:#d0d7de; --text:#1f2328;
+      --muted:#59636e; --accent:#0969da; --live:#1a7f37; --open:#9a6700; --code-bg:#f6f8fa; }
+  }
+  body{ background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+        max-width:900px; margin:0 auto; padding:32px 20px 80px; line-height:1.55; }
+  a{ color:var(--accent); }
+  .crumb{ font-size:13px; color:var(--muted); margin-bottom:18px; }
+  h1{ font-size:26px; margin:0 0 6px; }
+  .meta{ color:var(--muted); font-size:14px; margin-bottom:24px; }
+  .status{ display:inline-block; font-size:13px; font-weight:600; padding:3px 10px; border-radius:999px; margin-right:8px; }
+  .status.live{ background:rgba(46,160,67,.15); color:var(--live); border:1px solid var(--live); }
+  .status.open{ background:rgba(210,153,34,.15); color:var(--open); border:1px solid var(--open); }
+  h2{ font-size:19px; border-bottom:1px solid var(--border); padding-bottom:6px; margin-top:38px; }
+  h3{ font-size:15px; color:var(--muted); margin-top:20px; }
+  ul{ padding-left:20px; }
+  li{ margin-bottom:6px; }
+  table{ width:100%; border-collapse:collapse; margin:14px 0; font-size:14px; }
+  th,td{ text-align:left; padding:8px 10px; border:1px solid var(--border); vertical-align:top; }
+  th{ background:var(--panel); }
+  code{ background:var(--panel); padding:1px 5px; border-radius:4px; font-size:85%; }
+  pre{ background:var(--code-bg); border:1px solid var(--border); border-radius:6px; padding:14px; overflow-x:auto; font-size:13px; }
+  pre code{ background:none; padding:0; }
+  .achieved{ border-left:3px solid var(--live); padding-left:16px; }
+  .open-list{ border-left:3px solid var(--open); padding-left:16px; }
+  footer{ margin-top:56px; padding-top:16px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="crumb"><a href="../../">← all documentation</a></div>
+
+<h1>Overtime threshold notification: weekly check + month-end summary</h1>
+<div class="meta">
+  <span class="status live">Live — weekly check</span>
+  <span class="status open">Open — month-end summary first real run 31.10.2026</span><br>
+  22.10.2026 · Production (iq-dogsport.odoo.com) · <code>hr.employee</code> · Scheduled Action<br>
+  Prepared for: Dr. Florian Knabl
+</div>
+
+<h2>What was achieved</h2>
+<ul class="achieved">
+  <li>Replaced the existing "Daily Overtime Threshold Check" cron's logic: it used to compare each employee's <strong>lifetime</strong> overtime balance (<code>total_overtime</code>) to a threshold, which never resets — once crossed, an employee stayed flagged indefinitely even after the underlying overtime week was long over.</li>
+  <li>New logic sums each employee's actual clocked overtime (already net of the ArbZG break deduction) over a rolling <strong>7-day window</strong>, and compares that to a threshold scaled to that employee's own weekly contracted hours (10% currently, configurable in Settings → Attendances → Extra Hours — no code change needed to adjust the percentage).</li>
+  <li>Notification goes to the employee's manager plus all Administrators (currently Florian or the relevant manager, Hamza, Patricia) as a to-do activity, with the exact numbers written into the note. Duplicate to-dos are prevented while one is still open.</li>
+  <li>Added a second, independent block to the same cron: on the last calendar day of each month, it totals each employee's full month-to-date overtime and posts a separate "Monthly overtime summary" to-do to the same recipients — satisfies the follow-up ask for monthly visibility, not just weekly threshold breaches.</li>
+  <li>Cleaned up 15 stale "Overtime threshold exceeded" to-dos that the old (incorrect) lifetime-balance logic had created for 6 employees.</li>
+  <li>Live-tested the weekly check after the rewrite: correctly flagged only the one employee genuinely over their weekly threshold, and correctly cleared employees who still carry a high lifetime balance but had a normal recent week.</li>
+  <li>No new fields, views, or groups — this was a code-only change inside an automation that already existed.</li>
+</ul>
+
+<h2>What is left</h2>
+<ul class="open-list">
+  <li><strong>Monthly summary block is unverified in production.</strong> It has only ever run against a date that isn't month-end, so the branch that actually posts the summary has never executed for real. First real run is 31.10.2026 — needs a manual check afterwards that it created the expected to-dos with correct hours per employee.</li>
+  <li>Threshold percentage is still a single company-wide setting (10%) — no per-employee override exists yet if that's ever needed.</li>
+  <li>No email/digest option — notifications are Odoo activity to-dos only, not emails, by design so far.</li>
+  <li>Florian has not yet confirmed the recipient list (manager + both Administrators) is the right long-term group, or whether it should narrow over time.</li>
+</ul>
+
+<h2>Automation rule</h2>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Type</td><td>Scheduled Action (<code>ir.cron</code>)</td></tr>
+  <tr><td>Name</td><td>Daily Overtime Threshold Check</td></tr>
+  <tr><td>Model</td><td>Employee (<code>hr.employee</code>)</td></tr>
+  <tr><td>Runs</td><td>Every 1 day, 9:59 AM</td></tr>
+  <tr><td>Recipients</td><td>Employee's manager (<code>parent_id.user_id</code>) + Administrators (<code>base.group_system</code>)</td></tr>
+  <tr><td>Dedup</td><td>Skips creating a new to-do if one of the same summary is already open for that employee/user pair</td></tr>
+</table>
+
+<pre><code>company = env.company
+today = datetime.date.today()
+
+# --- Weekly overtime threshold check (last 7 days) ---
+threshold_percent = company.x_overtime_threshold_percent or 0.0
+if threshold_percent &gt; 0:
+    Employee = env['hr.employee'].sudo()
+    Attendance = env['hr.attendance'].sudo()
+    Activity = env['mail.activity'].sudo()
+    activity_type = env.ref('mail.mail_activity_data_todo')
+    hr_model_id = env['ir.model']._get_id('hr.employee')
+    admin_users = env.ref('base.group_system').sudo().user_ids
+    window_start = today - datetime.timedelta(days=6)
+    window_start_dt = datetime.datetime.combine(window_start, datetime.time.min)
+    window_end_dt = datetime.datetime.combine(today, datetime.time.max)
+    employees = Employee.search([('company_id', '=', company.id)])
+    for emp in employees:
+        calendar = emp.resource_calendar_id
+        if not calendar or not calendar.hours_per_week:
+            continue
+        threshold_hours = calendar.hours_per_week * (threshold_percent / 100.0)
+        attendances = Attendance.search([
+            ('employee_id', '=', emp.id),
+            ('check_in', '&gt;=', window_start_dt),
+            ('check_in', '&lt;=', window_end_dt),
+        ])
+        week_overtime = sum(attendances.mapped('validated_overtime_hours'))
+        if week_overtime &lt;= threshold_hours:
+            continue
+        recipients = env['res.users']
+        if emp.parent_id and emp.parent_id.user_id:
+            recipients |= emp.parent_id.user_id
+        recipients |= admin_users
+        note = (
+            "&lt;p&gt;&lt;strong&gt;%s&lt;/strong&gt; worked %.2f overtime hours in the last 7 days "
+            "(%s to %s), above the %.0f%% threshold of their %.1fh/week contract "
+            "(threshold: %.2f hours).&lt;/p&gt;"
+            % (emp.name, week_overtime, window_start, today, threshold_percent,
+               calendar.hours_per_week, threshold_hours)
+        )
+        for user in recipients:
+            existing = Activity.search([
+                ('res_model', '=', 'hr.employee'),
+                ('res_id', '=', emp.id),
+                ('activity_type_id', '=', activity_type.id),
+                ('user_id', '=', user.id),
+                ('summary', '=', 'Overtime threshold exceeded'),
+            ], limit=1)
+            if existing:
+                continue
+            Activity.create({
+                'res_model': 'hr.employee',
+                'res_model_id': hr_model_id,
+                'res_id': emp.id,
+                'activity_type_id': activity_type.id,
+                'user_id': user.id,
+                'summary': 'Overtime threshold exceeded',
+                'note': note,
+                'date_deadline': today,
+            })
+
+# --- Monthly overtime summary (fires only on the last calendar day of the month) ---
+if today.month == 12:
+    next_month_start = today.replace(year=today.year + 1, month=1, day=1)
+else:
+    next_month_start = today.replace(month=today.month + 1, day=1)
+last_day_of_month = next_month_start - datetime.timedelta(days=1)
+if today == last_day_of_month:
+    Employee = env['hr.employee'].sudo()
+    Attendance = env['hr.attendance'].sudo()
+    Activity = env['mail.activity'].sudo()
+    activity_type = env.ref('mail.mail_activity_data_todo')
+    hr_model_id = env['ir.model']._get_id('hr.employee')
+    admin_users = env.ref('base.group_system').sudo().user_ids
+    month_start = today.replace(day=1)
+    month_start_dt = datetime.datetime.combine(month_start, datetime.time.min)
+    month_end_dt = datetime.datetime.combine(today, datetime.time.max)
+    employees = Employee.search([('company_id', '=', company.id)])
+    for emp in employees:
+        calendar = emp.resource_calendar_id
+        if not calendar or not calendar.hours_per_week:
+            continue
+        attendances = Attendance.search([
+            ('employee_id', '=', emp.id),
+            ('check_in', '&gt;=', month_start_dt),
+            ('check_in', '&lt;=', month_end_dt),
+        ])
+        month_overtime = sum(attendances.mapped('validated_overtime_hours'))
+        if month_overtime &lt;= 0:
+            continue
+        recipients = env['res.users']
+        if emp.parent_id and emp.parent_id.user_id:
+            recipients |= emp.parent_id.user_id
+        recipients |= admin_users
+        note = (
+            "&lt;p&gt;&lt;strong&gt;%s&lt;/strong&gt; worked %.2f extra hours in total during %s "
+            "(%s to %s).&lt;/p&gt;"
+            % (emp.name, month_overtime, today.strftime('%B %Y'), month_start, today)
+        )
+        for user in recipients:
+            existing = Activity.search([
+                ('res_model', '=', 'hr.employee'),
+                ('res_id', '=', emp.id),
+                ('activity_type_id', '=', activity_type.id),
+                ('user_id', '=', user.id),
+                ('summary', '=', 'Monthly overtime summary'),
+                ('date_deadline', '=', today),
+            ], limit=1)
+            if existing:
+                continue
+            Activity.create({
+                'res_model': 'hr.employee',
+                'res_model_id': hr_model_id,
+                'res_id': emp.id,
+                'activity_type_id': activity_type.id,
+                'user_id': user.id,
+                'summary': 'Monthly overtime summary',
+                'note': note,
+                'date_deadline': today,
+            })
+</code></pre>
+
+<h3>Related</h3>
+<ul>
+  <li>ArbZG break deduction feeds <code>validated_overtime_hours</code> directly, so both checks above inherit the correct break-deducted figures automatically.</li>
+  <li>This is the same Scheduled Action as before this change — not a new automation, its code was replaced in place.</li>
+</ul>
+
+<h3>Rollback</h3>
+<ol>
+  <li>Settings → Technical → Scheduled Actions → "Daily Overtime Threshold Check"</li>
+  <li>Restore the pre-22.10.2026 code from git history (lifetime-balance version), or toggle <code>Active</code> off to stop all overtime notifications entirely.</li>
+  <li>No fields or groups to clean up.</li>
+</ol>
+
+<footer>IQ Dogsport GmbH · internal documentation · maintained by Hamza Mohsin</footer>
+
+</body>
+</html>
