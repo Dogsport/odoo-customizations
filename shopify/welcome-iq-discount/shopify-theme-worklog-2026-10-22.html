@@ -1,0 +1,611 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IQ Dogsport · Complete Shopify Worklog and Backups · 22 Oct 2026</title><meta name="description" content="Shopify live theme, Patricia native filters, responsive video, mobile CSS, Welcome-IQ and Git backup records, 16–22 Oct 2026."><style>
+:root{--red:#a6230f;--ink:#171717;--muted:#62625d;--line:#e0dfdb;--paper:#fff;--background:#f7f7f5;--radius:10px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--background);color:var(--ink);font:15px/1.75 system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}
+a{color:var(--red);text-decoration-thickness:1px;text-underline-offset:3px;overflow-wrap:anywhere}a:hover{text-decoration-thickness:2px}
+.top{background:#171717;color:white}.top-inner{max-width:1380px;margin:auto;padding:22px 26px;display:flex;justify-content:space-between;align-items:center;gap:25px}.logo{font-size:15px;font-weight:900;letter-spacing:.12em}.top a{color:white;text-decoration:none;font-size:13px}
+.hero{max-width:1380px;margin:0 auto;padding:47px 26px 27px}.eyebrow{font-weight:800;color:var(--red);letter-spacing:.14em;font-size:11px;text-transform:uppercase}.hero h1{max-width:900px;font-weight:850;font-size:clamp(28px,4vw,49px);line-height:1.1;letter-spacing:-.04em;margin:10px 0 14px}.hero p{max-width:840px;color:var(--muted);font-size:16px}
+.wrap{max-width:1380px;padding:0 26px 48px;margin:auto;display:grid;grid-template-columns:245px minmax(0,1fr);gap:26px;align-items:start}nav{position:sticky;top:22px;border:1px solid var(--line);background:white;border-radius:var(--radius);padding:18px;max-height:calc(100vh - 44px);overflow:auto}nav strong{display:block;margin-bottom:12px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}nav a{display:block;color:var(--ink);text-decoration:none;font-size:13px;padding:6px 2px;line-height:1.4}nav a:hover{color:var(--red)}
+main{background:white;border:1px solid var(--line);border-radius:var(--radius);padding:clamp(20px,3vw,46px);min-width:0;box-shadow:0 2px 12px rgba(0,0,0,.025)}main h1{font-size:24px;margin-top:0}main h2{font-size:22px;margin-top:53px;padding-top:26px;border-top:1px solid var(--line);line-height:1.25;letter-spacing:-.025em}main h3{font-size:17px;margin-top:26px;line-height:1.3}p,li{max-width:102ch}main>p:first-of-type{padding:12px 15px;background:#f3f1ee;border-left:3px solid var(--red)}table{border-collapse:collapse;width:100%;margin:18px 0 30px;font-size:13px;line-height:1.6}th,td{border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}th{background:#f2f1ef;color:#252525;font-weight:750}tr:nth-child(even) td{background:#fbfaf9}pre{overflow:auto;background:#171717;color:#eef0ee;padding:16px 20px;border-radius:7px;line-height:1.6;font-size:12px;white-space:pre}:not(pre)>code{background:#f2f2f0;border:1px solid #e8e6e1;border-radius:3px;padding:1px 4px;overflow-wrap:anywhere}blockquote{border-left:3px solid var(--red);padding:3px 18px;margin:25px 0;background:#faf8f6;color:#36342f}main ul{padding-left:22px}.footer{margin:24px auto 45px;max-width:1300px;padding:0 26px;color:var(--muted);font-size:12px}
+@media(max-width:900px){.wrap{display:block}nav{position:relative;max-height:none;display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;top:auto}nav strong{width:100%}nav a{padding:6px 9px;background:#f5f5f2;border-radius:5px;font-size:12px}main{padding:20px}table{display:block;overflow-x:auto;white-space:normal}}
+@media print{nav,.top{display:none}.wrap{display:block}main{border:0}body{background:white}}
+</style></head><body>
+<div class="top"><div class="top-inner"><span class="logo">IQ DOGSPORT · TECHNICAL DOCUMENTATION</span><a href="./">← Welcome-IQ documentation</a></div></div>
+<header class="hero"><div class="eyebrow">Implementation archive · 16–22 October 2026</div><h1>Shopify theme changes, IQ Insider and backup history</h1><p>Chronological technical record of documented work, tested configuration, CSS/Liquid changes, Git snapshots, branch conflicts, troubleshooting and recovery steps.</p></header>
+<div class="wrap"><nav aria-label="On this page"><strong>Documentation sections</strong><a href="#s-1-repository-and-theme-reference">1. Repository and theme reference</a>
+<a href="#s-2-chronological-work-log">2. Chronological work log</a>
+<a href="#s-3-native-shopify-collection-filters-patricia-mobile-work">3. Native Shopify collection filters (Patricia + mobile work)</a>
+<a href="#s-4-responsive-video-and-product-gallery-distinction">4. Responsive video and product-gallery distinction</a>
+<a href="#s-5-welcome-iq-discount-configuration-21-oct">5. Welcome-IQ discount configuration (21 Oct)</a>
+<a href="#s-6-active-iq-insider-homepage-custom-liquid-22-oct">6. Active IQ Insider: homepage Custom Liquid (22 Oct)</a>
+<a href="#s-7-backups-definitive-inventory">7. Backups — definitive inventory</a>
+<a href="#s-8-troubleshooting-from-the-conversation">8. Troubleshooting from the conversation</a>
+<a href="#s-9-pending-verification-and-safe-next-steps">9. Pending verification and safe next steps</a>
+<a href="#s-10-recovery-playbook">10. Recovery playbook</a>
+<a href="#s-11-evidence-index-and-limitations">11. Evidence index and limitations</a><a href="#s-12-related-odoo-shopify-variant-and-inventory-mapping-case">12. Related Odoo–Shopify variant and inventory mapping case</a></nav><main><h1 id="iq-dogsport-complete-shopify-implementation-and-backup-log">IQ Dogsport — Complete Shopify implementation and backup log</h1>
+<p><strong>Documentation as of 22 October 2026.</strong> This is a reconstructed, structured technical record of the work described in the ChatGPT conversation, supplemented by the screenshots, CSS versions, pasted terminal output and Welcome-IQ documentation provided. It is <strong>not a verbatim ChatGPT conversation export</strong> and does not imply that every local backup is available here. The canonical code history is in Git.</p>
+<h2 id="s-1-repository-and-theme-reference">1. Repository and theme reference</h2>
+<table>
+<thead>
+<tr>
+  <th>Resource</th>
+  <th>Identifier / link</th>
+  <th>What it contains</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Shopify store</td>
+  <td><code>iqdogsport</code></td>
+  <td>Merchant store; live theme changed on 22 October</td>
+</tr>
+<tr>
+  <td>Currently published theme</td>
+  <td><code>HAMZA – SEO Übergabe – Live-Kopie 22.10.2026</code></td>
+  <td>Theme <code>203931648264</code>, confirmed MAIN/live</td>
+</tr>
+<tr>
+  <td>Previous theme</td>
+  <td><code>IQ – live</code></td>
+  <td>Unpublished theme <code>202725884168</code> as shown in theme list at the time</td>
+</tr>
+<tr>
+  <td>Theme source repository</td>
+  <td><a href="https://github.com/knabl-florian/IQ-Shopify">knabl-florian/IQ-Shopify</a></td>
+  <td>Theme Git history; local working directory <code>IQ-Shopify-live-direct</code></td>
+</tr>
+<tr>
+  <td>Theme working branch</td>
+  <td><code>shopify-live-direct</code></td>
+  <td>The local branch used to commit changes</td>
+</tr>
+<tr>
+  <td>Confirmed snapshot branch</td>
+  <td><a href="https://github.com/knabl-florian/IQ-Shopify/tree/live-snapshot-2026-10-22">live-snapshot-2026-10-22</a></td>
+  <td>Successfully pushed as a <strong>separate branch</strong></td>
+</tr>
+<tr>
+  <td>Filter/video snapshot commit</td>
+  <td><a href="https://github.com/knabl-florian/IQ-Shopify/commit/f6cc45e"><code>f6cc45e</code></a></td>
+  <td>18 files, 562 insertions, 15 deletions</td>
+</tr>
+<tr>
+  <td>Documentation repository</td>
+  <td><a href="https://github.com/dogsport/odoo-customizations">dogsport/odoo-customizations</a></td>
+  <td>GitHub Pages and implementation notes — <strong>not</strong> Shopify deployment</td>
+</tr>
+<tr>
+  <td>Welcome-IQ page</td>
+  <td><a href="https://dogsport.github.io/odoo-customizations/shopify/welcome-iq-discount/">Welcome-IQ discount</a></td>
+  <td>Discount setup from 21 October</td>
+</tr>
+</tbody>
+</table>
+<h3 id="boundaries-of-what-was-confirmed">Boundaries of what was confirmed</h3>
+<ul>
+<li><code>shopify theme list</code> showed the HAMZA theme as <code>[live]</code>; subsequent Shopify Admin API lookup returned theme role <code>MAIN</code>. The most recent check was 22 Oct 2026.</li>
+<li>The <strong>filter/video commit</strong> <code>f6cc45e</code> was created successfully and pushed under <code>live-snapshot-2026-10-22</code>. A push to <code>origin/shopify-live-direct</code> was <strong>rejected</strong> due to remote commits; it was <strong>not</strong> forced.</li>
+<li>The updated IQ Insider homepage file <code>templates/index.json</code> was pulled from the published theme twice and copied into the main local Git project. At that moment, <code>git diff --stat</code> showed <code>1 file changed, 1 insertion(+), 1 deletion(-)</code> (a JSON string). <strong>A later commit and push of that last change are not confirmed in the provided evidence.</strong></li>
+<li>Local <code>theme-compare/live</code>, <code>theme-compare/draft</code>, and <code>backup-patricia-filters-20261022</code> were referenced/created on the user's Mac. These are not automatically part of the GitHub branch snapshot.</li>
+<li>An earlier backup tarball (<code>../IQ-Shopify-before-sync.tar.gz</code>) was <em>recommended</em>, but its existence was <strong>not demonstrated</strong>.</li>
+</ul>
+<h2 id="s-2-chronological-work-log">2. Chronological work log</h2>
+<table>
+<thead>
+<tr>
+  <th>Date / sequence</th>
+  <th>Work</th>
+  <th>Outcome / evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>16 Oct onward</td>
+  <td>Collection page and filter work, mobile layout tests, local CSS versions</td>
+  <td>Terminal/CSS screenshots, pasted source versions</td>
+</tr>
+<tr>
+  <td>Before publication</td>
+  <td>Pull current live and HAMZA draft into <code>theme-compare/live</code> and <code>theme-compare/draft</code>; compare with <code>git diff --no-index</code></td>
+  <td>Initial comparison described 17 changed files; local draft had new native filters/videos</td>
+</tr>
+<tr>
+  <td>21 Oct</td>
+  <td>Replace order-wide Welcome-IQ coupon with product-only discount; create/update automated eligible collection; exclude two new coats</td>
+  <td>Incognito checkout test documented</td>
+</tr>
+<tr>
+  <td>21 Oct</td>
+  <td>Update newsletter/welcome email discount copy</td>
+  <td>DE/EN offer disclaimer; old separate-section code archived</td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td>Publish HAMZA SEO draft <code>203931648264</code></td>
+  <td>Shopify CLI <code>[live]</code>, API <code>MAIN</code></td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td>Pull newly published HAMZA theme; synchronize local theme directories; stage Patricia filter/video and mobile CSS changes</td>
+  <td><code>git diff --stat</code>: 13 tracked files, 320 insertions, 15 deletions, plus new files</td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td>Create commit <code>f6cc45e</code></td>
+  <td>18 files, 562 insertions, 15 deletions</td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td>Attempt <code>git push -u origin shopify-live-direct</code></td>
+  <td>Rejected: non-fast-forward; remote branch ahead/diverged</td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td><code>git fetch origin</code> and compare histories</td>
+  <td>Remote includes variant gallery PR #4 and earlier Patricia snapshot PR #3</td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td>Create local backup branch and push independent live snapshot</td>
+  <td>Local <code>backup-patricia-filters-20261022</code>; remote <code>live-snapshot-2026-10-22</code> push succeeded</td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td>Read live theme using Shopify Admin API, inspect homepage</td>
+  <td>IQ Insider is active Custom Liquid in <code>templates/index.json</code>, not <code>sections/iq-insider-anmeldung.liquid</code></td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td>Pull live theme twice, then copy <code>templates/index.json</code> into local root</td>
+  <td>Diff <code>2 +−</code> lines because entire Custom Liquid serialized as one JSON string</td>
+</tr>
+<tr>
+  <td>22 Oct</td>
+  <td><code>jq</code> failed to parse Shopify template file</td>
+  <td>Top-of-file generated comment means <code>jq</code> needs comment removal / <code>awk</code> or Python parser</td>
+</tr>
+</tbody>
+</table>
+<h2 id="s-3-native-shopify-collection-filters-patricia-mobile-work">3. Native Shopify collection filters (Patricia + mobile work)</h2>
+<p><strong>Admin metafields/filter sources</strong> (final activation state still requires verification):</p>
+<table>
+<thead>
+<tr>
+  <th>Visible filter</th>
+  <th>Source</th>
+  <th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>IQ Produktgruppen</td>
+  <td><code>custom.iq_product_groups</code></td>
+  <td>Product metafield, list of text values; audit reported 111 active products assigned</td>
+</tr>
+<tr>
+  <td>IQ Buchsprache</td>
+  <td><code>custom.iq_book_languages</code></td>
+  <td>Single-line text <code>de</code> or <code>en</code>; reported 5 active book editions (3 DE / 2 EN)</td>
+</tr>
+<tr>
+  <td>Größe</td>
+  <td>Existing product option</td>
+  <td>No separate size metafield</td>
+</tr>
+<tr>
+  <td>Passform</td>
+  <td>Existing Shopify target-gender filter</td>
+  <td>Customer-facing DE/EN labels Damen/Unisex and Women/Unisex</td>
+</tr>
+<tr>
+  <td>Availability / price / colour</td>
+  <td>Existing filters</td>
+  <td>Retained, not replaced</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Product groups and intended order</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Collection</th>
+  <th>Group labels (German)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Bekleidung</td>
+  <td>Jacken · Mäntel · Westen · Hosen · Shirts &amp; Hoodies · Accessoires</td>
+</tr>
+<tr>
+  <td>Jacken</td>
+  <td>Winter · Multifunktion · Training · Regen &amp; Softshell · K9</td>
+</tr>
+<tr>
+  <td>Westen</td>
+  <td>Hundesport · Sommer · K9 / Dienst</td>
+</tr>
+<tr>
+  <td>T-Shirts &amp; Hoodies</td>
+  <td>Hoodies · Zip-Hoodies · Trainingsshirts · T-Shirts · Tanktops</td>
+</tr>
+<tr>
+  <td>Accessoires</td>
+  <td>Caps &amp; Mützen · Taschen &amp; Gürtel · Socken · Clicker · Pflege &amp; Ersatzteile · Schlüsselanhänger</td>
+</tr>
+<tr>
+  <td>Training &amp; Hund</td>
+  <td>Fußarbeit &amp; Clicker · Apportieren · Fährte · Geschirre &amp; Schutzdienst · Taschen &amp; Gürtel · Hundeplatz &amp; Verein</td>
+</tr>
+<tr>
+  <td>Spielzeug</td>
+  <td>Bälle · Beißrollen · Magnetsysteme</td>
+</tr>
+<tr>
+  <td>K9</td>
+  <td>Jacken · Westen · Geschirre · Taschen &amp; Belohnung · Zubehör &amp; Patches</td>
+</tr>
+<tr>
+  <td>Futter</td>
+  <td>Trainingssnacks · Kausnacks · Hauptfutter</td>
+</tr>
+<tr>
+  <td>Bücher</td>
+  <td>Unterordnung · Schutzdienst · Begleithundprüfung</td>
+</tr>
+<tr>
+  <td>Gutscheine &amp; More</td>
+  <td>Gutscheine · Banner · Schlüsselanhänger · Bälle · Caps &amp; Socken · Aufkleber</td>
+</tr>
+<tr>
+  <td>Hosen / IQ Outlet</td>
+  <td>No additional product-group row planned</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rules and behavior:</strong> A product can carry multiple relevant groups; Zip-in jackets map to <strong>Training</strong>. Keep source values with collection prefixes, e.g. <code>hundesport-westen--sommer</code>, and translate <strong>labels</strong>, not metafield values. Filter links are Shopify-native URLs with counts, selected states, keyboard access and Alle/All reset. The intended behavior is OR within a group and narrowing combination between separate filter sources. Existing collection links remain fallback until group sources become available. Hosen's Passform test reportedly gave Damen→Leggings, Unisex→Trainer Pants, both→both.</p>
+<p><strong>Main changed files:</strong></p>
+<pre><code class="language-text">assets/facets.js
+assets/iq-collection-system.css
+snippets/iq-collection-group-filters.liquid
+snippets/iq-filter-group-order.liquid
+snippets/iq-filter-label.liquid
+snippets/facets.liquid
+snippets/facets-active.liquid
+sections/iq-collection-links.liquid
+sections/main-collection-product-grid-magazine.liquid
+sections/iq-responsive-collection-video.liquid
+locales/de.json
+locales/en.default.json
+templates/collection.json
+templates/collection.jacken.json
+templates/collection.trainer-pants-patricia.json
+templates/collection.westen.json
+</code></pre>
+<p>The Liquid lookup used the Search &amp; Discovery/native filter source:</p>
+<pre><code class="language-liquid">{%- assign group_filter = collection.filters | where: 'param_name', 'filter.p.m.custom.iq_product_groups' | first -%}
+</code></pre>
+<h3 id="mobile-styling-fix">Mobile styling fix</h3>
+<p>Goal: one horizontal, swipeable row at narrow widths <strong>without</strong> breaking native link behavior, counts, selection, keyboard focus, reset, translation, pagination or desktop filtering. The selected implementation worked within shared <code>.iq-group-filters</code> CSS, not separate per-collection code.</p>
+<ul>
+<li><code>flex-wrap: nowrap</code>, <code>overflow-x: auto</code>, <code>overflow-y: hidden</code>, and <code>-webkit-overflow-scrolling: touch</code> for mobile.</li>
+<li><code>flex: 0 0 auto</code> and <code>white-space: nowrap</code> for <code>.iq-group-filters__option</code>.</li>
+<li>Constrain the parent/grid (<code>min-width:0</code>/<code>max-width:100%</code>) after an early Chrome emulation showed the filter container about <strong>1069px wide at a 375px viewport</strong>; this would otherwise prevent internal swiping.</li>
+<li>Top spacing at <code>#IQCollectionGroupFilters</code>: <strong>24px desktop</strong>, <strong>16px mobile</strong>.</li>
+<li>The supplied evidence records source edits and committed CSS; <strong>a complete post-publication device test was not documented</strong>.</li>
+</ul>
+<p>The original source/CSS versions and screenshots are in the <strong>offline evidence archive</strong>, not linked publicly from this page.</p>
+<h2 id="s-4-responsive-video-and-product-gallery-distinction">4. Responsive video and product-gallery distinction</h2>
+<p>The HAMZA commit introduced <code>sections/iq-responsive-collection-video.liquid</code> and modified collection layouts to support responsive collection videos. This is separate from the <strong>variant-gallery colour-filter</strong> work already committed on the shared remote branch.</p>
+<p>Remote history observed in Git:</p>
+<pre><code class="language-text">&lt; f6cc45e (local snapshot) feat: Patricia collection filters and video sections
+&lt; 2a49247 Backup of current live Shopify theme
+&gt; c211604 (origin/shopify-live-direct) Merge pull request #4 from knabl-florian/feature/variant-galerie-colour-filter
+&gt; c46e86a new variant base gallery
+&gt; 071377c Product gallery: show only media of selected colour (Variant Galerie metafield)
+&gt; 232fb62 Create README.md
+&gt; 29e32c3 Merge pull request #3 from knabl-florian/shopify-patricia-direct
+&gt; 7cec49c Snapshot of Patricia Shopify theme – 2026-10-14
+</code></pre>
+<p>As of the comparison shown in chat, these branches differed substantially (<code>assets/media-gallery.js</code>, product section, <code>config/settings_data.json</code>, <code>layout/theme.liquid</code>, filters and locales, and many other files). <strong>Do not treat a merge/rebase as a no-op</strong>, and never force-push away the gallery commits without explicit review.</p>
+<h2 id="s-5-welcome-iq-discount-configuration-21-oct">5. Welcome-IQ discount configuration (21 Oct)</h2>
+<h3 id="before-after">Before / after</h3>
+<table>
+<thead>
+<tr>
+  <th>Aspect</th>
+  <th>Before</th>
+  <th>After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Coupon</td>
+  <td><code>Welcome-IQ</code> amount off order</td>
+  <td>New <code>Welcome-IQ</code>, amount off products</td>
+</tr>
+<tr>
+  <td>Discount</td>
+  <td>10% of all items</td>
+  <td>10% only for products in automated <code>Welcome-Rabatt</code> collection</td>
+</tr>
+<tr>
+  <td>Historical code</td>
+  <td>Order-wide coupon</td>
+  <td>Renamed <code>Welcome-IQ-ALT</code> and deactivated, 262 recorded uses through 21 Oct</td>
+</tr>
+<tr>
+  <td>Limits</td>
+  <td>One use/customer</td>
+  <td>One use/customer; no global end date documented</td>
+</tr>
+<tr>
+  <td>New arrivals</td>
+  <td>Automatically discounted</td>
+  <td><strong>Must add <code>no-discount</code> tag to exclude</strong>; the generic 60-day <code>new</code> tag is not a discount exclusion</td>
+</tr>
+</tbody>
+</table>
+<p>Automated collection: product vendor <code>IQ Dogsport</code> <strong>OR</strong> <code>IQ Dogsport GmbH</code> and product tag <strong>does not include</strong> <code>no-discount</code> (match the intended ALL/ANY group logic when reviewing the actual Shopify configuration). Collection hidden from sales channels; the 21 Oct audit reported <strong>151 → 149</strong> products after two winter coats were excluded.</p>
+<p>Excluded products: <strong>IQ Winterparka Unisex</strong> and <strong>IQ Zip-off-Wintermantel Damen</strong>. Exclude more products by adding <code>no-discount</code> to their Shopify product tags.</p>
+<p>Incognito checkout verification recorded:</p>
+<table>
+<thead>
+<tr>
+  <th>Item</th>
+  <th>Observed test result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Nikwax Tech Wash</td>
+  <td>€11.90, no discount</td>
+</tr>
+<tr>
+  <td>IQ Summer Vest 3.0</td>
+  <td>€129.90 → €116.91 (10% discount, €12.99)</td>
+</tr>
+<tr>
+  <td>IQ Zip-off-Wintermantel Damen</td>
+  <td>€349.00, no discount</td>
+</tr>
+</tbody>
+</table>
+<p>The newsletter Flow <strong>10% Rabatt für Newsletter-Anmeldung</strong> had its message updated to explain that the code is only for IQ products, excluding new products. The code appears as plain text <code>WELCOME-IQ</code> in the flow email.</p>
+<p><strong>Rollback</strong>: deactivate/rename new product-only coupon and reactivate the historical order-wide coupon only if business approves; ensure all homepage and email copy matches the intended discount policy.</p>
+<h2 id="s-6-active-iq-insider-homepage-custom-liquid-22-oct">6. Active IQ Insider: homepage Custom Liquid (22 Oct)</h2>
+<p>The previous standalone <code>iq-insider-anmeldung.liquid</code> documented on 21 Oct was <strong>not</strong> the active section in the new published HAMZA theme. Shopify Admin API confirmed:</p>
+<pre><code class="language-text">Published theme  : HAMZA – SEO Übergabe – Live-Kopie 22.10.2026
+Theme ID         : 203931648264
+Theme role       : MAIN
+Theme file       : templates/index.json
+Section key      : custom_liquid_EtqqpY
+Section type     : custom-liquid
+Section name     : Newsletter
+</code></pre>
+<p>The active Custom Liquid contains:</p>
+<pre><code class="language-liquid">&lt;p class=&quot;iq-insider__note&quot;&gt;{% if iq_en %}On your first order. Valid on IQ products, excluding new arrivals.{% else %}Auf Deine erste Bestellung. Gültig für IQ Produkte, ausgenommen Neuheiten.{% endif %}&lt;/p&gt;
+</code></pre>
+<p>and:</p>
+<pre><code class="language-css">.iq-insider .iq-insider__note { margin:-12px 0 20px; font-size:14px; line-height:1.5; color:#52524F; }
+</code></pre>
+<p>The active Custom Liquid <strong>does not</strong> contain <code>text_36</code> / <code>text_37</code> fields. Those fields belong to the <strong>historical standalone Liquid section</strong> (kept as evidence). To edit the live text: theme editor → homepage → <strong>Newsletter</strong> → Custom Liquid; or edit <code>templates/index.json</code> carefully in version control.</p>
+<p>In the homepage template, another older <code>custom_liquid_nmLPH3</code> (&quot;Newsletter Banner&quot;) and a native <code>newsletter_P7pLqr</code> section were disabled at the time checked. Re-check their copy before re-enabling.</p>
+<h3 id="exact-code-extraction-on-mac">Exact-code extraction on Mac</h3>
+<p>Shopify <code>templates/index.json</code> starts with an auto-generated comment, so plain <code>jq</code> fails with <code>Invalid numeric literal at line 2, column 0</code>. A robust local extractor:</p>
+<pre><code class="language-bash">python3 - &quot;theme-compare/live/templates/index.json&quot; &lt;&lt;'PY'
+import json, pathlib, re, sys
+raw = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8-sig')
+raw = re.sub(r'^\s*/\*.*?\*/\s*', '', raw, count=1, flags=re.S)
+data = json.loads(raw)
+code = data['sections']['custom_liquid_EtqqpY']['settings']['custom_liquid']
+print(code)
+PY
+</code></pre>
+<p>The latest <code>templates/index.json</code> file was pulled from live using <code>shopify theme pull --theme 203931648264 --store iqdogsport --path ./theme-compare/live</code> and then copied to the theme Git working tree. The diff summary <code>2 +−</code> represents the entire serialized Custom Liquid string as one JSON line, <strong>not only one character changed</strong>. An updated commit/push after this copy is <strong>not confirmed</strong> here.</p>
+<h2 id="s-7-backups-definitive-inventory">7. Backups — definitive inventory</h2>
+<table>
+<thead>
+<tr>
+  <th>Name / location</th>
+  <th>Operation</th>
+  <th>Confirmed?</th>
+  <th>Restore / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>live-snapshot-2026-10-22</code></td>
+  <td><code>git push origin HEAD:refs/heads/live-snapshot-2026-10-22</code></td>
+  <td><strong>YES</strong>, GitHub reported <code>[new branch]</code></td>
+  <td>Remote snapshot of commit <code>f6cc45e</code></td>
+</tr>
+<tr>
+  <td><code>f6cc45e</code></td>
+  <td><code>git commit</code></td>
+  <td><strong>YES</strong></td>
+  <td><code>git show f6cc45e</code>, <code>git show --stat f6cc45e</code></td>
+</tr>
+<tr>
+  <td><code>backup-patricia-filters-20261022</code></td>
+  <td><code>git branch backup-patricia-filters-20261022</code></td>
+  <td><strong>YES</strong>, command returned successfully</td>
+  <td>Local lightweight branch; not proven pushed remotely</td>
+</tr>
+<tr>
+  <td><code>2a49247</code></td>
+  <td><code>git log --oneline</code></td>
+  <td><strong>YES</strong>, earlier commit was shown</td>
+  <td>Earlier &quot;Backup of current live Shopify theme&quot;</td>
+</tr>
+<tr>
+  <td><code>theme-compare/live/</code></td>
+  <td>Shopify CLI pull</td>
+  <td><strong>YES</strong>, multiple successful pulls</td>
+  <td>Local folder; ignored by Git due to <code>.gitignore</code></td>
+</tr>
+<tr>
+  <td><code>theme-compare/draft/</code></td>
+  <td>Shopify CLI pull</td>
+  <td><strong>YES</strong>, earlier session evidence</td>
+  <td>Local folder; ignored by Git</td>
+</tr>
+<tr>
+  <td><code>templates/index.json</code> after IQ Insider pull</td>
+  <td><code>cp theme-compare/live/templates/index.json templates/index.json</code></td>
+  <td><strong>YES</strong>, local diff shown</td>
+  <td>Last commit/push unverified</td>
+</tr>
+<tr>
+  <td><code>../IQ-Shopify-before-sync.tar.gz</code></td>
+  <td>Suggested tar backup</td>
+  <td><strong>UNKNOWN</strong></td>
+  <td>Verify, don't assume exists</td>
+</tr>
+<tr>
+  <td><code>backup-hamza-live-2026-10-22</code></td>
+  <td>Suggested local branch</td>
+  <td><strong>UNKNOWN</strong></td>
+  <td>Verify with <code>git branch --list</code></td>
+</tr>
+<tr>
+  <td><code>origin/shopify-live-direct</code> after snapshot</td>
+  <td>Initial push rejected</td>
+  <td><strong>NOT UPDATED BY THAT PUSH</strong></td>
+  <td>Remote contains independent gallery commits</td>
+</tr>
+<tr>
+  <td><code>live-snapshot-2026-10-22</code> with latest IQ Insider commit</td>
+  <td>Suggested follow-on push</td>
+  <td><strong>NOT VERIFIED</strong></td>
+  <td>Check <code>git log</code> and <code>git ls-remote</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="commands-to-audit-and-export-actual-backups">Commands to audit and export actual backups</h3>
+<p>From <strong>IQ-Shopify-live-direct</strong>:</p>
+<pre><code class="language-bash">git status --short
+git branch -avv
+git log --all --decorate --oneline --graph -35
+git ls-remote --heads origin live-snapshot-2026-10-22
+git show --stat f6cc45e
+git show f6cc45e &gt; hamza-seo-theme-changes.patch
+ls -ld theme-compare/live theme-compare/draft 2&gt;/dev/null
+ls -l ../IQ-Shopify-before-sync.tar.gz 2&gt;/dev/null
+</code></pre>
+<p>For an <strong>offline complete Git backup</strong> (history + all refs), run the included <code>collect_local_backups.sh</code> with a private output path. It creates a Git bundle, theme working-file archives, live/draft local comparisons when present, exact Liquid export, diff snapshots and SHA-256 checksums. <strong>It does not modify Shopify or force-push anything.</strong></p>
+<blockquote>
+<p>Security: do not upload full theme ZIPs, <code>config/settings_data.json</code>, private terminal logs or Shopify credentials to a public GitHub Pages documentation site. Save theme backups privately. This public work log links to the GitHub branch but publishes only non-sensitive descriptions and code excerpts.</p>
+</blockquote>
+<h2 id="s-8-troubleshooting-from-the-conversation">8. Troubleshooting from the conversation</h2>
+<table>
+<thead>
+<tr>
+  <th>Issue</th>
+  <th>Cause / response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>git push ... (non-fast-forward)</code></td>
+  <td>GitHub <code>shopify-live-direct</code> contains other commits; independent snapshot branch was pushed instead of force-pushing</td>
+</tr>
+<tr>
+  <td><code>jq: parse error: Invalid numeric literal at line 2, column 0</code></td>
+  <td>Shopify theme JSON may start with a generated comment; strip it before <code>jq</code> or use Python parser above</td>
+</tr>
+<tr>
+  <td><code>code: command not found</code> on Mac</td>
+  <td>VS Code Shell Command: Install 'code' command in PATH was not configured</td>
+</tr>
+<tr>
+  <td><code>permission denied</code> trying to run screenshot path</td>
+  <td>Image files aren't executable commands; open in Finder or VS Code</td>
+</tr>
+<tr>
+  <td>Filter row 1069px wide on 375px viewport</td>
+  <td>Parent min-content width prevented nested scrolling; constrain container/grid width</td>
+</tr>
+<tr>
+  <td>Shopify theme vs documentation repo confusion</td>
+  <td><code>knabl-florian/IQ-Shopify</code> stores theme source; <code>dogsport/odoo-customizations</code> is GitHub Pages documentation</td>
+</tr>
+<tr>
+  <td><code>git diff</code> shows deletions of new snippets</td>
+  <td>Diff direction <code>HEAD origin/shopify-live-direct</code> reports <strong>relative Git content</strong>, not Shopify storefront deletions</td>
+</tr>
+<tr>
+  <td>Shopify code all on one JSON line</td>
+  <td><code>settings.custom_liquid</code> is serialized as one string; extract before <code>diff -u</code></td>
+</tr>
+<tr>
+  <td>Search &amp; Discovery scope</td>
+  <td>Metafields are configured shop-wide; collection-specific presentation is in theme snippets</td>
+</tr>
+</tbody>
+</table>
+<h2 id="s-9-pending-verification-and-safe-next-steps">9. Pending verification and safe next steps</h2>
+<ul>
+<li>Verify final enabled state of product-group and book-language filters in Search &amp; Discovery.</li>
+<li>Test group selection, OR behavior, combined size/gender/colour, reset/Alle, DE/EN, URLs, AJAX, pagination, keyboard focus.</li>
+<li>Test mobile swiping at 320/375/390px; confirm no outer page horizontal scroll and check desktop layout.</li>
+<li>Compare CLS and loading performance before/after; no confirmed measurements were provided.</li>
+<li>Verify tag <code>no-discount</code> for new products, two vendor spellings, and Flow email copy.</li>
+<li>After IQ Insider update: stage and commit <code>templates/index.json</code> separately, push snapshot only if remote branch has not moved. No force push.</li>
+<li>Resolve remote <code>shopify-live-direct</code> branch divergence deliberately; review gallery code before merge/rebase.</li>
+</ul>
+<h2 id="s-10-recovery-playbook">10. Recovery playbook</h2>
+<p><strong>Inspect a known Git snapshot without touching Shopify:</strong></p>
+<pre><code class="language-bash">git fetch origin
+git show f6cc45e:snippets/iq-collection-group-filters.liquid
+git show f6cc45e:assets/iq-collection-system.css
+git show f6cc45e:sections/iq-responsive-collection-video.liquid
+</code></pre>
+<p>For a separate recovery working tree, create a new Git worktree or checkout branch; <strong>do not</strong> overwrite the active storefront directly. Historical code should be tested in an unpublished theme before publication.</p>
+<p>To restore IQ Insider, use a correctly dated local <code>templates/index.json</code> or extract its Custom Liquid. The standalone 21 Oct <code>iq-insider-anmeldung.liquid</code> is an <strong>old different implementation</strong>, not a drop-in replacement for the homepage Custom Liquid.</p>
+<h2 id="s-11-evidence-index-and-limitations">11. Evidence index and limitations</h2>
+<p>The <strong>offline evidence package</strong>, not intended for automatic public GitHub upload, contains available session screenshots, CSS variants, pasted terminal logs, original 21 Oct Welcome-IQ Markdown and archival standalone section code. The <strong>real</strong> local <code>theme-compare</code> folders, exact new homepage template and Git history reside on the user's Mac/GitHub and must be collected by the backup script.</p>
+<p>An exact verbatim chat transcript requires a separate ChatGPT conversation/data export. This page is a reconstructed technical activity log based on available messages and attachments, not every conversational line.</p>
+<p><strong>History status:</strong> confirmed = observed CLI/API output; reported = user audit or documentation; pending = no corresponding confirmation was shown.</p>
+
+<h2 id="s-12-related-odoo-shopify-variant-and-inventory-mapping-case">12. Related Odoo–Shopify variant and inventory mapping case</h2>
+<p>A separate issue discussed earlier in the same Shopify/Odoo working conversation involved the <strong>IQ Mini Dumbbell Keychain</strong>: Shopify variants had been associated with zero-stock duplicate Odoo products, while the original Odoo product carried stock. This case is <strong>not</strong> fixed by the theme snapshot and must be resolved in Emipro/Odoo product-to-variant mappings rather than CSS or Liquid.</p>
+<table>
+<thead>
+<tr>
+  <th>Item</th>
+  <th>Recorded identifier / observation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Shopify product</td>
+  <td><code>12141783613704</code></td>
+</tr>
+<tr>
+  <td>Original Odoo Mini-Apportierholz variant</td>
+  <td><code>IQD-APH-LIGHT</code>: 8 on hand, 7 reserved, 1 forecast at the time</td>
+</tr>
+<tr>
+  <td>Original Odoo Hetzarm variant</td>
+  <td><code>IQD-APH-HETZ</code>: 0 stock</td>
+</tr>
+<tr>
+  <td>Shopify Hetzarm variant</td>
+  <td><code>59119335440648</code>; inventory item <code>61466959053064</code></td>
+</tr>
+<tr>
+  <td>Shopify Mini variant</td>
+  <td><code>59119335473416</code>; inventory item <code>61466959085832</code></td>
+</tr>
+<tr>
+  <td>Obsolete Mini mapping</td>
+  <td>Shopify variant <code>58333728243976</code>; inventory item <code>60669710696712</code></td>
+</tr>
+<tr>
+  <td>Reported export error</td>
+  <td><code>INVALID_INVENTORY_ITEM</code> against obsolete mapping</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reported cause:</strong> The Emipro connector created/link-mapped two extra standalone Odoo products with 0 stock instead of mapping the existing Odoo product variants to the current Shopify variants. <strong>Status:</strong> no confirmed completed mapping fix in the supplied messages. Do not treat this as part of the 18-file theme commit; handle it in the integration/ERP workflow separately.</p>
+</main></div><footer class="footer">IQ Dogsport · Technical reference · Reconstructed from conversation materials; not a verbatim chat export. Store full theme archives and screenshots privately.</footer></body></html>
