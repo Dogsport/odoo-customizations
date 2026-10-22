@@ -91,5 +91,13 @@ window.IQ_LOG = [
     summary: "Group Check Availability erlaubt (5 users); Check Availability and Waiting-Validate hidden for others in Studio; automation blocks Waiting → Done outside the group, also in the Barcode app.",
     status: "Live",
     link: "odoo/delivery-validation-restrictions/"
-  }
+  },
+  {
+  date: "2026-10-22",
+  area: "Odoo",
+  status: "In progress",
+  title: "Overtime threshold notification: weekly check + month-end summary",
+  summary: "Rewrote the overtime alert cron from a lifetime-balance check (never reset) to a rolling 7-day check scaled to each employee's own contracted hours, added a month-end total-hours summary for managers, and cleaned up 15 stale alerts the old logic had created.",
+  link: "odoo/overtime-threshold-notification/index.html"
+},
 ];
