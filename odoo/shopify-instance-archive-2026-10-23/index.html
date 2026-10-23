@@ -1,0 +1,152 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shopify instance archive incident</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
+.tag{font-size:11px;font-weight:700;padding:2px 6px;border-radius:3px;vertical-align:middle} .ro{background:#e3f1e5;color:#1d5e2a} .wr{background:#fbe3df;color:#a6230f}
+@media print{table{display:table;font-size:11px;table-layout:auto} td,th{overflow-wrap:anywhere} header{-webkit-print-color-adjust:exact;print-color-adjust:exact} pre,table,.tag{-webkit-print-color-adjust:exact;print-color-adjust:exact} h2{break-after:avoid} tr,pre{break-inside:avoid} header a{display:none}}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Shopify instance archived by mistake – webhooks &amp; schedulers restored (23.10.2026)</h1></div></header>
+<main>
+<p><strong>Status 23.10.2026, 17:40: solved.</strong> Shopify ↔ Odoo sync running normally again. One minor item (product-delete webhook) handed to Emipro.</p>
+<p>Odoo 19 Production (iq-dogsport.odoo.com) · Emipro Shopify connector · instance <em>IQ Dogsport Shopify</em> (id 1).
+Credentials, tokens and customer data are intentionally <strong>not</strong> stored here. The commands below read the token from the database at run time and never print it.</p>
+<p class="note">All times are <strong>German time (CEST)</strong> unless marked UTC. Odoo.sh logs and the database use <strong>UTC</strong> (= CEST − 2 h).</p>
+
+<h2>1. Summary</h2>
+<ul>
+<li>While preparing staging for the DHL/GLS test, the Shopify instance was <strong>archived by mistake in Production</strong> (15:29:05) and reactivated 16 seconds later.</li>
+<li>Archiving deleted the instance's <strong>webhook records</strong> in Odoo (and 2 of the 6 webhooks in Shopify), deleted the queues and switched off 2 schedulers. Reactivating did <strong>not</strong> restore webhooks or schedulers.</li>
+<li>Effect: from 15:29 to 17:18 <strong>no Shopify orders reached Odoo automatically</strong>; stock and tracking were not sent to Shopify.</li>
+<li>Fix: schedulers re-enabled, webhooks re-created one by one from the instance's Webhooks tab (old Shopify subscriptions removed first where they still existed), missed orders imported manually. Verified end to end.</li>
+</ul>
+
+<h2>2. Timeline (23.10.2026)</h2>
+<table><thead><tr><th>CEST</th><th>UTC</th><th>Event</th></tr></thead><tbody>
+<tr><td>15:29:05</td><td>13:29:05</td><td>Production instance <em>IQ Dogsport Shopify</em> archived by mistake (intended: staging)</td></tr>
+<tr><td>15:29:21</td><td>13:29:21</td><td>Instance reactivated</td></tr>
+<tr><td>~15:30</td><td></td><td>Archive attempted in staging → error <em>"Webhook subscription does not exist"</em> (staging is a copy of Production and still has the <strong>live store credentials</strong>, so it tried to delete webhooks in the live store). Cancelled.</td></tr>
+<tr><td>15:56</td><td>13:56</td><td>Last webhook deliveries from Shopify arrive — Odoo ignores them (no webhook records)</td></tr>
+<tr><td>~16:20</td><td></td><td>Read-only analysis (logs + database): schedulers 105 and 101 switched off by the archive → re-enabled</td></tr>
+<tr><td>16:37 / 16:56</td><td></td><td>Re-enable via <em>Settings → Shopify → Webhook</em> fails: <em>"Address for this topic has already been taken"</em></td></tr>
+<tr><td>16:45</td><td></td><td>Read-only list of Shopify webhook subscriptions: 4 Production webhooks still exist in Shopify, customer webhooks missing</td></tr>
+<tr><td>16:47</td><td></td><td>#IQD-99051 imported manually (Operations → Import Orders) — works</td></tr>
+<tr><td>16:50 → 16:57</td><td></td><td>Stock export queue ESQ005047 created and completed — stock export works again</td></tr>
+<tr><td>17:10 / 17:11</td><td>15:10 / 15:11</td><td>customers/create and customers/update added via <em>Add a line</em> (no conflict)</td></tr>
+<tr><td>17:18</td><td>15:18</td><td>Old ORDERS_UPDATED subscription deleted in Shopify, immediately re-created via <em>Add a line</em></td></tr>
+<tr><td>17:22</td><td></td><td>Test: tag <code>sync-test</code> on #IQD-99052 in Shopify → queue ODQ015374 created by <em>Public user</em> → sales order created automatically ✅</td></tr>
+<tr><td>17:26 / 17:27</td><td>15:26 / 15:27</td><td>products/update and products/create re-created the same way</td></tr>
+<tr><td>17:28</td><td></td><td><em>When Product is Deleted</em> cannot be selected in the form → left for Emipro (old Shopify subscription kept)</td></tr>
+</tbody></table>
+
+<h2>3. What archiving / reactivating an instance does (Emipro)</h2>
+<table><thead><tr><th>Item</th><th>Archive</th><th>Reactivate</th><th>Today</th></tr></thead><tbody>
+<tr><td>Webhooks</td><td>deleted (Odoo records + tries to delete in Shopify)</td><td><strong>not restored</strong> ("needs to be activated manually")</td><td>re-created manually</td></tr>
+<tr><td>Schedulers of the instance</td><td>deactivated</td><td><strong>not restored</strong></td><td>105 and 101 re-enabled</td></tr>
+<tr><td>Queues</td><td>deleted</td><td>–</td><td>missed orders imported manually</td></tr>
+<tr><td>Shopify layer products</td><td>archived</td><td>reactivated</td><td>OK</td></tr>
+<tr><td>Payment gateways, financial statuses</td><td>archived</td><td>reactivated</td><td>OK (all active at 13:29:21 UTC)</td></tr>
+</tbody></table>
+
+<h2>4. Diagnosis</h2>
+<h3>4.1 Schedulers</h3>
+<p>Logs (last start per Shopify job) + database (current state, who changed it, when). Result:</p>
+<table><thead><tr><th>ID</th><th>Scheduler</th><th>Interval</th><th>Last run (UTC)</th><th>Changed (UTC)</th><th>Result</th></tr></thead><tbody>
+<tr><td>105</td><td>IQ Dogsport Shopify : Shopify Auto Export Stock</td><td>30 min</td><td>13:21:11</td><td>13:29:05 (archive)</td><td><strong>switched off by archive → re-enabled</strong></td></tr>
+<tr><td>101</td><td>IQ Dogsport Shopify : Shopify Auto Update Order Shipping Status</td><td>30 min</td><td>13:03:48</td><td>13:29:05 (archive)</td><td><strong>switched off by archive → re-enabled</strong></td></tr>
+<tr><td>102, 103</td><td>Payout report / bank statement</td><td>1 day</td><td>today</td><td>Sept</td><td>still on</td></tr>
+<tr><td>44–47, 56, 116, 117</td><td>Queue processors, images, POS invoice, customer emails</td><td>1–15 min</td><td>today</td><td>older</td><td>still on (not instance-bound)</td></tr>
+<tr><td>48–59, 96, 97, 110, 112</td><td>Generic templates (no "IQ Dogsport Shopify :" prefix)</td><td></td><td>–</td><td>Jan–Sept</td><td><strong>already off before — left off</strong></td></tr>
+</tbody></table>
+
+<h3>4.2 Webhook deliveries (Odoo.sh logs)</h3>
+<table><thead><tr><th>Endpoint</th><th>Today before 13:29 UTC</th><th>After</th><th>Last</th></tr></thead><tbody>
+<tr><td>orders_partially_updated</td><td>77</td><td>2</td><td>13:56 UTC</td></tr>
+<tr><td>customer_update</td><td>41</td><td>0</td><td>13:25 UTC</td></tr>
+<tr><td>customer_create</td><td>7</td><td>0</td><td>12:52 UTC</td></tr>
+<tr><td>product_update</td><td>99</td><td>1</td><td>13:56 UTC</td></tr>
+<tr><td>product_create / product_delete</td><td>0</td><td>0</td><td>16.10 / 15.10 (rare)</td></tr>
+</tbody></table>
+<p>Order queues created by <em>Public user</em> (= webhook) stopped after 14:52 (ODQ015368, #IQD-99050). Only the manual import (#IQD-99051) appeared afterwards.</p>
+
+<h3>4.3 Webhook subscriptions in Shopify (before the fix)</h3>
+<table><thead><tr><th>Topic</th><th>Target</th><th>Created</th><th>Subscription ID</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>PRODUCTS_CREATE</td><td>Production</td><td>01.04.2026</td><td>2227223724296</td><td>still in Shopify, unknown to Odoo</td></tr>
+<tr><td>PRODUCTS_UPDATE</td><td>Production</td><td>01.04.2026</td><td>2227223757064</td><td>still in Shopify, unknown to Odoo</td></tr>
+<tr><td>PRODUCTS_DELETE</td><td>Production</td><td>01.04.2026</td><td>2227223789832</td><td>still in Shopify, unknown to Odoo</td></tr>
+<tr><td>ORDERS_UPDATED</td><td>Production (<code>…orders_partially_updated</code>)</td><td>01.04.2026</td><td>2227223822600</td><td>still in Shopify, unknown to Odoo</td></tr>
+<tr><td>PRODUCTS_CREATE/UPDATE/DELETE</td><td>old staging <code>iq-dogsport-staging-27975224</code></td><td>03.04.2026</td><td>2229657993480 / 2229658026248 / 2229658059016</td><td>old leftovers, not related — not touched</td></tr>
+<tr><td>CUSTOMERS_CREATE, CUSTOMERS_UPDATE</td><td>–</td><td>–</td><td>–</td><td><strong>deleted by the archive</strong></td></tr>
+</tbody></table>
+<p><strong>Root cause:</strong> Odoo lost its webhook records, so it ignored what Shopify still sent. Re-enabling failed because Shopify still had subscriptions for the same topic and address ("already been taken"). There never was an <code>orders/create</code> webhook — new orders arrive through <code>orders/updated</code>.</p>
+<p><strong>Setup before the archive (target state):</strong> orders/updated, products/create, products/update, products/delete, customers/create, customers/update — nothing else.</p>
+
+<h2>5. Fix</h2>
+<h3>5.1 Schedulers</h3>
+<p>Settings → Technical → Automation → Scheduled Actions → open <strong>"IQ Dogsport Shopify : Shopify Auto Export Stock"</strong> (105) and <strong>"IQ Dogsport Shopify : Shopify Auto Update Order Shipping Status"</strong> (101) → tick <em>Active</em> → save. Interval unchanged (30 min). Not the generic ones without prefix (48, 53).</p>
+<h3>5.2 Webhooks — one at a time</h3>
+<p>Shopify → Configuration → Instances → IQ Dogsport Shopify → <strong>Webhooks</strong> tab → <strong>Add a line</strong>. Do <strong>not</strong> use the Settings checkboxes (they fail and may create topics that did not exist before).</p>
+<ol>
+<li><strong>Customers</strong> (no conflict, nothing to delete): Add a line → <em>When Customer is Created</em> → Name <code>Customer Create</code> → Save &amp; Close. Same for <em>When Customer is Updated</em>.</li>
+<li><strong>Orders / products</strong> (old subscription still in Shopify): prepare the line first (action + name, <em>don't save</em>) → run the delete command for exactly that one subscription ID → check <code>"userErrors":[]</code> → <strong>immediately</strong> Save &amp; Close.
+<table><thead><tr><th>Odoo option</th><th>Old Shopify subscription deleted</th><th>New subscription</th></tr></thead><tbody>
+<tr><td>When Order is Created/Updated</td><td>2227223822600</td><td>2439347110152 (15:18 UTC)</td></tr>
+<tr><td>When Product is Updated</td><td>2227223757064</td><td>2439352877320 (15:26 UTC)</td></tr>
+<tr><td>When Product is Created</td><td>2227223724296</td><td>2439353729288 (15:27 UTC)</td></tr>
+</tbody></table></li>
+<li>After each step: run the read-only list command and check that exactly one subscription changed.</li>
+</ol>
+<p><em>When Product is Deleted</em> is not selectable in the form ("No results"). The old subscription 2227223789832 was <strong>not deleted</strong> and is left for Emipro.</p>
+<h3>5.3 Missed orders</h3>
+<p>Shopify → Operations → Import Orders (from 23.10.2026 15:00). Orders already in Odoo are skipped. #IQD-99051 imported manually; #IQD-99052 came in through the restored webhook.</p>
+
+<h2>6. Verification</h2>
+<table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody>
+<tr><td>Shopify subscriptions</td><td>9: 3 old staging + 6 Production (customers ×2, orders/updated, products create/update new; products/delete old)</td></tr>
+<tr><td>Odoo Webhooks tab</td><td>Customer Create, Customer Update, Order Update, Product Update, Product Create — all Active</td></tr>
+<tr><td>Order webhook</td><td>Tag on #IQD-99052 → ODQ015374 by <em>Public user</em> → sales order, invoice (paid) and delivery created automatically</td></tr>
+<tr><td>Stock export</td><td>ESQ005047 Completed (16:57); today 575 lines, 0 draft, 0 failed</td></tr>
+<tr><td>Schedulers</td><td>Instance shows 4 active: payout report, auto export stock (30 min), auto update order shipping status (30 min), bank statement</td></tr>
+<tr><td>Missed orders</td><td>#IQD-99049 – 99052 all in Odoo</td></tr>
+</tbody></table>
+
+<h2>7. Open items</h2>
+<ul>
+<li>Emipro: restore the <strong>product-delete</strong> webhook record (existing Shopify subscription 2227223789832). Low impact: only relevant when a product is <em>deleted</em> in Shopify (archive/draft is an update and works). Until then: archive products in Shopify instead of deleting them.</li>
+<li>Emipro: should the 3 old webhooks to <code>iq-dogsport-staging-27975224</code> be removed?</li>
+<li>Changes made in Shopify between 15:29 and 17:18 to <em>existing</em> orders/products/customers (edits, cancellations, refunds) were not synced. Re-import manually if known.</li>
+<li>Remove tag <code>sync-test</code> from #IQD-99052 in Shopify.</li>
+<li>Staging (<code>iq-dogsport-staging-40297587</code>) still has the <strong>live store credentials</strong> → switch it to the test store with <strong>Reset Credentials</strong> before any test.</li>
+</ul>
+
+<h2>8. Rules for next time</h2>
+<ul>
+<li><strong>Never archive the Shopify instance</strong> — not in Production, not in staging. To point staging at the test store use <strong>Reset Credentials</strong>.</li>
+<li>Before any change, check the browser address bar and the red <em>"Database neutralized"</em> banner. No banner = Production.</li>
+<li>A new Odoo.sh staging build is a <strong>copy of Production</strong>, including Shopify credentials. Treat it as live until the credentials are changed.</li>
+<li>Webhook health at a glance: new order queues created by <em>Public user</em> = webhooks work. Only manual ones = webhooks broken.</li>
+<li>Investigate with read-only commands first (<code>default_transaction_read_only=on</code>), change one thing at a time, verify after each step.</li>
+</ul>
+
+<h2>9. All commands used (Odoo.sh → Production → SHELL)</h2>
+<p><span class="tag ro">read-only</span> commands only read. <span class="tag wr">CHANGES SHOPIFY</span> commands change Shopify and were run once per subscription, each immediately followed by <em>Add a line</em> in Odoo.</p>
+<h3>9.1 Last run of each Shopify scheduler (logs) <span class="tag ro">read-only</span></h3><pre><code>zgrep -h &quot;ir_cron: Job &#x27;&quot; ~/logs/odoo.log* | grep -i shopify | grep &quot;starting&quot; | grep -oE &quot;^[0-9-]+ [0-9:]+|Job &#x27;[^&#x27;]+&#x27; \([0-9]+\)&quot; | paste - - | awk -F&#x27;\t&#x27; &#x27;{ if ($1 &gt; last[$2]) last[$2]=$1 } END { for (k in last) print last[k] &quot; UTC   &quot; k }&#x27; | sort</code></pre>
+<h3>9.2 Scheduler state in the database <span class="tag ro">read-only</span></h3><pre><code>PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -c &quot;SELECT c.id, c.cron_name, c.active, c.interval_number, c.interval_type, c.lastcall AS last_run_utc, c.write_date AS changed_utc, u.login AS changed_by FROM ir_cron c LEFT JOIN res_users u ON u.id = c.write_uid WHERE c.cron_name ILIKE &#x27;%shopify%&#x27; ORDER BY c.active, c.write_date DESC;&quot; </code></pre>
+<h3>9.3 Instance active? <span class="tag ro">read-only</span></h3><pre><code>PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -c &quot;SELECT id, name, active, write_date FROM shopify_instance_ept;&quot; </code></pre>
+<h3>9.4 Table names <span class="tag ro">read-only</span></h3><pre><code>PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -c &quot;\dt shopify*webhook*&quot; -c &quot;\dt shopify*gateway*&quot; -c &quot;\dt *workflow*config*&quot; </code></pre>
+<h3>9.5 Sales orders created after 13:00 UTC <span class="tag ro">read-only</span></h3><pre><code>PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -c &quot;SELECT name, client_order_ref, create_date FROM sale_order WHERE create_date &gt; &#x27;2026-10-23 13:00&#x27; ORDER BY create_date;&quot; </code></pre>
+<h3>9.6 Webhooks, payment gateways, financial statuses — last change <span class="tag ro">read-only</span></h3><pre><code>PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -P pager=off -c &quot;SELECT &#x27;webhook&#x27; AS area, t.id, coalesce(to_jsonb(t)-&gt;&gt;&#x27;webhook_name&#x27;, to_jsonb(t)-&gt;&gt;&#x27;webhook_action&#x27;, to_jsonb(t)-&gt;&gt;&#x27;name&#x27;) AS name, coalesce(to_jsonb(t)-&gt;&gt;&#x27;active&#x27;, to_jsonb(t)-&gt;&gt;&#x27;state&#x27;) AS status, t.write_date FROM shopify_webhook_ept t UNION ALL SELECT &#x27;payment_gateway&#x27;, t.id, coalesce(to_jsonb(t)-&gt;&gt;&#x27;name&#x27;, to_jsonb(t)-&gt;&gt;&#x27;code&#x27;), to_jsonb(t)-&gt;&gt;&#x27;active&#x27;, t.write_date FROM shopify_payment_gateway_ept t UNION ALL SELECT &#x27;financial_status&#x27;, t.id, to_jsonb(t)-&gt;&gt;&#x27;financial_status&#x27;, to_jsonb(t)-&gt;&gt;&#x27;active&#x27;, t.write_date FROM sale_auto_workflow_configuration_ept t ORDER BY 1, 5 DESC;&quot; </code></pre>
+<h3>9.7 Webhook deliveries per type, before/after the archive (logs) <span class="tag ro">read-only</span></h3><pre><code>zgrep -h &quot;POST /shopify_odoo_webhook&quot; ~/logs/odoo.log* | grep -oE &quot;^[0-9-]+ [0-9:]{5}|/shopify_odoo_webhook[a-z_]*&quot; | paste - - | awk -F&#x27;\t&#x27; &#x27;{k=$2; if($1&gt;l[k])l[k]=$1; if($1 ~ /^2026-10-23/){ if($1 &lt; &quot;2026-10-23 13:29&quot;) b[k]++; else a[k]++ }} END{for(k in l) printf &quot;%-55s last: %s UTC | today before archive: %d | after: %d\n&quot;, k, l[k], b[k], a[k]}&#x27; | sort</code></pre>
+<h3>9.8 Column holding the access token (names only) <span class="tag ro">read-only</span></h3><pre><code>PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -At -c &quot;SELECT string_agg(k, &#x27;, &#x27; ORDER BY k) FROM shopify_instance_ept t, jsonb_object_keys(to_jsonb(t)) k WHERE t.id = 1 AND (k ILIKE &#x27;%token%&#x27; OR k ILIKE &#x27;%password%&#x27;);&quot; </code></pre>
+<h3>9.9 List webhook subscriptions in Shopify <span class="tag ro">read-only</span></h3><pre><code>TOKEN=$(PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -At -c &quot;SELECT shopify_password FROM shopify_instance_ept WHERE id = 1;&quot;) &amp;&amp; curl -s -X POST &quot;https://iqdogsport.myshopify.com/admin/api/2026-04/graphql.json&quot; -H &quot;X-Shopify-Access-Token: $TOKEN&quot; -H &quot;Content-Type: application/json&quot; -d &#x27;{&quot;query&quot;:&quot;{ webhookSubscriptions(first: 100) { edges { node { id topic createdAt endpoint { __typename ... on WebhookHttpEndpoint { callbackUrl } } } } } }&quot;}&#x27; | python3 -c &quot;import sys,json; d=json.load(sys.stdin); r=[e[&#x27;node&#x27;] for e in d.get(&#x27;data&#x27;,{}).get(&#x27;webhookSubscriptions&#x27;,{}).get(&#x27;edges&#x27;,[])]; [print(n[&#x27;topic&#x27;],&#x27;|&#x27;,n[&#x27;endpoint&#x27;].get(&#x27;callbackUrl&#x27;),&#x27;|&#x27;,n[&#x27;createdAt&#x27;],&#x27;|&#x27;,n[&#x27;id&#x27;]) for n in r]; print(len(r),&#x27;webhooks found&#x27;) if r else print(d)&quot;; unset TOKEN</code></pre>
+<h3>9.10 Delete ONE webhook subscription in Shopify <span class="tag wr">CHANGES SHOPIFY</span></h3>
+<p>Used for 2227223822600 (orders/updated), 2227223757064 (products/update), 2227223724296 (products/create). Example:</p><pre><code>TOKEN=$(PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -At -c &quot;SELECT shopify_password FROM shopify_instance_ept WHERE id = 1;&quot;) &amp;&amp; curl -s -X POST &quot;https://iqdogsport.myshopify.com/admin/api/2026-04/graphql.json&quot; -H &quot;X-Shopify-Access-Token: $TOKEN&quot; -H &quot;Content-Type: application/json&quot; -d &#x27;{&quot;query&quot;:&quot;mutation { webhookSubscriptionDelete(id: \&quot;gid://shopify/WebhookSubscription/2227223822600\&quot;) { deletedWebhookSubscriptionId userErrors { field message } } }&quot;}&#x27;; echo; unset TOKEN</code></pre>
+<p>Expected answer: <code>"deletedWebhookSubscriptionId":"gid://shopify/WebhookSubscription/…"</code> and <code>"userErrors":[]</code>.</p>
+<h3>9.11 Run history of scheduler 101 (logs) <span class="tag ro">read-only</span></h3><pre><code>zgrep -h &quot;Job &#x27;IQ Dogsport Shopify : Shopify Auto Update Order Shipping Status&#x27; (101) starting&quot; ~/logs/odoo.log* | cut -c1-19 | sort | tail -10</code></pre>
+<p>Tip: if a long result opens in a scroll view, press <strong>q</strong> to exit.</p>
+</main></body></html>
