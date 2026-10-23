@@ -100,4 +100,12 @@ window.IQ_LOG = [
   summary: "Rewrote the overtime alert cron from a lifetime-balance check (never reset) to a rolling 7-day check scaled to each employee's own contracted hours, added a month-end total-hours summary for managers, and cleaned up 15 stale alerts the old logic had created.",
   link: "odoo/overtime-threshold-notification/index.html"
 },
+  {
+    date: "2026-10-23",
+    area: "Odoo",
+    title: "Shopify instance archived by mistake – webhooks & schedulers restored",
+    summary: "Production Shopify instance archived and reactivated by mistake: webhooks deleted, 2 schedulers off, orders stopped syncing. Diagnosed with read-only commands, schedulers 105/101 re-enabled, webhooks re-created one by one, missed orders imported, verified end to end.",
+    status: "Done",
+    link: "odoo/shopify-instance-archive-2026-10-23/"
+  },
 ];
