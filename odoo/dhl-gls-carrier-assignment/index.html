@@ -1,0 +1,120 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carrier assignment DHL/GLS</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
+.ok{color:#1d5e2a;font-weight:700}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Carrier assignment: Germany → DHL, international → GLS (26.10.2026)</h1></div></header>
+<main>
+<p><strong>Status 26.10.2026: tested in Staging (<code>iq-dogsport-staging-40297587</code>), all tests passed. Not yet in Production.</strong> Decision by Florian (23.10.2026): Germany ships with DHL, international stays with GLS for now.</p>
+<p class="note">Credentials, tokens and customer data are intentionally not stored here. IDs below are <strong>Staging IDs</strong> — Production IDs must be checked before the rollout (section 7).</p>
+
+<h2>1. Target behaviour</h2>
+<table><thead><tr><th>Situation</th><th>Delivery method on the order</th><th>Carrier on the delivery</th></tr></thead><tbody>
+<tr><td>Delivery address in Germany, no method set</td><td>DHL Parcel DE</td><td>DHL Parcel DE</td></tr>
+<tr><td>Delivery address outside Germany, no method set</td><td>GLS Germany</td><td>GLS Germany (+ GLS incoterm)</td></tr>
+<tr><td>Quotation: address changed Germany ↔ abroad</td><td>switches DHL ↔ GLS</td><td>follows the order</td></tr>
+<tr><td>Method chosen by hand (e.g. Direct Sales)</td><td>kept, never overwritten</td><td>kept</td></tr>
+<tr><td>Confirmed order</td><td>never changed by the rules</td><td>–</td></tr>
+</tbody></table>
+<p><strong>Principle:</strong> the <em>sales order</em> decides the carrier in one place; the delivery takes it over via the route option <em>Propagation of carrier</em> (already ticked on the delivery rules, no change).</p>
+
+<h2>2. What was wrong before</h2>
+<ul>
+<li>The carrier was set in <strong>four</strong> places: rule <em>Shipping add</em> (order) and rules <em>Auto Set Incoterms – EFTA</em>, <em>– Outside EU</em> and <em>Auto Set Carrier</em> (delivery). The three delivery rules always wrote <strong>GLS Germany</strong>, so a DHL order still ended up with a GLS delivery.</li>
+<li><em>Shipping add</em> used the condition <code>("carrier_id.name", "=", False)</code>. In Odoo 17+ a condition through a related field never matches an <em>empty</em> field, so the rule <strong>never ran</strong> (<code>last_run</code> empty). GLS on deliveries only came from the delivery rules.</li>
+<li>The rule ran only <em>on create</em>: changing the customer/address on a quotation afterwards kept the old carrier (test S00475: Swiss address with DHL).</li>
+</ul>
+
+<h2>3. Changes made in Staging</h2>
+<table><thead><tr><th>#</th><th>Automation rule (Staging ID)</th><th>Before</th><th>After</th></tr></thead><tbody>
+<tr><td>1</td><td><strong>Shipping add</strong> (8) – Sales Order</td><td>Trigger <em>On create</em>; Apply on <code>[("carrier_id.name", "=", False)]</code>; action → DHL Parcel DE</td><td>Trigger <em>On create and edit</em>; When updating: <em>Delivery Address</em>; Apply on: see below; action unchanged → <strong>DHL Parcel DE</strong></td></tr>
+<tr><td>2</td><td><strong>Shipping add – International (GLS)</strong> (43, new) – Sales Order</td><td>–</td><td>Duplicate of rule 8; Trigger <em>On create and edit</em>; When updating: <em>Delivery Address</em>; Apply on: see below; action → <strong>GLS Germany</strong></td></tr>
+<tr><td>3</td><td><strong>Auto Set Incoterms Based on Country Groups – EFTA</strong> (5) – Transfer</td><td>2 actions: Carrier → GLS Germany, Gls Incoterm → 20</td><td>Carrier action <strong>deleted</strong>; Gls Incoterm → 20 kept</td></tr>
+<tr><td>4</td><td><strong>Auto Set Incoterms Based on Country Groups – Outside EU</strong> (6) – Transfer</td><td>2 actions: Carrier → GLS Germany, Gls Incoterm → 40</td><td>Carrier action <strong>deleted</strong>; Gls Incoterm → 40 kept</td></tr>
+<tr><td>5</td><td><strong>Auto Set Carrier</strong> (7) – Transfer</td><td>Active, sets Carrier → GLS Germany on create and every edit</td><td><strong>Archived</strong> (not deleted)</td></tr>
+<tr><td>–</td><td>Routes: rules <em>Pull From WH1/Stock → Customers</em> (1-step and 3-step)</td><td colspan="2"><em>Propagation of carrier</em> already ticked – no change</td></tr>
+</tbody></table>
+
+<h3>Apply on – Shipping add (DHL, Germany)</h3>
+<pre><code>["&amp;", "&amp;", ("state", "in", ["draft", "sent"]), ("partner_shipping_id.country_id", "in", [57]), "|", ("carrier_id", "=", False), ("carrier_id", "=", 2)]</code></pre>
+<p>= Quotation or Quotation Sent · Delivery Address → Country = Germany · Delivery Method not set <em>or</em> GLS Germany.</p>
+<h3>Apply on – Shipping add – International (GLS)</h3>
+<pre><code>["&amp;", "&amp;", ("state", "in", ["draft", "sent"]), ("partner_shipping_id.country_id", "not in", [57]), "|", ("carrier_id", "=", False), ("carrier_id", "=", 25)]</code></pre>
+<p>= Quotation or Quotation Sent · Country ≠ Germany · Delivery Method not set <em>or</em> DHL Parcel DE.</p>
+<p>Staging IDs: country Germany = <code>57</code>, GLS Germany = <code>2</code>, DHL Parcel DE = <code>25</code>. <strong>When updating</strong> must contain only <em>Delivery Address</em> (not <em>Delivery Method</em>), otherwise a manual GLS choice on a German quotation would be switched back.</p>
+
+<h2>4. Tests in Staging (26.10.2026)</h2>
+<h3>4.1 Orders created in Odoo</h3>
+<table><thead><tr><th>Test</th><th>Order → delivery</th><th>Result</th></tr></thead><tbody>
+<tr><td>German address</td><td>S00476 → WH1/OUT/06865</td><td class="ok">DHL Parcel DE ✓</td></tr>
+<tr><td>Swiss address</td><td>S00477 → WH1/OUT/06866</td><td class="ok">GLS Germany ✓</td></tr>
+<tr><td>Quotation address Germany → Switzerland</td><td>S00479 → WH1/OUT/06868</td><td class="ok">switched to GLS ✓</td></tr>
+<tr><td>Quotation address Switzerland → Germany</td><td>S00480 → WH1/OUT/06869</td><td class="ok">switched to DHL ✓</td></tr>
+<tr><td>Direct Sales chosen by hand</td><td>S00481 → WH1/OUT/06870</td><td class="ok">Direct Sales kept ✓</td></tr>
+<tr><td>Direct Sales, then address Germany → Switzerland</td><td>S00482 → WH1/OUT/06871</td><td class="ok">Direct Sales kept ✓</td></tr>
+</tbody></table>
+<h3>4.2 Orders from the Shopify test store (iq-dogsport-test)</h3>
+<table><thead><tr><th>Test</th><th>Order → delivery</th><th>Result</th></tr></thead><tbody>
+<tr><td>German address, imported via webhook</td><td>#IQD-POS-1127 → WH1/OUT/06873</td><td class="ok">DHL Parcel DE ✓ (delivery Ready, no label created)</td></tr>
+<tr><td>International address, online-store checkout with shipping rate</td><td>#IQD-POS-1130 → WH1/OUT/06874</td><td class="ok">GLS Germany ✓ (Gls Incoterm set)</td></tr>
+</tbody></table>
+<p>Before the first failed test, an earlier delivery (S00471–S00473) showed an empty carrier: archiving <em>Auto Set Carrier</em> alone is not enough while <em>Shipping add</em> has the broken condition – both changes belong together.</p>
+
+<h2>5. Test-store setup in Staging (for reference)</h2>
+<ul>
+<li>Staging is a copy of Production, including the <strong>live</strong> Shopify instance. It stays <strong>archived</strong> in Staging. <strong>Never archive or sync it</strong> (see the incident page of 23.10.2026).</li>
+<li>New instance <strong>IQ Dogsport TEST</strong> (host <code>iq-dogsport-test.myshopify.com</code>) created via <em>Create New Store</em> with a custom app <em>Odoo Staging Connector</em> in the test store (Admin API scopes for orders, products, inventory, locations, customers, fulfillments, fulfillment orders, shipping).</li>
+<li>Location <em>Shop location</em> imported → IQ Dogsport Main Warehouse. Webhook <em>Order Update</em> added on the instance (Webhooks tab → Add a line). Schedulers not activated.</li>
+<li>Financial Status lines for TEST: <em>manual</em> and <em>bogus</em> + paid + Unshipped → <em>Automatic Validation for Manual Payment</em>, Immediate Payment.</li>
+<li><strong>Emipro bug found:</strong> with <em>Use GraphQL API</em> on, orders without Shopify risk analysis (draft/admin orders, test-mode payments – "Order risk: Analysis not available") fail with <code>order_risk.py</code> line 67 <code>AttributeError: 'list' object has no attribute 'get'</code>. Workaround on the TEST instance only: GraphQL unticked. Reported/to report to Emipro – it can also affect manually created orders in Production.</li>
+</ul>
+
+<h2>6. Production rollout – checklist</h2>
+<ol>
+<li><strong>Shopify (live store):</strong> rename the German rate "GLS Deutschland" → "DHL Paket" (prices unchanged unless Florian decides otherwise), keep international GLS rates; update shipping page, policy and notifications ("DHL in Germany, GLS international"). Check the Odoo method linked under <em>Shopify Carrier Info</em> still only adds the price line.</li>
+<li><strong>Backup</strong> Production on Odoo.sh.</li>
+<li><strong>Check Production IDs</strong> (read-only, section 7): Germany, GLS Germany, DHL Parcel DE, and the automation rules. Replace 57 / 2 / 25 in the domains if different.</li>
+<li>Change <strong>Shipping add</strong> as in section 3 (trigger, When updating, Apply on). Save.</li>
+<li><strong>Duplicate</strong> it → <em>Shipping add – International (GLS)</em>, action → GLS Germany, Apply on as in section 3. Save.</li>
+<li>Delete the <strong>Carrier → GLS Germany</strong> action in both <em>Auto Set Incoterms</em> rules (keep the incoterm action).</li>
+<li><strong>Archive</strong> <em>Auto Set Carrier</em> (last step, so deliveries are never without a carrier in between).</li>
+<li>Check the route rules have <em>Propagation of carrier</em> ticked (expected, no change).</li>
+<li><strong>Verify</strong> the first real orders: one German (order + delivery = DHL Parcel DE), one international (GLS Germany). Run the check query in section 7. Open GLS deliveries created before the switch stay as they are.</li>
+<li>Labels: DHL methods use 103×199 (910-300-610) until the 103×150 rolls (910-300-410) are in use; then change Label Type on both DHL carriers.</li>
+<li>Do <strong>not</strong> touch <em>Use GraphQL API</em> on the live instance; wait for Emipro's fix.</li>
+</ol>
+<h3>Rollback</h3>
+<ul>
+<li>Shipping add: trigger <em>On create</em>, Apply on <code>[("carrier_id.name", "=", False)]</code>, When updating empty.</li>
+<li>Shipping add – International (GLS): archive.</li>
+<li>Auto Set Incoterms (both): Add an action → Update Record → Carrier → GLS Germany.</li>
+<li>Auto Set Carrier: Automation Rules → filter Archived → Unarchive.</li>
+</ul>
+
+<h2>7. Read-only checks (Odoo.sh → SHELL)</h2>
+<h3>IDs of Germany and the carriers</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT 'country' AS what, id, code AS name FROM res_country WHERE code='DE' UNION ALL SELECT 'carrier', id, to_jsonb(c)-&gt;&gt;'name' FROM delivery_carrier c WHERE active ORDER BY 1, 2;"</code></pre>
+<h3>Automation rules on orders and deliveries</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT a.id, to_jsonb(a)-&gt;&gt;'name' AS name, a.active, a.trigger, m.model, to_jsonb(a)-&gt;&gt;'filter_domain' AS apply_on, a.last_run FROM base_automation a JOIN ir_model m ON m.id = a.model_id WHERE m.model IN ('sale.order','stock.picking') ORDER BY m.model, a.id;"</code></pre>
+<h3>Which field each rule action writes</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT s.base_automation_id AS rule, f.model, f.name AS field, s.value FROM ir_act_server s LEFT JOIN ir_model_fields f ON f.id = (to_jsonb(s)-&gt;&gt;'update_field_id')::int WHERE s.state = 'object_write' AND s.base_automation_id IS NOT NULL ORDER BY 1;"</code></pre>
+<h3>Check the newest orders after go-live</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT so.name, so.carrier_id, c.code AS ship_country, sp.name AS delivery, sp.carrier_id AS delivery_carrier FROM sale_order so LEFT JOIN res_partner p ON p.id = so.partner_shipping_id LEFT JOIN res_country c ON c.id = p.country_id LEFT JOIN stock_picking sp ON sp.sale_id = so.id ORDER BY so.id DESC LIMIT 10;"</code></pre>
+<p>Expected: <code>DE</code> → DHL Parcel DE on order and delivery; other countries → GLS Germany.</p>
+
+<h2>8. Open items</h2>
+<ul>
+<li>Emipro: fix the GraphQL order-risk crash (section 5).</li>
+<li>Florian: return costs, international DHL returns, DHL customer prices per zone, customs data for non-EU.</li>
+<li>Later: if DHL becomes cheaper for some countries, only the two <em>Shipping add</em> rules need a country list – the delivery rules don't set carriers any more.</li>
+<li>Security: rotate credentials that were visible in screenshots (DHL portal password/client secret, Shopify app secret keys).</li>
+</ul>
+</main></body></html>

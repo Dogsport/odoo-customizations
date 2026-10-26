@@ -116,4 +116,12 @@ window.IQ_LOG = [
     status: "Live",
     link: "odoo/overtime-threshold-notification/"
   },
+  {
+    date: "2026-10-26",
+    area: "Odoo · Shipping",
+    title: "Carrier assignment: Germany → DHL, international → GLS",
+    summary: "Fixed Shipping add (condition never matched), new GLS rule, removed carrier actions from incoterm rules, archived Auto Set Carrier. Tested in staging with Odoo orders and Shopify test-store orders; production checklist ready.",
+    status: "Staging",
+    link: "odoo/dhl-gls-carrier-assignment/"
+  },
 ];
