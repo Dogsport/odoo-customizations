@@ -1,0 +1,98 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gift Card Hero issues</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
+.ok{color:#1d5e2a;font-weight:700} .open{color:#a6230f;font-weight:700}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Gift cards – physical cards without code &amp; custom amounts blocked (26.10.2026)</h1></div></header>
+<main>
+<p><strong>Status 26.10.2026, 17:45: customer case fixed, root cause found, waiting for Gift Card Hero (Syncube) support.</strong></p>
+<p class="note">Shopify store iqdogsport.myshopify.com · app <em>Gift Card Hero • All-in-one</em> by Syncube (installed 05.01, usage-based pricing). All checks were read-only except creating one replacement gift card. Customer names, e-mails and full codes are intentionally not stored here; look them up on the order.</p>
+
+<h2>1. Customer case</h2>
+<ul>
+<li>Order <strong>#IQD-95299</strong> (21.05.2026): physical gift card, <strong>custom amount 125 €</strong>, created by Gift Card Hero as <strong>draft order #D21</strong>, paid, shipped by GLS on 26.05. The order confirmation e-mail showed a red error and no code.</li>
+<li>The buyer gave the card to a friend. On 26.10 the friend wrote that the code (12 letters, ending <code>…JDEN</code>) is rejected at checkout as invalid.</li>
+</ul>
+
+<h2>2. Investigation (read-only)</h2>
+<table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody>
+<tr><td>Shopify → Gift cards export (77 cards, 05.04 – 24.10)</td><td>No card ending <code>jden</code>, nothing for #IQD-95299</td></tr>
+<tr><td>Gift Card Hero export queue (63 rows)</td><td>Not in it – this export is the <em>eGift e-mail queue</em>, so physical cards never appear there</td></tr>
+<tr><td>Shopify → Discounts, search code</td><td>Nothing found</td></tr>
+<tr><td>Gift Card Hero → Physical card settings</td><td><strong>Auto assignment: Disabled · Generate new code on sale: off · Uploaded codes: 0 · Send digital copy to purchaser: off</strong></td></tr>
+</tbody></table>
+<p><strong>Result:</strong> the code existed only on the printed card. Nothing in Shopify, so checkout correctly said "invalid".</p>
+
+<h2>3. Fix done for the customer</h2>
+<ol>
+<li>Shopify → Products → Gift cards → <strong>Create gift card</strong> with the exact code from the card, <strong>125,00 €</strong>, doesn't expire, internal note with the order number. Saved without "code already exists" → confirms it never existed.</li>
+<li>Card is <span class="ok">Active</span>, also visible in Gift Card Hero → Reload balance (Code ending jden, 125/125 €).</li>
+<li>Did <strong>not</strong> use "Send Gift Card" (would e-mail store admin/buyer). Reply e-mail to the recipient: code is now active for 125 €.</li>
+</ol>
+
+<h2>4. Root cause – physical cards</h2>
+<p>Gift Card Hero does <strong>nothing</strong> for physical card sales with the current settings (no code generated, no code assigned, no e-mail). A Shopify gift card exists only if a person creates it by hand.</p>
+<ul>
+<li><strong>Since 21.09.2026</strong> a staff member creates each card manually a few minutes before fulfilment (matched by amount and time: #IQD-98141, 98176, 98190, 98280, 98403, 98412, 98852, 98910, 98990 – all have a card).</li>
+<li><strong>Before 21.09</strong> no card was created for these physical-card orders:</li>
+</ul>
+<table><thead><tr><th>Order</th><th>Date</th><th>Value</th><th>Status</th></tr></thead><tbody>
+<tr><td>#IQD-94432</td><td>04.04</td><td>70 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-94586</td><td>11.04</td><td>90 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-95299</td><td>21.05</td><td>125 €</td><td class="ok">fixed 26.10</td></tr>
+<tr><td>#IQD-96801</td><td>14.07</td><td>172 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-97438</td><td>04.08</td><td>150 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-97580</td><td>12.08</td><td>50 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-97637</td><td>16.08</td><td>130 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-97640</td><td>17.08</td><td>50 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-97672</td><td>19.08</td><td>25 €</td><td class="open">no card</td></tr>
+<tr><td>#IQD-97980</td><td>05.09</td><td>100 €</td><td class="open">no card</td></tr>
+</tbody></table>
+<p>Total still open: <strong>877 €</strong>. We cannot recreate them proactively because we don't know which code is printed on which card. <strong>Customer service rule:</strong> if a customer reports an invalid gift card, check this list, then create the card manually with the code the customer gives (same as section 3).</p>
+<p>Also check (paid, gift card line never fulfilled): <strong>#IQD-96492</strong> (10 € card, since 24.06), <strong>#IQD-97899</strong> (50 €, since 31.08), <strong>#IQD-97934</strong> (10 € card line pending).</p>
+<p>Open question for the warehouse: where did the printed codes come from before 21.09 (pre-printed stack, app, by hand)?</p>
+
+<h2>5. Custom amounts blocked</h2>
+<p>Choosing <em>Benutzerdefinierte</em> (custom amount) and clicking KASSE does nothing – for eGift <strong>and</strong> physical. Fixed amounts work.</p>
+<pre><code>POST https://iq-dogsport.de/a/gifthero/api/card/custom  → 400
+{"error":{"statusCode":400,"name":"BadRequestError",
+ "message":"Custom gift card amounts are not available in this store."}}</code></pre>
+<h3>Why fixed works and custom doesn't</h3>
+<table><thead><tr><th>Type</th><th>How it works</th><th>Order source</th></tr></thead><tbody>
+<tr><td>Fixed (10/25/50/100/150 €)</td><td>Real Shopify variant (SKU IQD-GG-… / IQD-GC-…), normal cart and checkout – app not involved</td><td><code>web</code></td></tr>
+<tr><td>Custom amount</td><td>Page sends <code>id: "custom", price: "…"</code> to the app server, which creates a <strong>draft order</strong> – this step is refused</td><td><code>shopify_draft_order</code></td></tr>
+</tbody></table>
+<ul>
+<li>Last successful custom order: <strong>#IQD-98910, 19.10.2026</strong> (220 €). Broken since about 20.10.</li>
+<li>Not the cause: Shopify billing (app is usage-based, no plan to downgrade), app permissions (all granted, active).</li>
+<li>Other console errors are unrelated: <code>rez-bis.js addEventListener</code> (pre-order app), "preloaded but not used" warnings.</li>
+<li>#IQD-95299 also came through this draft-order route.</li>
+</ul>
+
+<h2>6. Support request (Syncube)</h2>
+<p>Sent from Shopify admin → Settings → Apps → Gift Card Hero → <strong>Get support</strong> (chat widget failed with "problem sending"; the Shopify form is the reliable route). Replies go to mail@iq-dogsport.de. First message: custom amount error (section 5). Follow-up in the same thread: #IQD-95299 / physical card settings.</p>
+
+<h2>7. How to check (read-only)</h2>
+<ul>
+<li><strong>Does a code exist?</strong> Shopify → Products → Gift cards → search last 4 characters. Or Gift Card Hero → Reload balance.</li>
+<li><strong>Custom amount error:</strong> product page in a private window → DevTools → Network → filter <code>custom</code> → choose custom amount → KASSE → click the red request → Response tab.</li>
+<li><strong>Physical cards since a date:</strong> export orders with product "IQ Geschenkgutschein (Karte)" and compare with the gift card export (amount, date, customer).</li>
+</ul>
+
+<h2>8. Next steps</h2>
+<ol>
+<li>Wait for Syncube: re-enable custom amounts. Until then only fixed amounts can be sold. If it takes days: decide with Florian whether to hide the custom amount field (theme change, needs go-ahead).</li>
+<li>Agree with Florian and the warehouse how physical cards should get a code (app <em>Generate new code on sale</em> + <em>Send digital copy</em>, or keep manual creation) – <strong>do not enable before agreed</strong>.</li>
+<li>Ask the warehouse about the code source before 21.09.</li>
+<li>Check the 3 unfulfilled gift card orders.</li>
+<li>Inform customer service about the list in section 4.</li>
+</ol>
+</main></body></html>

@@ -132,4 +132,12 @@ window.IQ_LOG = [
     status: "In progress",
     link: "odoo/shopify-duplicate-mappings/"
   },
+  {
+    date: "2026-10-26",
+    area: "Shopify · Gift cards",
+    title: "Gift cards – physical cards without code & custom amounts blocked",
+    summary: "Customer complaint #IQD-95299: printed code never existed in Shopify; replacement 125 € card created with the same code. Root cause: Gift Card Hero physical-card auto assignment disabled; 9 more pre-21.09 orders without card. Custom amounts fail with 400 since ~20.10; support request sent to Syncube.",
+    status: "Waiting for support",
+    link: "odoo/gift-card-hero-2026-10-26/"
+  },
 ];
