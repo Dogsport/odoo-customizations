@@ -43,17 +43,37 @@
 
 <h1>Overtime threshold notification: weekly check + month-end summary</h1>
 <div class="meta">
-  <span class="status live">Live — weekly check</span>
+  <span class="status live">Live — weekly check (Mondays)</span>
   <span class="status open">Open — month-end summary first real run 31.10.2026</span><br>
-  22.10.2026 · Production (iq-dogsport.odoo.com) · <code>hr.employee</code> · Scheduled Action<br>
+  22.10.2026 · updated 26.10.2026 · Production (iq-dogsport.odoo.com) · <code>hr.employee</code> · Scheduled Action<br>
   Prepared for: Dr. Florian Knabl
 </div>
 
-<h2>What was achieved</h2>
+<h2>Change 26.10.2026: weekly check on Mondays, always notify</h2>
+<ul class="achieved">
+  <li>The weekly check now runs <strong>only on Mondays</strong> and looks at the <strong>previous week (Monday–Sunday)</strong> instead of a rolling 7-day window that moved every day.</li>
+  <li>A new to-do is created <strong>every week</strong> an employee is over the threshold, even if the previous week's to-do is still open. Before, an open to-do blocked any new one.</li>
+  <li>The week is now part of the to-do title, e.g. <em>"Overtime threshold exceeded (19.10.2026 - 25.10.2026)"</em>, so several open weeks can be told apart in My Activities.</li>
+  <li>Each to-do shows only that week's overtime hours — weeks are never added together.</li>
+  <li>Duplicate protection only applies to the same week (e.g. if the action is run twice on the same Monday).</li>
+  <li>The scheduled action still runs daily so the month-end summary keeps working; the weekly block simply skips non-Monday days.</li>
+  <li>Month-end summary block unchanged. No new fields, views or groups.</li>
+</ul>
+
+<h3>What the manager does with the to-do</h3>
+<ol>
+  <li>Open the to-do and go to the employee — the note shows the week's overtime and the threshold.</li>
+  <li>Check the employee's attendances for that week (which days caused it, any forgotten check-out).</li>
+  <li>Correct wrong attendance entries if needed.</li>
+  <li>Decide on real overtime (accept, compensate with time off, talk to the employee if it repeats).</li>
+  <li>Mark the to-do Done, optionally with a short note on the decision.</li>
+</ol>
+
+<h2>What was achieved (22.10.2026)</h2>
 <ul class="achieved">
   <li>Replaced the existing "Daily Overtime Threshold Check" cron's logic: it used to compare each employee's <strong>lifetime</strong> overtime balance (<code>total_overtime</code>) to a threshold, which never resets — once crossed, an employee stayed flagged indefinitely even after the underlying overtime week was long over.</li>
-  <li>New logic sums each employee's actual clocked overtime (already net of the ArbZG break deduction) over a rolling <strong>7-day window</strong>, and compares that to a threshold scaled to that employee's own weekly contracted hours (10% currently, configurable in Settings → Attendances → Extra Hours — no code change needed to adjust the percentage).</li>
-  <li>Notification goes to the employee's manager plus all Administrators (currently Florian or the relevant manager, Hamza, Patricia) as a to-do activity, with the exact numbers written into the note. Duplicate to-dos are prevented while one is still open.</li>
+  <li>New logic sums each employee's actual clocked overtime (already net of the ArbZG break deduction) and compares that to a threshold scaled to that employee's own weekly contracted hours (10% currently, configurable in Settings → Attendances → Extra Hours — no code change needed to adjust the percentage). Since 26.10.2026 the window is the previous Monday–Sunday week (see above).</li>
+  <li>Notification goes to the employee's manager plus all Administrators (currently Florian or the relevant manager, Hamza, Patricia) as a to-do activity, with the exact numbers written into the note.</li>
   <li>Added a second, independent block to the same cron: on the last calendar day of each month, it totals each employee's full month-to-date overtime and posts a separate "Monthly overtime summary" to-do to the same recipients — satisfies the follow-up ask for monthly visibility, not just weekly threshold breaches.</li>
   <li>Cleaned up 15 stale "Overtime threshold exceeded" to-dos that the old (incorrect) lifetime-balance logic had created for 6 employees.</li>
   <li>Live-tested the weekly check after the rewrite: correctly flagged only the one employee genuinely over their weekly threshold, and correctly cleared employees who still carry a high lifetime balance but had a normal recent week.</li>
@@ -62,7 +82,9 @@
 
 <h2>What is left</h2>
 <ul class="open-list">
-  <li><strong>Monthly summary block is unverified in production.</strong> It has only ever run against a date that isn't month-end, so the branch that actually posts the summary has never executed for real. First real run is 31.10.2026 — needs a manual check afterwards that it created the expected to-dos with correct hours per employee.</li>
+  <li><strong>Monday version to be verified.</strong> Check after the first Monday run that the to-dos carry the correct week in the title and the correct hours per employee.</li>
+  <li>The 3 open to-dos from the old logic (Manuela May, Anastasiia Derkach, Markus Liebetanz) can be marked Done or cancelled.</li>
+  <li><strong>Monthly summary block is unverified in production.</strong> First real run is 31.10.2026 — needs a manual check afterwards that it created the expected to-dos with correct hours per employee.</li>
   <li>Threshold percentage is still a single company-wide setting (10%) — no per-employee override exists yet if that's ever needed.</li>
   <li>No email/digest option — notifications are Odoo activity to-dos only, not emails, by design so far.</li>
   <li>Florian has not yet confirmed the recipient list (manager + both Administrators) is the right long-term group, or whether it should narrow over time.</li>
@@ -74,26 +96,30 @@
   <tr><td>Type</td><td>Scheduled Action (<code>ir.cron</code>)</td></tr>
   <tr><td>Name</td><td>Daily Overtime Threshold Check</td></tr>
   <tr><td>Model</td><td>Employee (<code>hr.employee</code>)</td></tr>
-  <tr><td>Runs</td><td>Every 1 day, 9:59 AM</td></tr>
+  <tr><td>Runs</td><td>Every 1 day, 9:59 AM — weekly block only acts on Mondays, monthly block only on the last day of the month</td></tr>
+  <tr><td>Weekly window</td><td>Previous Monday 00:00 – Sunday 23:59</td></tr>
   <tr><td>Recipients</td><td>Employee's manager (<code>parent_id.user_id</code>) + Administrators (<code>base.group_system</code>)</td></tr>
-  <tr><td>Dedup</td><td>Skips creating a new to-do if one of the same summary is already open for that employee/user pair</td></tr>
+  <tr><td>Dedup</td><td>Weekly: skips only if a to-do for the same week already exists for that employee/user pair. Monthly: skips if a summary with today's date already exists.</td></tr>
 </table>
 
 <pre><code>company = env.company
 today = datetime.date.today()
 
-# --- Weekly overtime threshold check (last 7 days) ---
+# --- Weekly overtime threshold check (runs only on Mondays, checks previous Mon-Sun) ---
 threshold_percent = company.x_overtime_threshold_percent or 0.0
-if threshold_percent &gt; 0:
+if threshold_percent &gt; 0 and today.weekday() == 0:
     Employee = env['hr.employee'].sudo()
     Attendance = env['hr.attendance'].sudo()
     Activity = env['mail.activity'].sudo()
     activity_type = env.ref('mail.mail_activity_data_todo')
     hr_model_id = env['ir.model']._get_id('hr.employee')
     admin_users = env.ref('base.group_system').sudo().user_ids
-    window_start = today - datetime.timedelta(days=6)
-    window_start_dt = datetime.datetime.combine(window_start, datetime.time.min)
-    window_end_dt = datetime.datetime.combine(today, datetime.time.max)
+    week_start = today - datetime.timedelta(days=7)   # last Monday
+    week_end = today - datetime.timedelta(days=1)     # yesterday (Sunday)
+    week_start_dt = datetime.datetime.combine(week_start, datetime.time.min)
+    week_end_dt = datetime.datetime.combine(week_end, datetime.time.max)
+    week_label = "%s - %s" % (week_start.strftime('%d.%m.%Y'), week_end.strftime('%d.%m.%Y'))
+    summary = "Overtime threshold exceeded (%s)" % week_label
     employees = Employee.search([('company_id', '=', company.id)])
     for emp in employees:
         calendar = emp.resource_calendar_id
@@ -102,8 +128,8 @@ if threshold_percent &gt; 0:
         threshold_hours = calendar.hours_per_week * (threshold_percent / 100.0)
         attendances = Attendance.search([
             ('employee_id', '=', emp.id),
-            ('check_in', '&gt;=', window_start_dt),
-            ('check_in', '&lt;=', window_end_dt),
+            ('check_in', '&gt;=', week_start_dt),
+            ('check_in', '&lt;=', week_end_dt),
         ])
         week_overtime = sum(attendances.mapped('validated_overtime_hours'))
         if week_overtime &lt;= threshold_hours:
@@ -113,19 +139,21 @@ if threshold_percent &gt; 0:
             recipients |= emp.parent_id.user_id
         recipients |= admin_users
         note = (
-            "&lt;p&gt;&lt;strong&gt;%s&lt;/strong&gt; worked %.2f overtime hours in the last 7 days "
-            "(%s to %s), above the %.0f%% threshold of their %.1fh/week contract "
+            "&lt;p&gt;&lt;strong&gt;%s&lt;/strong&gt; worked %.2f overtime hours in the week %s, "
+            "above the %.0f%% threshold of their %.1fh/week contract "
             "(threshold: %.2f hours).&lt;/p&gt;"
-            % (emp.name, week_overtime, window_start, today, threshold_percent,
+            % (emp.name, week_overtime, week_label, threshold_percent,
                calendar.hours_per_week, threshold_hours)
         )
         for user in recipients:
+            # Only prevents a duplicate for the SAME week (e.g. if run twice on the same Monday).
+            # Open to-dos from earlier weeks do NOT block a new one.
             existing = Activity.search([
                 ('res_model', '=', 'hr.employee'),
                 ('res_id', '=', emp.id),
                 ('activity_type_id', '=', activity_type.id),
                 ('user_id', '=', user.id),
-                ('summary', '=', 'Overtime threshold exceeded'),
+                ('summary', '=', summary),
             ], limit=1)
             if existing:
                 continue
@@ -135,7 +163,7 @@ if threshold_percent &gt; 0:
                 'res_id': emp.id,
                 'activity_type_id': activity_type.id,
                 'user_id': user.id,
-                'summary': 'Overtime threshold exceeded',
+                'summary': summary,
                 'note': note,
                 'date_deadline': today,
             })
@@ -204,13 +232,14 @@ if today == last_day_of_month:
 <h3>Related</h3>
 <ul>
   <li>ArbZG break deduction feeds <code>validated_overtime_hours</code> directly, so both checks above inherit the correct break-deducted figures automatically.</li>
-  <li>This is the same Scheduled Action as before this change — not a new automation, its code was replaced in place.</li>
+  <li>This is the same Scheduled Action as before these changes — not a new automation, its code was replaced in place (22.10.2026 and 26.10.2026).</li>
 </ul>
 
 <h3>Rollback</h3>
 <ol>
   <li>Settings → Technical → Scheduled Actions → "Daily Overtime Threshold Check"</li>
-  <li>Restore the pre-22.10.2026 code from git history (lifetime-balance version), or toggle <code>Active</code> off to stop all overtime notifications entirely.</li>
+  <li>To undo the 26.10.2026 change: restore the 22.10.2026 code (rolling 7 days, skip while open) from git history of this page.</li>
+  <li>To stop all overtime notifications: toggle <code>Active</code> off.</li>
   <li>No fields or groups to clean up.</li>
 </ol>
 

@@ -108,4 +108,12 @@ window.IQ_LOG = [
     status: "Done",
     link: "odoo/shopify-instance-archive-2026-10-23/"
   },
+    {
+    date: "2026-10-26",
+    area: "Odoo · Attendances",
+    title: "Overtime check: weekly on Mondays, always notify",
+    summary: "Weekly overtime check now runs only on Mondays and looks at the previous week (Mon–Sun) instead of a rolling 7 days. A new to-do is created every week an employee is over the threshold, even if last week's to-do is still open. Week dates now shown in the to-do title. Month-end summary unchanged.",
+    status: "Live",
+    link: "odoo/overtime-threshold-notification/"
+  },
 ];
