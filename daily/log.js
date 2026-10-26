@@ -124,4 +124,12 @@ window.IQ_LOG = [
     status: "Staging",
     link: "odoo/dhl-gls-carrier-assignment/"
   },
+  {
+    date: "2026-10-26",
+    area: "Odoo",
+    title: "Shopify orders linked to archived products – duplicate mappings",
+    summary: "Reactivating the instance on 23.10 re-activated old Shopify layer mappings: 27 wrong mappings, orders #IQD-99056/99075/99099 got archived or wrong products. Mappings 749 and 1169 archived and verified; 25 remaining, orders to correct.",
+    status: "In progress",
+    link: "odoo/shopify-duplicate-mappings/"
+  },
 ];

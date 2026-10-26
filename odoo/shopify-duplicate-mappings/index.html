@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shopify duplicate mappings</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
+.ok{color:#1d5e2a;font-weight:700} .open{color:#a6230f;font-weight:700}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Shopify orders linked to archived / wrong products – duplicate mappings (26.10.2026)</h1></div></header>
+<main>
+<p><strong>Status 26.10.2026, 14:30: in progress.</strong> Cause found, method proven on 2 of 27 wrong mappings, 3 orders to correct. Follow-up of the <a href="../shopify-instance-archive-2026-10-23/">Shopify instance archive incident (23.10.2026)</a>.</p>
+<p class="note">Odoo 19 Production · Emipro Shopify connector · instance <em>IQ Dogsport Shopify</em> (id 1). All investigation was done with read-only commands. Customer data is not stored here.</p>
+
+<h2>1. Symptom</h2>
+<p>Order <strong>#IQD-99075</strong> contained the archived product <strong>[IQD-EGE-WUV-0010] Wurfversteck</strong> (id 312, stock 0 → delivery "Nicht verfügbar"), although the active product <strong>IQ Wurfversteck / IQ Pop-Up Blind</strong> (id 676, same SKU, 28 in stock) exists and had been sold 421 times.</p>
+
+<h2>2. How the connector finds the product</h2>
+<p>The connector does not search by product name. It uses its mapping table <code>shopify.product.product.ept</code> ("Shopify layer variant"): <em>Shopify variant ID → Odoo product</em>. If a Shopify variant has several <strong>active</strong> mappings, it can take the wrong one (here the older record).</p>
+
+<h2>3. Root cause</h2>
+<ul>
+<li>When products were replaced (new version, merge), a <strong>new mapping</strong> was created for the same Shopify variant; the old mapping was <strong>archived</strong>. Old and new product often keep the <strong>same SKU</strong>.</li>
+<li>On <strong>23.10.2026 13:29:21 UTC</strong> the instance was archived by mistake and reactivated. The reactivation set <strong>all</strong> layer records active again, including the old, intentionally archived mappings (write_date of both Wurfversteck mappings = exactly 13:29:21).</li>
+<li>Since then those Shopify variants have two or three active mappings → new orders could land on archived or wrong products. Before 23.10 no order used product 312.</li>
+<li>Special case <strong>PSD</strong>: the PSD Shopify variants still had an old mapping to the <strong>TDP.OL</strong> products (variant probably reused in Shopify) → a PSD order arrived as a <strong>different article</strong>.</li>
+</ul>
+
+<h2>4. Findings (read-only)</h2>
+<table><thead><tr><th>Check</th><th>Result</th></tr></thead><tbody>
+<tr><td>Active mappings pointing to archived Odoo products</td><td>277</td></tr>
+<tr><td>Shopify variants with more than one active mapping</td><td>43 (some harmless: both point to the same product)</td></tr>
+<tr><td><strong>Wrong mappings for sure</strong> (archived/wrong product while the same variant also has a correct active mapping)</td><td><strong>27</strong></td></tr>
+<tr><td>Orders since 23.10 13:29 UTC with an archived product</td><td>3: #IQD-99056, #IQD-99075, #IQD-99099</td></tr>
+</tbody></table>
+
+<h3>The 27 wrong mappings</h3>
+<table><thead><tr><th>Product</th><th>Wrong layer IDs → archived product</th><th>Correct layer → product (keep)</th><th>Status</th></tr></thead><tbody>
+<tr><td>Wurfversteck IQD-EGE-WUV-0010</td><td>749 → 312</td><td>1109 → 676</td><td class="ok">archived 26.10 ✓</td></tr>
+<tr><td>PSD.S (Trainingsshirt Damen mit Rückentasche)</td><td>1169 → 353 (TDP.OL.S!)</td><td>1195 → 1028</td><td class="ok">archived 26.10 ✓</td></tr>
+<tr><td>PSD.M – 2XL</td><td>1170–1173 → 354–357 (TDP.OL!)</td><td>1196–1199 → 1029–1032</td><td class="open">open</td></tr>
+<tr><td>TDP.OL XS – 2XL</td><td>379–384 → 352–357</td><td>1202–1207 → 1036–1041</td><td class="open">open</td></tr>
+<tr><td>ZBS-SET.o</td><td>737 → 303</td><td>1110 → 666</td><td class="open">open</td></tr>
+<tr><td>SSU3 S – 4XL (two old sets)</td><td>1226–1232 → 1067–1073 and 1233–1239 → 1074–1080</td><td>1240–1246 → 1081–1087</td><td class="open">open</td></tr>
+</tbody></table>
+
+<h2>5. Fix procedure (one mapping)</h2>
+<ol>
+<li><strong>Before</strong> (read-only): list all mappings of the Shopify variant (query 8.1) – expect one wrong + one correct, both active.</li>
+<li>Open <code>https://iq-dogsport.odoo.com/odoo/shopify.product.product.ept/&lt;ID&gt;</code>. Check instance, Shopify variant, Default Code and that <em>Product</em> is the <strong>old/wrong</strong> one.</li>
+<li><strong>⚙ → Archive.</strong> Never archive the correct mapping, never archive the Shopify layer <em>product</em> (template).</li>
+<li><strong>After</strong>: run query 8.1 again → wrong = <code>f</code>, correct = <code>t</code>. Check the product is unchanged in Shopify.</li>
+<li>Re-check after ~1 hour that it stays archived (done for 749: still archived ✓).</li>
+</ol>
+<p class="note"><strong>Careful:</strong> <em>Inventory → Product Variants</em> lists <em>Odoo products</em> with different IDs (there id 749 is "Chest and back patch with print"). The mappings are only in model <code>shopify.product.product.ept</code>.</p>
+<p><strong>Why it is safe:</strong> archiving a mapping only hides it from the connector; nothing is sent to Shopify (proven on 23.10, when all mappings were archived and the shop kept working) and it is reversible (filter Archived → Unarchive). Existing orders are not changed by it.</p>
+<h3>Remaining 25 at once (after the proven single tests)</h3>
+<p>Open <code>https://iq-dogsport.odoo.com/odoo/shopify.product.product.ept</code> → Add Custom Filter (code editor):</p>
+<pre><code>[("id", "in", [379, 380, 381, 382, 383, 384, 737, 1170, 1171, 1172, 1173, 1226, 1227, 1228, 1229, 1230, 1231, 1232, 1233, 1234, 1235, 1236, 1237, 1238, 1239])]</code></pre>
+<p>Only if exactly <strong>25</strong> records with the old products appear: select all → Actions → Archive. Afterwards query 8.2 must return 0 rows.</p>
+
+<h2>6. Correct the affected orders</h2>
+<p>Order first? No – <strong>archive the mapping first</strong> (stops new wrong orders and prevents an order update from re-adding the old product), then correct the order on its delivery (still Waiting):</p>
+<table><thead><tr><th>Order</th><th>Remove</th><th>Add (qty as ordered)</th><th>Status</th></tr></thead><tbody>
+<tr><td>#IQD-99056</td><td>312 Wurfversteck (old)</td><td>676 IQ Wurfversteck / IQ Pop-Up Blind</td><td class="open">open</td></tr>
+<tr><td>#IQD-99075 (WH1/OUT/07245)</td><td>312 Wurfversteck (old)</td><td>676 IQ Wurfversteck / IQ Pop-Up Blind</td><td class="open">open</td></tr>
+<tr><td>#IQD-99099</td><td>353 TDP.OL.S (old)</td><td>1028 IQD-EKL-PSD.S (Shopify order shows PSD.S, S / Schwarz)</td><td class="open">open</td></tr>
+</tbody></table>
+<ol>
+<li>Delivery → Operations: delete the old line, <em>Add a product</em> → correct product → Save → <strong>Check Availability</strong>.</li>
+<li>Log note: "Product corrected: &lt;old&gt; → &lt;new&gt;, wrong Shopify mapping after 23.10."</li>
+<li>Invoice still shows the old product – inform accounting (for #IQD-99099 a different article).</li>
+<li>Manually added lines may not be sent to Shopify as fulfilled: after shipping check the order in Shopify and mark it fulfilled with tracking if needed.</li>
+</ol>
+
+<h2>7. Prevention</h2>
+<ul>
+<li><strong>Never archive / deactivate the Shopify instance</strong> (Production or Staging). Staging: use <em>Reset Credentials</em> or a separate instance.</li>
+<li><strong>When replacing a product:</strong> map the Shopify variant to the new product, archive the old mapping at the same time, and give the archived Odoo product a unique SKU (e.g. <code>…-ALT</code>) so it can never be matched again. <em>(SKU change on existing archived products: to be agreed before doing it.)</em></li>
+<li><strong>Weekly check</strong> with queries 8.3 and 8.4 (read-only). Optional later: scheduled action that creates an activity when they find something (needs go-ahead).</li>
+<li>About 250 more active mappings point to archived products without a duplicate. They only matter if that Shopify variant is still for sale – review later.</li>
+</ul>
+
+<h2>8. Read-only queries (Odoo.sh → Production → SHELL)</h2>
+<h3>8.1 All mappings of one Shopify variant</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT s.id, to_jsonb(s)-&gt;&gt;'variant_id' AS shopify_variant, s.product_id, pp.default_code, pp.active AS product_active, s.active AS mapping_active, s.write_date FROM shopify_product_product_ept s JOIN product_product pp ON pp.id = s.product_id WHERE to_jsonb(s)-&gt;&gt;'variant_id' = '53151323881736' ORDER BY s.id;"</code></pre>
+<h3>8.2 Wrong mappings (archived product while a correct active mapping exists)</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT bad.id AS wrong_layer, to_jsonb(bad)-&gt;&gt;'variant_id' AS shopify_variant, bad.product_id AS wrong_product, pb.default_code AS wrong_sku, good.id AS right_layer, good.product_id AS right_product, pg.default_code AS right_sku FROM shopify_product_product_ept bad JOIN product_product pb ON pb.id = bad.product_id JOIN shopify_product_product_ept good ON to_jsonb(good)-&gt;&gt;'variant_id' = to_jsonb(bad)-&gt;&gt;'variant_id' AND good.id &lt;&gt; bad.id AND good.active AND good.shopify_instance_id = 1 JOIN product_product pg ON pg.id = good.product_id AND pg.active WHERE bad.active AND NOT pb.active AND bad.shopify_instance_id = 1 ORDER BY bad.id;"</code></pre>
+<h3>8.3 Variants mapped to more than one different product</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT to_jsonb(s)-&gt;&gt;'variant_id' AS shopify_variant, string_agg(s.id::text || '-&gt;' || s.product_id::text, ', ') AS layer_to_product FROM shopify_product_product_ept s WHERE s.active AND s.shopify_instance_id = 1 GROUP BY 1 HAVING count(DISTINCT s.product_id) &gt; 1;"</code></pre>
+<h3>8.4 Orders of the last 7 days with archived products</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT so.name, so.create_date, pp.default_code FROM sale_order_line sol JOIN sale_order so ON so.id = sol.order_id JOIN product_product pp ON pp.id = sol.product_id WHERE so.create_date &gt; now() - interval '7 days' AND NOT pp.active;"</code></pre>
+
+<h2>9. Next steps</h2>
+<ol>
+<li>Archive the remaining 25 wrong mappings (section 5).</li>
+<li>Correct #IQD-99056, #IQD-99075, #IQD-99099 (section 6); inform accounting.</li>
+<li>Run 8.2 (expect 0) and 8.4 for a few days.</li>
+<li>Decide on SKU suffix for archived duplicate products and on reviewing the ~250 other mappings.</li>
+</ol>
+</main></body></html>
