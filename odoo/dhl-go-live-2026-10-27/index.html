@@ -1,0 +1,142 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DHL Go-Live Production</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
+.ok{color:#1d5e2a;font-weight:700} .open{color:#a6230f;font-weight:700}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>DHL Parcel DE live in Production – Germany DHL, international GLS (27.10.2026)</h1></div></header>
+<main>
+<p style="font-size:13px"><a href="DHL_Go-Live_Production_2026-10-27.pdf">PDF version</a></p>
+
+<p><strong>Status 27.10.2026, 16:30: DHL Parcel DE is live in Production.</strong> Germany ships with DHL, all other countries with GLS. First DHL pickup booked for <strong>Wednesday 28.10.2026</strong>. Follow-up of the <a href="../dhl-gls-carrier-assignment/">staging test (26.10.2026)</a>.</p>
+<p class="note">Odoo 19 Production · BrowseInfo DHL Parcel DE connector · Emipro Shopify connector. Credentials and customer data are intentionally not stored here. All investigation was done with read-only commands.</p>
+
+<h2>1. Result</h2>
+<table><thead><tr><th>Area</th><th>Status</th></tr></thead><tbody>
+<tr><td>Carrier assignment Germany → DHL Parcel DE, international → GLS Germany</td><td class="ok">live</td></tr>
+<tr><td>Block Validate when a delivery has no carrier</td><td class="ok">live (rule "Block Validate without Carrier")</td></tr>
+<tr><td>DHL / GLS / CHECK CARRIER badge on the packing cards (Pack-Übersicht)</td><td class="ok">live (server action "Rebuild Packing Card")</td></tr>
+<tr><td>DHL return receiver <code>deu</code> filled in automatically (Germany)</td><td class="ok">live since 20.10 (rule "DHL – Automatic Return Receiver")</td></tr>
+<tr><td>Shopify German rate renamed "GLS Deutschland" → "DHL Paket"</td><td class="ok">done (connector created carrier 27, handled by the rules)</td></tr>
+<tr><td>Warehouse sign DHL / GLS (A4, DE/EN)</td><td class="ok">printed version: <a href="Versandhinweis_DHL_GLS.pdf">Versandhinweis_DHL_GLS.pdf</a></td></tr>
+<tr><td>DHL pickup 28.10.2026 (Bedarfsabholung, Langenwiesen 2, contact Elena)</td><td class="ok">booked</td></tr>
+<tr><td>Return label decision deu (IQ pays) vs deu_SZ (customer pays)</td><td class="open">open – Florian</td></tr>
+</tbody></table>
+
+<h2>2. How the carrier is decided now</h2>
+<pre><code>Shopify checkout: customer picks a rate (e.g. "DHL Paket", "GLS EU")
+  → Emipro creates the order, then writes the matching PRICE carrier (sale_order.py line 458)
+  → rule "Shipping add" / "Shipping add – International (GLS)" fires on that edit
+  → Germany: price carrier → DHL Parcel DE (25)   ·   other countries: → GLS Germany (2)
+  → order confirmed → delivery takes the carrier over (Propagation of carrier)
+  → GLS incoterm rules (EFTA 20 / Outside EU 40) add the incoterm on the delivery</code></pre>
+<p><strong>Key finding:</strong> only three carriers can create labels. Every Shopify rate maps to a <em>fixed</em> price carrier, which only carries the shipping price:</p>
+<table><thead><tr><th>ID</th><th>Carrier</th><th>Type</th><th>Orders last 60 days</th></tr></thead><tbody>
+<tr><td>2</td><td>GLS Germany</td><td><strong>gls_germany (labels)</strong></td><td>–</td></tr>
+<tr><td>25</td><td>DHL Parcel DE</td><td><strong>dhl_parcel_de (labels)</strong></td><td>new</td></tr>
+<tr><td>26</td><td>DHL Parcel DE – International</td><td><strong>dhl_parcel_de (labels)</strong></td><td>not used yet</td></tr>
+<tr><td>15</td><td>GLS Deutschland</td><td>fixed</td><td>950 (DE)</td></tr>
+<tr><td>11</td><td>GLS EU</td><td>fixed</td><td>221</td></tr>
+<tr><td>21</td><td>Standard</td><td>fixed</td><td>58 (non-DE)</td></tr>
+<tr><td>18 / 19</td><td>GLS Europa nicht-EU Zone 1 / 2</td><td>fixed</td><td>38 / 2</td></tr>
+<tr><td>16 / 20 / 22 / 24</td><td>GLS Welt Zone 1 / Zone 3 / Australien &amp; NZ / UK</td><td>fixed</td><td>25 / 3 / 1 / 1</td></tr>
+<tr><td>27</td><td>DHL Paket (auto-created 27.10 14:59 after the Shopify rename)</td><td>fixed</td><td>new</td></tr>
+<tr><td>1 / 23</td><td>Direct Sales / Shipping Costs</td><td>fixed</td><td>manual / unused</td></tr>
+</tbody></table>
+<p>Before today, "Auto Set Carrier" replaced every price carrier with GLS Germany on the delivery. Since it is archived, the two Sales Order rules must replace the price carriers themselves – that is why their lists contain all fixed GLS/DHL carriers.</p>
+
+<h2>3. Final configuration in Production</h2>
+<table><thead><tr><th>ID</th><th>Rule</th><th>Model</th><th>Setting</th></tr></thead><tbody>
+<tr><td>8</td><td>Shipping add</td><td>Sales Order</td><td>On create and edit · When updating: <strong>Delivery Address, Delivery Method</strong> · Action: Delivery Method → <strong>DHL Parcel DE (25)</strong></td></tr>
+<tr><td>45</td><td>Shipping add – International (GLS)</td><td>Sales Order</td><td>On create and edit · When updating: <strong>Delivery Address, Delivery Method</strong> · Action: Delivery Method → <strong>GLS Germany (2)</strong></td></tr>
+<tr><td>5</td><td>Auto Set Incoterms – EFTA</td><td>Transfer</td><td>only Gls Incoterm → 20 (carrier action deleted)</td></tr>
+<tr><td>6</td><td>Auto Set Incoterms – Outside EU</td><td>Transfer</td><td>Gls Incoterm → 40 · <span class="open">carrier → GLS Germany action still present (harmless, delete to match staging)</span></td></tr>
+<tr><td>7</td><td>Auto Set Carrier</td><td>Transfer</td><td><strong>archived</strong> (rollback option)</td></tr>
+<tr><td>new</td><td>Block Validate without Carrier</td><td>Transfer</td><td>On create and edit · Before: Status ≠ Done · Apply on: Status = Done, Type = Delivery, Carrier not set · Execute Code → UserError</td></tr>
+<tr><td>–</td><td>DHL – Automatic Return Receiver</td><td>Transfer</td><td>since 20.10 · Apply on: receiver not set · When updating: Carrier, Contact, Operation Type · German DHL return → <code>deu</code></td></tr>
+<tr><td>–</td><td>Rebuild Packing Card (server action)</td><td>Transfer</td><td>writes <code>x_studio_packing_card</code>; now with DHL / GLS / CHECK CARRIER badge (<a href="packing_card_with_carrier.py">code</a>)</td></tr>
+</tbody></table>
+<h3>Apply on – Shipping add (Germany → DHL)</h3>
+<pre><code>["&amp;", "&amp;", ("state", "in", ["draft", "sent"]), ("partner_shipping_id.country_id", "in", [57]), "|", ("carrier_id", "=", False), ("carrier_id", "in", [2, 15, 27])]</code></pre>
+<h3>Apply on – Shipping add – International (GLS)</h3>
+<pre><code>["&amp;", "&amp;", ("state", "in", ["draft", "sent"]), ("partner_shipping_id.country_id", "not in", [57]), "|", ("carrier_id", "=", False), ("carrier_id", "in", [25, 11, 15, 16, 18, 19, 20, 21, 22, 24, 27])]</code></pre>
+<p>Kept untouched by both rules: 1 Direct Sales, 26 DHL International, 23 Shipping Costs, and anything on a confirmed order. No loops: the Germany rule writes 25 (not in its list), the international rule writes 2 (not in its list).</p>
+
+<h2>4. What happened on go-live day (27.10.2026)</h2>
+<table><thead><tr><th>Time</th><th>Event</th><th>Fix</th></tr></thead><tbody>
+<tr><td>~14:15</td><td>Staging rules applied in Production (rule 8 changed, rule 45 created, EFTA carrier action deleted, Auto Set Carrier archived)</td><td>–</td></tr>
+<tr><td>14:30</td><td>#IQD-99163 (DE) arrived with "GLS Deutschland" (15) – rule did not fire. Staging never showed this because the test store's rates were not linked to any Odoo carrier.</td><td>15 added to the Germany list</td></tr>
+<tr><td>14:49</td><td>#IQD-99164 still GLS Deutschland. Emipro sets the carrier with a separate <code>write</code> after creating the order (<code>create_shopify_shipping_lines</code>, sale_order.py line 458) – an edit the rule ignored.</td><td><strong>Delivery Method</strong> added to "When updating" (both rules)</td></tr>
+<tr><td>14:4x</td><td>Carrier usage of the last 60 days checked: "Standard" (21) used by 58 international orders</td><td>21 + all GLS price carriers added to the international list</td></tr>
+<tr><td>14:45</td><td>New rule "Block Validate without Carrier" created (Production)</td><td>–</td></tr>
+<tr><td>14:59</td><td>German Shopify rate renamed to "DHL Paket" → connector found no carrier with that code and created <strong>carrier 27 "DHL Paket" (fixed)</strong> (delivery_carrier.py <code>shopify_search_create_delivery_carrier</code>, line 218). #IQD-99165 got it.</td><td>27 added to both lists</td></tr>
+<tr><td>15:02</td><td>WH1/OUT/07341 (#IQD-99165) validated with "DHL Paket" → no label, chatter "Sendungsnummer False". Not blocked because the carrier was not empty.</td><td>label to create by hand (see next steps)</td></tr>
+<tr><td>16:00</td><td>Packing card badge live; cards show DHL (#IQD-99167), GLS (#IQD-99161), CHECK CARRIER (#IQD-99165)</td><td>–</td></tr>
+</tbody></table>
+<p class="note"><strong>Lesson:</strong> never delete or archive carrier 27 "DHL Paket" or the other price carriers – the connector would recreate them with a new ID that the rules don't know. If a Shopify rate is renamed or added again, run check 9.2 and add the new ID to the right list.</p>
+
+<h2>5. Returns (DHL)</h2>
+<ul>
+<li>Rule "DHL – Automatic Return Receiver" (Production, since 20.10; Staging ID 41) fills <code>deu</code> on German DHL returns when the receiver is empty. Tested 27.10 on a manual return: Carrier → DHL Parcel DE → Save → <code>deu</code> filled, button changed from Get Receivers to Change Receiver.</li>
+<li><strong>Print Return Label only appears on real returns</strong> created with the <em>Return</em> button of the original delivery (standard Odoo: the return lines must be linked to the original moves). A return created via Returns → New never shows it.</li>
+<li>Team rule: open the original delivery (or sales order → delivery) → <strong>Return</strong> → Print Return Label. No original delivery in Odoo → create the label in the DHL Geschäftskundenportal (Retoure, receiver deu) and book the return in Odoo without label.</li>
+<li>"Change/Get Receivers" gives <code>401 … no apiproduct match found</code>: the DHL developer app behind the API key lacks the API product the receiver lookup uses. Not needed for German returns.</li>
+<li>Only receivers on the live DHL account: <code>deu</code> (Retoure Online, billed to IQ Dogsport) and <code>deu_SZ</code> (Selbstzahler). No international receivers.</li>
+<li>Never click Print Return Label in Production for a test – it creates a real DHL return shipment. Test returns WH1/RET/00523 and 00524 to be cancelled.</li>
+</ul>
+
+<h2>6. Pickup</h2>
+<ul>
+<li>DHL Bedarfsabholung booked for <strong>28.10.2026</strong>, 08:00–18:00, IQ Dogsport GmbH, Langenwiesen 2, 85276 Pfaffenhofen, contact Elena, notifications on. The parcel count is an estimate for the driver's planning.</li>
+<li>Keep DHL and GLS parcels separate (sign in the packing area).</li>
+<li>Next: ask DHL business customer service for a <strong>Regelabholung</strong> (fixed daily pickup) instead of booking every day.</li>
+</ul>
+
+<h2>7. Labels</h2>
+<p>Zebra ZD421, one blank thermal roll for DHL and GLS. DHL Label Type 103×150 (910-300-410) tested on the GLS roll on 26.10 – works. Set Label Type on DHL Parcel DE and DHL International accordingly.</p>
+
+<h2>8. Next steps</h2>
+<ol>
+<li><strong>Verify automatic assignment</strong> on the next German and the next international Shopify order (check 9.1): DE → 25 / 25, others → 2 / 2.</li>
+<li><strong>Fix open deliveries with a price carrier</strong> before validating (check 9.3): Germany → DHL Parcel DE, others → GLS Germany. Rebuild their packing cards.</li>
+<li><strong>#IQD-99165 / WH1/OUT/07341</strong> (done without label): carrier → DHL Parcel DE; use "Send to Shipper" if shown, otherwise create the label in the DHL portal and add the tracking number to the Shopify order.</li>
+<li>Confirm the saved domains (check 9.4) contain 27 (both) and 21 (international).</li>
+<li>Delete the carrier action in rule 6 (Outside EU) to match staging (optional, harmless today).</li>
+<li>Florian: <code>deu</code> or <code>deu_SZ</code> for returns; international DHL returns; DHL prices per zone.</li>
+<li>DHL: Regelabholung; API product for receiver lookup (developer.dhl.com → My Apps).</li>
+<li>Shopify: shipping page, policy and notification texts ("Germany DHL, international GLS").</li>
+<li>Warehouse: sign printed and explained; CHECK CARRIER badge = fix carrier before Validate; Block Validate rule blocks empty carriers (customer pickups/samples → Direct Sales).</li>
+<li>Optional: packing card always in German (today it follows the language of the user who triggers it).</li>
+<li>Security: rotate credentials that were visible in screenshots. Emipro: GraphQL order-risk bug (see staging doc).</li>
+</ol>
+
+<h2>9. Read-only checks (Odoo.sh → Production → SHELL)</h2>
+<h3>9.1 Newest Shopify orders: order and delivery carrier</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT so.name, so.state, so.carrier_id AS order_carrier, c.code AS country, string_agg(DISTINCT sp.carrier_id::text, ',') AS delivery_carrier, so.create_date FROM sale_order so LEFT JOIN res_partner p ON p.id = so.partner_shipping_id LEFT JOIN res_country c ON c.id = p.country_id LEFT JOIN stock_picking sp ON sp.sale_id = so.id WHERE so.name LIKE '#IQD-%' GROUP BY so.id, so.name, so.state, so.carrier_id, c.code, so.create_date ORDER BY so.id DESC LIMIT 15;"</code></pre>
+<h3>9.2 All carriers with type and Shopify code (after any Shopify rate change)</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT id, to_jsonb(c)-&gt;'name'-&gt;&gt;'en_US' AS name, c.delivery_type, c.shopify_code, c.shopify_source, c.create_date FROM delivery_carrier c WHERE c.active ORDER BY id;"</code></pre>
+<h3>9.3 Open deliveries still on a price carrier</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT so.name, sp.name AS delivery, sp.state, sp.carrier_id FROM stock_picking sp JOIN stock_picking_type spt ON spt.id = sp.picking_type_id LEFT JOIN sale_order so ON so.id = sp.sale_id LEFT JOIN delivery_carrier dc ON dc.id = sp.carrier_id WHERE spt.code = 'outgoing' AND sp.state NOT IN ('done','cancel') AND (sp.carrier_id IS NULL OR dc.delivery_type = 'fixed') ORDER BY sp.id DESC;"</code></pre>
+<h3>9.4 Saved rule domains and triggers</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT a.id, to_jsonb(a)-&gt;&gt;'name' AS name, a.active, to_jsonb(a)-&gt;&gt;'filter_domain' AS apply_on, (SELECT string_agg(f.name, ',') FROM base_automation_ir_model_fields_rel r JOIN ir_model_fields f ON f.id = r.ir_model_fields_id WHERE r.base_automation_id = a.id) AS when_updating FROM base_automation a WHERE a.id IN (5, 6, 7, 8, 45);"</code></pre>
+<h3>9.5 What each rule action writes</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT s.base_automation_id AS rule, to_jsonb(a)-&gt;&gt;'name' AS rule_name, a.active, f.model, f.name AS field, s.value FROM ir_act_server s JOIN base_automation a ON a.id = s.base_automation_id LEFT JOIN ir_model_fields f ON f.id = (to_jsonb(s)-&gt;&gt;'update_field_id')::int WHERE s.state = 'object_write' ORDER BY 1;"</code></pre>
+<h3>9.6 DHL deliveries without tracking number (label missing)</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT sp.name, sp.origin, sp.state, sp.date_done FROM stock_picking sp JOIN delivery_carrier dc ON dc.id = sp.carrier_id WHERE dc.delivery_type = 'dhl_parcel_de' AND sp.state = 'done' AND sp.carrier_tracking_ref IS NULL ORDER BY sp.id DESC LIMIT 20;"</code></pre>
+
+<h2>10. Rollback</h2>
+<ol>
+<li>Automation Rules → filter Archived → <strong>Auto Set Carrier</strong> → Unarchive (everything back to GLS Germany on deliveries).</li>
+<li>Archive "Shipping add – International (GLS)"; set "Shipping add" action back to GLS Germany or archive it.</li>
+<li>Archive "Block Validate without Carrier" if it blocks legitimate deliveries.</li>
+<li>Shopify: rename "DHL Paket" back to "GLS Deutschland" (carrier 15 is still there).</li>
+</ol>
+
+</main></body></html>

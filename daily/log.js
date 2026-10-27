@@ -140,4 +140,30 @@ window.IQ_LOG = [
     status: "Waiting for support",
     link: "odoo/gift-card-hero-2026-10-26/"
   },
+  {
+    date: "2026-10-27",
+    area: "Odoo · Shipping",
+    title: "DHL Parcel DE live in Production – Germany DHL, international GLS",
+    summary: "DHL Parcel DE live: Germany → DHL Parcel DE, international → GLS Germany. Found on go-live: Shopify orders arrive with fixed price carriers (GLS Deutschland 15, auto-created DHL Paket 27, GLS EU 11, Standard 21…) set by a write after create; rules extended and Delivery Method added to When updating. Block Validate rule, packing card badge, DHL pickup booked for 28.10.",
+    status: "Live",
+    link: "odoo/dhl-go-live-2026-10-27/"
+  },
+
+  {
+    date: "2026-10-27",
+    area: "Odoo · Shopify",
+    title: "Product data queues stuck – duplicate Shopify template links",
+    summary: "Product data queues stuck since 23.10 (Expected singleton product.template(89, 178)). Duplicate template links re-activated by the instance reactivation. Archived 205, 199, 332, 333 with before/after checks; PDQ006762 completed. Open: 316 (PSD), 114, remaining queues.",
+    status: "In progress",
+    link: "odoo/shopify-template-duplicates-2026-10-27/"
+  },
+
+  {
+    date: "2026-10-27",
+    area: "Shopify · Tax",
+    title: "EU business customers charged VAT – status",
+    summary: "EU B2B customers with a valid VAT ID charged gross price. Investigation open: checklist of Shopify tax settings, Odoo query for affected orders since 01.04.2026, report to Patricia.",
+    status: "Open",
+    link: "shopify/eu-b2b-vat-reverse-charge/"
+  },
 ];

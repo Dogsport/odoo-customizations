@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EU B2B VAT Issue</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
+.ok{color:#1d5e2a;font-weight:700} .open{color:#a6230f;font-weight:700}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>EU business customers charged VAT – status and next steps (27.10.2026)</h1></div></header>
+<main>
+<p style="font-size:13px"><a href="EU_B2B_VAT_Status_2026-10-27.pdf">PDF version</a></p>
+
+<p><strong>Status 27.10.2026: investigation open, nothing changed yet.</strong> Owner: Hamza, report to Patricia.</p>
+<p class="note">Shopify store iqdogsport.myshopify.com (Grow plan, no Shopify Plus checkout customization) · orders synced to Odoo 19 via Emipro.</p>
+<h2>1. Problem</h2>
+<p>EU business customers (outside Germany) who enter a valid VAT ID are charged the <strong>gross</strong> price including German VAT, although an intra-EU B2B delivery should be invoiced net (reverse charge, §4 Nr. 1b UStG).</p>
+<h2>2. Where we stand</h2>
+<ul>
+<li>Task: find the cause in Shopify (tax settings / VAT ID collection / B2B handling) and list the affected orders since 1 April 2026.</li>
+<li>No setting has been changed. Topic was not part of the DHL / Shopify-link work on 26.–27.10.</li>
+</ul>
+<h2>3. What to check in Shopify (read only)</h2>
+<ol>
+<li><strong>Settings → Taxes and duties → European Union:</strong> is "Collect VAT" set up for Germany / OSS, and is the option to <em>not charge VAT for businesses with a valid VAT number</em> available/enabled for the store?</li>
+<li><strong>Checkout:</strong> where does the customer enter the VAT ID (company/VAT field, app, customer account)? Does Shopify validate it (VIES)?</li>
+<li><strong>Customers:</strong> open an affected customer – is "Collect tax" / tax exemption set? Shopify only drops VAT when the customer or the checkout VAT number is recognised as tax-exempt.</li>
+<li><strong>Markets:</strong> are prices shown including tax ("Dynamic tax-inclusive pricing")? This changes how net prices look for EU customers.</li>
+<li><strong>Apps:</strong> any VAT/B2B app (e.g. VAT validation) installed – what does it do, is it still active?</li>
+</ol>
+<h2>4. Affected orders since 1 April 2026 (Odoo, read only)</h2>
+<p>Orders from EU countries except Germany where the customer has a VAT ID but tax was charged:</p>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT so.name, so.date_order::date, c.code AS country, p.vat, so.amount_untaxed, so.amount_tax, so.amount_total FROM sale_order so JOIN res_partner p ON p.id = so.partner_invoice_id LEFT JOIN res_country c ON c.id = coalesce(p.country_id, (SELECT country_id FROM res_partner WHERE id = p.commercial_partner_id)) WHERE so.name LIKE '#IQD-%' AND so.date_order &gt;= '2026-04-01' AND coalesce(p.vat, '') &lt;&gt; '' AND c.code IN ('AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE') AND so.amount_tax &gt; 0 AND so.state &lt;&gt; 'cancel' ORDER BY so.date_order;"</code></pre>
+<p>If the VAT ID is stored on the company contact and not the invoice address, also run the query with <code>p.commercial_partner_id</code>. Export the result for Patricia (order, date, country, VAT ID, net, tax, total).</p>
+<h2>5. Next steps</h2>
+<ol>
+<li>Run query 4 → list for Patricia.</li>
+<li>Screenshots of the Shopify settings in section 3 → identify the cause.</li>
+<li>Write the cause and 1–2 solution options (Shopify setting, VAT app, manual credit note process) for Patricia.</li>
+<li>Decision with Patricia / tax advisor: correction of past orders (credit notes / corrected invoices) – Odoo invoices are the legal documents.</li>
+<li>Test any change first in the Shopify test store (iq-dogsport-test) with an EU test customer and VAT ID.</li>
+</ol>
+
+</main></body></html>

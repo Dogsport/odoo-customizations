@@ -1,0 +1,71 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shopify Template Duplicates</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
+.ok{color:#1d5e2a;font-weight:700} .open{color:#a6230f;font-weight:700}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
+</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>Product data queues stuck – duplicate Shopify template links (27.10.2026)</h1></div></header>
+<main>
+<p style="font-size:13px"><a href="Shopify_Template_Duplicates_2026-10-27.pdf">PDF version</a></p>
+
+<p><strong>Status 27.10.2026: cause proven and fixed for 4 of 6 products.</strong> Follow-up of <a href="../shopify-duplicate-mappings/">Shopify duplicate mappings (26.10.2026)</a> – this time on the <em>product (template)</em> level.</p>
+<p class="note">Odoo 19 Production · Emipro Shopify connector. All checks read-only; changes = archiving wrong link records one at a time with before/after checks.</p>
+<h2>1. Symptom</h2>
+<p>Product Data Queues stuck in Draft / Partially Completed since 23.10.2026 19:10 (PDQ006640 … PDQ006762), 27 draft lines. Server log:</p>
+<pre><code>product_data_queue_line.py, line 118, in process_product_queue_line_data
+ValueError: Expected singleton: product.template(89, 178)</code></pre>
+<h2>2. Cause</h2>
+<ul>
+<li>One Shopify product linked to two or three Odoo templates in <code>shopify.product.template.ept</code>. The connector crashes and the whole queue run stops – products behind the broken line stay Draft too.</li>
+<li>All 17 duplicate links (and 178 template + 601 variant links in total) have <code>write_date</code> 23.10.2026 13:29:21 UTC – the instance reactivation switched the intentionally archived old links back on (written by the user who reactivated).</li>
+<li>Proof: the same products processed fine until 22.10 (Wurfversteck 15× done, PSD 21×, Top-Matic 13×) and only drafts since 23.10.</li>
+<li>Not caused by archiving mappings 749/1169 on 26.10 (that was the variant table).</li>
+</ul>
+<h2>3. Duplicates and status</h2>
+<table><thead><tr><th>Shopify product</th><th>Archive (wrong)</th><th>Keep (correct)</th><th>Status</th></tr></thead><tbody>
+<tr><td>10709793145096 Wurfversteck</td><td>205 → tmpl 89 (+ variant 750 old Set variant)</td><td>301 → 178 (variant 1109)</td><td class="ok">archived ✓, PDQ006762 processed, 8/8 done</td></tr>
+<tr><td>10709806711048 Top-Matic Profi Set</td><td>199 → 83 (variants 737–739)</td><td>302 → 174 (1110–1112)</td><td class="ok">archived ✓</td></tr>
+<tr><td>12205141098760 Softshell 3.0 Unisex (SSU3)</td><td>332 → 382, 333 → 383 (variants 1226–1239)</td><td>334 → 384 (1240–1246)</td><td class="ok">archived ✓, health check 7/7 ok; 2.0 Unisex/Damen and 3.0 Damen unchanged</td></tr>
+<tr><td>12109893730568 PSD Trainingsshirt</td><td>316 → 107 (variants 1170–1173 → old TDP.OL!)</td><td>324 → 361 (1195–1199, 1280)</td><td class="open">checked, safe – archive and confirm (also fixes PSD M–2XL orders landing on TDP.OL)</td></tr>
+<tr><td>10709825028360 T-Shirt 'Power' Olive</td><td>114 → 107 (variants 379–384)</td><td>327 → 365 (1202–1207)</td><td class="open">checked, safe – archive and confirm (preventive)</td></tr>
+<tr><td>E-Geschenkgutschein / Geschenkgutscheinkarte / IQ Geschenkgutschein</td><td colspan="2">271/337, 276/338 (both archived templates), 303/330 (same template)</td><td>leave – decision later</td></tr>
+</tbody></table>
+<p>Harmless leftovers (old archived product with an active link but a different Shopify variant, e.g. FUN.bl, "- ALT IQ Softshelljacke"): no crash, clean up later together with the ~250 others.</p>
+<h2>4. Procedure (one link at a time)</h2>
+<ol>
+<li>Before check: variant links under the wrong and the correct template link (query 6.2). Stop if anything under the wrong link points to an <em>active</em> product that has no twin under the correct link.</li>
+<li>Open <code>/odoo/shopify.product.template.ept/&lt;ID&gt;</code> → check Shopify Template Id and Product Template → <strong>⚙ → Archive</strong>. Never Delete, never Publish/Unpublish (those talk to Shopify), never Export.</li>
+<li>After check (query 6.3) → wrong <code>f</code>, correct <code>t</code>.</li>
+<li>Process the affected queue manually; never "Set To Completed" (skips the import).</li>
+</ol>
+<p>Archiving a link sends nothing to Shopify and changes no product, stock or order. Undo: filter Archived → Unarchive.</p>
+<h2>5. Queues</h2>
+<table><thead><tr><th>Queue</th><th>Status 27.10</th></tr></thead><tbody>
+<tr><td>PDQ006762</td><td class="ok">Completed</td></tr>
+<tr><td>PDQ006640, 006667, 006726, 006727, 006737</td><td>ready – process manually</td></tr>
+<tr><td>PDQ006651, 006703 (SSU3)</td><td>ready since 332/333 archived – process manually</td></tr>
+<tr><td>PDQ006692 (PSD)</td><td class="open">after archiving 316</td></tr>
+<tr><td>PDQ006766 (gift card variants without SKU, created 27.10 ~10:28)</td><td>separate issue – leave until Gift Card Hero / Syncube is done</td></tr>
+</tbody></table>
+<h2>6. Read-only checks</h2>
+<h3>6.1 Shopify products with more than one active template link</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT to_jsonb(t)-&gt;&gt;'shopify_tmpl_id' AS shopify_product, count(*) AS active_layers, string_agg(t.id::text || '-&gt;' || t.product_tmpl_id::text, ', ') AS layer_to_odoo_template FROM shopify_product_template_ept t WHERE t.active AND t.shopify_instance_id = 1 GROUP BY 1 HAVING count(*) &gt; 1 ORDER BY 1;"</code></pre>
+<h3>6.2 Variant links under two template links (replace 316, 324)</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT v.id, to_jsonb(v)-&gt;&gt;'variant_id' AS shopify_variant, (to_jsonb(v)-&gt;&gt;'shopify_template_id') AS tmpl_layer, v.product_id, pp.default_code, pp.active AS product_active, v.active AS link_active FROM shopify_product_product_ept v JOIN product_product pp ON pp.id = v.product_id WHERE (to_jsonb(v)-&gt;&gt;'shopify_template_id')::int IN (316, 324) ORDER BY 2, 3, 1;"</code></pre>
+<h3>6.3 After check (replace IDs)</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT 'tmpl' AS t, id, product_tmpl_id, active FROM shopify_product_template_ept WHERE id IN (316, 324) UNION ALL SELECT 'var', id, product_id, active FROM shopify_product_product_ept WHERE id IN (1169,1170,1171,1172,1173,1195,1196,1197,1198,1199,1280) ORDER BY 1, 2;"</code></pre>
+<h3>6.4 Stuck queue lines with status</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT qd.name AS queue, q.id AS line, left(to_jsonb(q)-&gt;&gt;'name', 40) AS product, q.state FROM shopify_product_data_queue_line_ept q JOIN shopify_product_data_queue_ept qd ON qd.id = (to_jsonb(q)-&gt;&gt;'product_data_queue_id')::int WHERE q.state IN ('draft','failed') ORDER BY 1, 2;"</code></pre>
+<h3>6.5 Health check per Shopify product (every variant exactly one active link to an active product)</h3>
+<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "WITH v AS (SELECT to_jsonb(t)-&gt;&gt;'shopify_tmpl_id' AS sp, to_jsonb(v)-&gt;&gt;'variant_id' AS sv, v.active AS la, pp.active AS pa, pp.default_code AS sku FROM shopify_product_product_ept v JOIN shopify_product_template_ept t ON t.id = (to_jsonb(v)-&gt;&gt;'shopify_template_id')::int JOIN product_product pp ON pp.id = v.product_id WHERE to_jsonb(t)-&gt;&gt;'shopify_tmpl_id' IN ('12109893730568','10709825028360')), per AS (SELECT sp, sv, count(*) FILTER (WHERE la) AS active_links, count(*) FILTER (WHERE la AND pa) AS good_links, min(sku) FILTER (WHERE la AND pa) AS sku FROM v GROUP BY sp, sv) SELECT sp AS shopify_product, min(sku) AS example_sku, count(*) AS variants, count(*) FILTER (WHERE active_links = 1 AND good_links = 1) AS ok, count(*) FILTER (WHERE NOT (active_links = 1 AND good_links = 1)) AS problem FROM per GROUP BY sp ORDER BY sp;"</code></pre>
+<h2>7. Next steps</h2>
+<ol><li>Archive 316 (PSD) → after check → process PDQ006692.</li><li>Archive 114 (T-Shirt Olive) → after check.</li><li>Process the remaining ready queues one by one.</li><li>Run 6.1 again – expect only the gift card rows (271/337, 276/338, 303/330).</li><li>Weekly: 6.1 and the variant check from the 26.10 page.</li><li><strong>Never archive or deactivate the Shopify instance.</strong></li></ol>
+
+</main></body></html>
