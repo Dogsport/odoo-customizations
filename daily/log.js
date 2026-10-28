@@ -166,4 +166,12 @@ window.IQ_LOG = [
     status: "Open",
     link: "shopify/eu-b2b-vat-reverse-charge/"
   },
+  {
+    date: "2026-10-28",
+    area: "Shopify · Tax",
+    title: "EU VAT ID – Odoo automations + Shopify Dynamic tax (live)",
+    summary: "Root cause: Emipro does not import the checkout VAT ID (only in Shopify order events) and Shopify keeps the gross price with fixed tax display. Live: Odoo automations 'IQ – EU VAT from Shopify reverse charge' + '0% tax on reverse-charge lines', #IQD-99202 corrected, Shopify Dynamic tax-inclusive pricing on (decision Florian). Open: monitor first Dynamic orders, EU price adjustment, past refunds.",
+    status: "Live",
+    link: "shopify/eu-b2b-vat-reverse-charge/"
+  },
 ];

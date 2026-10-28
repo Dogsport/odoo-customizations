@@ -1,0 +1,3 @@
+[("shopify_instance_id", "!=", False), ("partner_shipping_id.country_id.code", "in", ["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE"])]
+
+Check after saving: it must read "Shopify Instance is set" (in staging the domain editor once turned it into "!= 2").

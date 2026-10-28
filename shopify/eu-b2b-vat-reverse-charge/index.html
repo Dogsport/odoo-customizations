@@ -1,48 +1,330 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EU B2B VAT Issue</title><style>
-:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f}
+<title>EU B2B VAT Solution</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f;--ok:#1d5e2a;--okbg:#e6f2e8;--warnbg:#fff5d6}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
 main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
-h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:32px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin-top:22px}
-table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
-code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all} pre code{background:none;color:inherit;font-size:12px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:34px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin:22px 0 6px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto;margin:8px 0} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top} th{background:#efeeeb}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-word} pre code{background:none;color:inherit;font-size:12px}
 a{color:var(--accent)}
-.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px}
-.ok{color:#1d5e2a;font-weight:700} .open{color:#a6230f;font-weight:700}
-@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
-</style></head><body><header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a><h1>EU business customers charged VAT – status and next steps (27.10.2026)</h1></div></header>
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px;margin:10px 0}
+.good{background:var(--okbg);border-left:4px solid var(--ok);padding:8px 12px;margin:10px 0}
+.warn{background:var(--warnbg);border-left:4px solid #b7791f;padding:8px 12px;margin:10px 0}
+.ok{color:var(--ok);font-weight:700} .open{color:var(--accent);font-weight:700}
+.toc{background:#fff;border:1px solid var(--line);padding:10px 16px;columns:2;font-size:14px} .toc a{text-decoration:none}
+@media (max-width:640px){.toc{columns:1}}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a,.toc{display:none} tr,pre{break-inside:avoid} h2{break-after:avoid}}
+</style></head><body>
+<header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a>
+<h1>EU VAT ID in Shopify and Odoo – findings, decision and live solution (28.10.2026)</h1></div></header>
 <main>
-<p style="font-size:13px"><a href="EU_B2B_VAT_Status_2026-10-27.pdf">PDF version</a></p>
+<p style="font-size:13px"><a href="EU_B2B_VAT_Documentation_2026-10-28.pdf">PDF version</a> · <a href="EU_VAT_ID_Status_2026-10-28.pdf">Status for Patricia &amp; Florian</a> · <a href="EU_B2B_VAT_Refund_List_2026-10-28.pdf">Refund list</a> · <a href="EU_B2B_VAT_Status_2026-10-27.pdf">Status 27.10 (old)</a></p>
 
-<p><strong>Status 27.10.2026: investigation open, nothing changed yet.</strong> Owner: Hamza, report to Patricia.</p>
-<p class="note">Shopify store iqdogsport.myshopify.com (Grow plan, no Shopify Plus checkout customization) · orders synced to Odoo 19 via Emipro.</p>
-<h2>1. Problem</h2>
-<p>EU business customers (outside Germany) who enter a valid VAT ID are charged the <strong>gross</strong> price including German VAT, although an intra-EU B2B delivery should be invoiced net (reverse charge, §4 Nr. 1b UStG).</p>
-<h2>2. Where we stand</h2>
+<div class="good"><strong>Status 28.10.2026 – live.</strong> Odoo now reads the VAT ID from Shopify reverse-charge orders (2 automation rules in production). Shopify live store switched to <strong>Dynamic tax-inclusive pricing</strong> (decision Florian, 28.10.2026), so a valid VAT ID now lowers the price at checkout. Owner: Hamza. Stakeholders: Patricia, Florian, Elena.</div>
+
+<div class="toc">
+<a href="#s1">1. Summary</a><br><a href="#s2">2. The problem</a><br><a href="#s3">3. Findings</a><br><a href="#s4">4. Options we evaluated</a><br>
+<a href="#s5">5. Decision</a><br><a href="#s6">6. Changes made</a><br><a href="#s7">7. How it works now</a><br><a href="#s8">8. Code</a><br>
+<a href="#s9">9. Tests</a><br><a href="#s10">10. Past orders</a><br><a href="#s11">11. Open items / next steps</a><br><a href="#s12">12. Rollback</a><br><a href="#s13">13. Read-only queries</a>
+</div>
+
+<h2 id="s1">1. Summary</h2>
+<table>
+<tr><th>Topic</th><th>Before</th><th>Now (28.10.2026)</th></tr>
+<tr><td>VAT ID entered at Shopify checkout</td><td>Not transferred to Odoo by the Emipro connector</td><td class="ok">Read automatically from the Shopify order, stored on the customer, VIES checked</td></tr>
+<tr><td>Odoo invoice for reverse-charge orders</td><td>Often OSS VAT of the customer's country (VAT the customer never paid)</td><td class="ok">Fiscal position "Business partner EU (with VAT ID)", 0% EU D – matches Shopify</td></tr>
+<tr><td>Price paid by a business with VAT ID</td><td>Gross price (Shopify removed VAT but kept the price) → refunds</td><td class="ok">Price minus local VAT (Dynamic tax display)</td></tr>
+<tr><td>Dealers with company account (B2B)</td><td>Correct (net catalog prices, "don't collect tax")</td><td>Unchanged</td></tr>
+<tr><td>Private customers in other EU countries</td><td>Same gross price everywhere</td><td class="open">Price follows the local VAT rate (see 7)</td></tr>
+</table>
+
+<h2 id="s2">2. The problem</h2>
+<p>EU business customers (outside Germany) can enter a VAT ID in the Shopify checkout. Shopify validates it and applies reverse charge ("Reverse charge was applied. A valid VAT number: HU… was provided for this order."). Two things went wrong:</p>
+<ol>
+<li><strong>Odoo:</strong> the Emipro connector does not import the VAT ID (it is only in the Shopify order <em>events</em>, not in the REST order data, localizedFields or customAttributes). In Odoo the customer had no VAT ID, the order got the OSS fiscal position of the customer's country (e.g. "OSS B2C Hungary" 27%) and the invoice showed VAT the customer never paid.</li>
+<li><strong>Shopify price:</strong> with fixed tax-inclusive prices ("Show as included"), Shopify removes the VAT but <strong>keeps the gross price</strong>. Example: jacket €279.90 → business with valid VAT ID still pays €279.90, tax €0.00 (should be ≈ €235.21 net). Customers then ask for a refund (e.g. Fodor).</li>
+</ol>
+<p>Since April this happened in <strong>14 orders</strong> (list from Patricia): #IQD-94603, 94847, 96441, 96555, 96556, 97075, 97529, 98321, 98713, 98815, 98874, 98902, 99056, 99141. Two were dealers who ordered as normal customers instead of via their company account (#IQD-96555/96556 The Kill, #IQD-98815 Edog). New case on 28.10: #IQD-99202 (HU18283822, €308.80, bank deposit pending).</p>
+
+<h2 id="s3">3. Findings</h2>
+<h3>3.1 Odoo setup was already right – only the input was missing</h3>
 <ul>
-<li>Task: find the cause in Shopify (tax settings / VAT ID collection / B2B handling) and list the affected orders since 1 April 2026.</li>
-<li>No setting has been changed. Topic was not part of the DHL / Shopify-link work on 26.–27.10.</li>
+<li>Fiscal position 6 "Business partner EU (with VAT ID)" (auto apply, VAT required, EU country group, 0% EU D, account 812500) and the OSS B2C positions exist and work.</li>
+<li>VIES check: production on since 27.10 (Patricia), staging switched on 28.10.</li>
+<li>Customers that already have a VAT ID in Odoo (dealers) automatically get fiscal position 6. Production check: of 83 EU orders since 01.04 from customers with a VAT ID, 76 were invoiced correctly.</li>
+<li>Emipro sets the fiscal position from the Shopify market (<code>prepare_shopify_order_vals</code>, sale_order.py) and creates order lines <em>without tax</em> when Shopify sends no tax lines.</li>
+<li>The VAT ID is only available via GraphQL order <code>events</code>; <code>instance.get_graphql_client().execute()</code> can be called from an automation (safe_eval).</li>
 </ul>
-<h2>3. What to check in Shopify (read only)</h2>
+<h3>3.2 Shopify behaviour</h3>
+<ul>
+<li><strong>Fixed / "Show as included" / line item:</strong> VAT ID → tax line becomes €0, price stays. There is no setting to change this.</li>
+<li><strong>Dynamic tax-inclusive pricing:</strong> Shopify takes out the German 19% and adds the customer's VAT. With a valid VAT ID the VAT is removed and the price drops. Test store: Hungary private €280.80 (with −6% HU sub-market), with VAT ID €221.10.</li>
+<li>Market price adjustments only accept whole percentages; one percentage per market. Grow plan reportedly allows only 3 markets (Basic/Grow 3, Advanced 3–50, Plus 50) – to be confirmed in admin.</li>
+<li>Checkout customization and private Shopify Functions need Shopify Plus (~$2,300+/month). Even on Plus, custom code cannot read Shopify's native VAT field.</li>
+<li>Since 01.01.2026 new legacy custom apps cannot be created in the Shopify admin. Dev Dashboard apps install directly only on development stores; the custom install link for the test store was rejected ("installation link is invalid"). The existing "Odoo Staging Connector" has no <code>draft_orders</code> scope.</li>
+</ul>
+<h3>3.3 Dealers (Shopify B2B companies)</h3>
+<ul>
+<li>Dealers are Shopify <strong>Companies</strong> (Customers → Companies) with catalog <strong>IQ-Händler-B2B-Gold</strong> (fixed net prices, e.g. Sommerweste 3.0 €79.90 vs. retail €129.90) and location tax setting <strong>"Don't collect tax"</strong>.</li>
+<li>Proof: #IQD-99203 CaniTess (BE) – dealer prices, no tax in Shopify, Odoo 0% EU D, totals equal (€1,213.57).</li>
+<li>Edog Kalypsoland: location switched to "Don't collect tax" by Chantal on 16.06; #IQD-95400 (25.05) was before that and was charged 21% RO VAT in Shopify (still "payment pending"; Odoo invoice RE/2026/01277 at 0%).</li>
+<li>Company locations often have <strong>no VAT number</strong> stored ("VAT number: Not provided"). Several companies show "No main contact" (ordering still possible via assigned customers).</li>
+<li>Dynamic does not adjust fixed catalog prices – dealers should be unaffected (to be verified with one company order after the switch).</li>
+</ul>
+<h3>3.4 Open finding</h3>
+<p>#IQD-98746 and #IQD-94400 (Austria): Shopify charged no VAT although there was no company and no VAT ID. Cause not found yet (customer tax exempt? draft order without tax? product "charge tax" off? Austria override?).</p>
+
+<h2 id="s4">4. Options we evaluated</h2>
+<table>
+<tr><th>Option</th><th>Result</th><th>Why (not)</th></tr>
+<tr><td>A. Keep fixed prices, refund by hand</td><td>Rejected</td><td>Manual work, unhappy customers</td></tr>
+<tr><td>B. Switch off VAT ID field, VAT-free only via company account (Patricia's proposal)</td><td>Alternative</td><td>Free, no price change; customers must request an account first</td></tr>
+<tr><td><strong>C. Dynamic tax-inclusive pricing</strong></td><td class="ok">Chosen</td><td>Automatic, no app, no development; private EU prices follow local VAT</td></tr>
+<tr><td>D. Shopify app (cart VAT field): TAX Exemption &amp; VAT e-invoices ($9.99), Exemptify ($4.99), Wezy Tax Exempt ($24.99), EUVAT.app (usage based)</td><td>Not needed now</td><td>Not tested; must reduce price before payment and import correctly into Odoo</td></tr>
+<tr><td>E. Own development: cart VAT field + draft order at net price</td><td>Stopped</td><td>Needs a Shopify app token with draft-order scope (blocked for the test store), backend and theme work. Prototype script <code>vat_draft_order_prototype.py</code> written, never run.</td></tr>
+<tr><td>F. After-the-fact automatic refund via Odoo</td><td>Rejected</td><td>Customer pays gross first – not wanted</td></tr>
+<tr><td>G. Shopify Plus</td><td>Rejected</td><td>Too expensive, does not solve the native VAT field problem</td></tr>
+</table>
+
+<h2 id="s5">5. Decision</h2>
+<ul>
+<li><strong>28.10.2026 – Florian:</strong> Dynamic tax display is OK → switched on in the live store.</li>
+<li>Odoo automations activated in production (Hamza, 28.10.2026).</li>
+<li>Still for Patricia: price adjustment on the EU market (yes/no, how much), prices for non-EU customers, refunds of past orders (section 10).</li>
+</ul>
+
+<h2 id="s6">6. Changes made</h2>
+<table>
+<tr><th>System</th><th>Change</th><th>When / who</th></tr>
+<tr><td>Odoo production</td><td>Company setting "Verify VAT numbers (VIES)" on</td><td>27.10, Patricia</td></tr>
+<tr><td>Odoo staging</td><td>VIES on; test server action "IQ – Check reverse-charge VAT (test)"; automations 1+2 (tested)</td><td>28.10, Hamza</td></tr>
+<tr><td>Odoo production</td><td>Automation rule <strong>"IQ – EU VAT from Shopify reverse charge"</strong> (Sales Order, on create)</td><td>28.10, Hamza</td></tr>
+<tr><td>Odoo production</td><td>Automation rule <strong>"IQ – EU VAT: 0% tax on reverse-charge lines"</strong> (Sales Order Line, on create)</td><td>28.10, Hamza</td></tr>
+<tr><td>Odoo production</td><td>#IQD-99202: VAT HU18283822 on customer Christian Helmut Buchenau, fiscal position 6, taxes 0% EU D (manual, imported before the rules)</td><td>28.10, Hamza</td></tr>
+<tr><td>Shopify live</td><td><strong>Dynamic tax-inclusive pricing on</strong> (Markets → European Union → Taxes and duties)</td><td>28.10, decision Florian</td></tr>
+<tr><td>Shopify test store</td><td>Dynamic on; sub-market "EU – Hungary 27%" (catalog −6%, EUR, no rounding); test product €119</td><td>28.10, Hamza</td></tr>
+<tr><td>Shopify Dev Dashboard</td><td>Apps "IQ VAT prototype (TEST ONLY)" and "IQ VAT prototype TEST2" created, 0 installs, scopes read_products/read+write_draft_orders only – can be deleted</td><td>28.10, Hamza</td></tr>
+</table>
+
+<h2 id="s7">7. How it works now</h2>
+<table>
+<tr><th>Customer</th><th>Shopify checkout</th><th>Odoo</th></tr>
+<tr><td>Germany, private</td><td>€279.90 incl. 19% (unchanged)</td><td>Domestic 19% – no automation message</td></tr>
+<tr><td>Other EU country, private</td><td>Price recalculated with local VAT (e.g. HU 27%: €298.72 without adjustment)</td><td>OSS B2C of the country – no automation message</td></tr>
+<tr><td>Other EU country, valid VAT ID at checkout</td><td>Price minus local VAT, tax €0 ("Reverse charge was applied")</td><td>Automation 1: VAT on customer, VIES, fiscal position 6, 0% EU D, note "IQ VAT: This order contains VAT ID …"; Automation 2 adds 0% EU D to lines without tax</td></tr>
+<tr><td>Dealer via company account</td><td>Fixed net catalog price, "don't collect tax"</td><td>Already has VAT + fiscal position 6 → skipped</td></tr>
+<tr><td>Outside the EU</td><td>Shopify shows prices without VAT</td><td>Export fiscal position – check first orders</td></tr>
+</table>
+<div class="warn"><strong>Private price changes with Dynamic (without market adjustment), example €279.90:</strong> LU 17% €275.20 (−1.7%) · AT/FR/BG 20% €282.25 (+0.8%) · NL/BE/ES/RO/CZ/LV/LT 21% €284.61 (+1.7%) · IT/SI 22% €286.95 (+2.5%) · PL/PT/IE/SK 23% €289.31 (+3.4%) · GR/EE 24% €291.66 (+4.2%) · DK/SE/HR 25% €294.02 (+5.0%) · HU 27% €298.72 (+6.7%). A price adjustment of −2% on the EU market keeps the 21% countries ≈ unchanged.</div>
+
+<h2 id="s8">8. Code</h2>
+<p>All code is also in the folder <code>code/</code>.</p>
+<h3>Automation 1 – Sales Order, on create</h3>
+<p>Domain (Apply on):</p>
+<pre><code>[(&quot;shopify_instance_id&quot;, &quot;!=&quot;, False), (&quot;partner_shipping_id.country_id.code&quot;, &quot;in&quot;, [&quot;AT&quot;,&quot;BE&quot;,&quot;BG&quot;,&quot;HR&quot;,&quot;CY&quot;,&quot;CZ&quot;,&quot;DK&quot;,&quot;EE&quot;,&quot;FI&quot;,&quot;FR&quot;,&quot;GR&quot;,&quot;HU&quot;,&quot;IE&quot;,&quot;IT&quot;,&quot;LV&quot;,&quot;LT&quot;,&quot;LU&quot;,&quot;MT&quot;,&quot;NL&quot;,&quot;PL&quot;,&quot;PT&quot;,&quot;RO&quot;,&quot;SK&quot;,&quot;SI&quot;,&quot;ES&quot;,&quot;SE&quot;])]
+
+Check after saving: it must read &quot;Shopify Instance is set&quot; (in staging the domain editor once turned it into &quot;!= 2&quot;).
+</code></pre>
+<pre><code># Odoo 19 - Automation Rule (PRODUCTION since 28.10.2026)
+# Name:     IQ - EU VAT from Shopify reverse charge
+# Model:    Sales Order (sale.order)
+# Trigger:  On create
+# Apply on: see domain_automation_1.txt
+# Action:   Execute Code (paste everything below this header)
+#
+# What it does: when Shopify applied reverse charge (&quot;Reverse charge was applied.
+# A valid VAT number: XX...&quot; in the Shopify order events), store the VAT ID on the
+# customer (Odoo runs the VIES check), set the &quot;VAT required&quot; fiscal position
+# (Business partner EU (with VAT ID)), update taxes (0% EU D) and post a note.
+# Never changes prices. Skips dealers that already have VAT + B2B fiscal position.
+
+MARK = &quot;A valid VAT number:&quot;
+QUERY = &quot;query($id: ID!) { order(id: $id) { events(first: 50) { nodes { message } } } }&quot;
+for order in records:
+    try:
+        if not order.shopify_order_id:
+            continue
+        partner = order.partner_invoice_id.commercial_partner_id
+        # dealer with VAT already in Odoo and correct fiscal position -&gt; nothing to do
+        if partner.vat and order.fiscal_position_id.vat_required:
+            continue
+        country = order.partner_shipping_id.country_id
+        code = country.code or &quot;&quot;
+        res = order.shopify_instance_id.get_graphql_client().execute(QUERY, {&quot;id&quot;: &quot;gid://shopify/Order/%s&quot; % order.shopify_order_id})
+        if not isinstance(res, dict):
+            res = res.to_dict()
+        so = (res.get(&quot;data&quot;, res) or {}).get(&quot;order&quot;) or {}
+        vat = False
+        for ev in ((so.get(&quot;events&quot;) or {}).get(&quot;nodes&quot;) or []):
+            msg = ev.get(&quot;message&quot;) or &quot;&quot;
+            if &quot;Reverse charge was applied&quot; in msg and MARK in msg:
+                vat = msg.split(MARK)[1].strip().split(&quot; &quot;)[0].strip()
+        if not vat:
+            continue
+        prefix = &quot;EL&quot; if code == &quot;GR&quot; else code
+        if not vat.startswith(prefix) or not vat.isalnum():
+            order.message_post(body=&quot;IQ VAT: VAT %s does not match delivery country %s - nothing changed, please check.&quot; % (vat, code))
+            continue
+        # 1. store VAT ID on the customer (Odoo runs the VIES check)
+        if not partner.vat:
+            partner.write({&quot;vat&quot;: vat})
+            partner.message_post(body=&quot;VAT ID %s taken from Shopify order %s.&quot; % (vat, order.name))
+        elif partner.vat.replace(&quot; &quot;, &quot;&quot;).upper() != vat:
+            order.message_post(body=&quot;IQ VAT: customer already has VAT %s, Shopify says %s - customer not changed, please check.&quot; % (partner.vat, vat))
+            continue
+        # 2. fiscal position + taxes, only if not already B2B
+        if not order.fiscal_position_id.vat_required:
+            fp = env[&quot;account.fiscal.position&quot;].search([
+                (&quot;auto_apply&quot;, &quot;=&quot;, True), (&quot;vat_required&quot;, &quot;=&quot;, True),
+                (&quot;country_group_id.country_ids&quot;, &quot;in&quot;, country.id),
+                (&quot;company_id&quot;, &quot;in&quot;, [order.company_id.id, False])], order=&quot;sequence&quot;, limit=1)
+            if fp:
+                order.write({&quot;fiscal_position_id&quot;: fp.id})
+                if order.order_line and order.invoice_status != &quot;invoiced&quot;:
+                    order.action_update_taxes()
+        order.message_post(body=&quot;IQ VAT: This order contains VAT ID %s (Shopify reverse charge). Customer updated, fiscal position: %s.&quot; % (vat, order.fiscal_position_id.display_name))
+    except Exception as e:
+        order.message_post(body=&quot;IQ VAT: could not process VAT ID: %s&quot; % e)
+</code></pre>
+<h3>Automation 2 – Sales Order Line, on create</h3>
+<pre><code># Odoo 19 - Automation Rule (PRODUCTION since 28.10.2026)
+# Name:     IQ - EU VAT: 0% tax on reverse-charge lines
+# Model:    Sales Order Line (sale.order.line)
+# Trigger:  On create
+# Apply on: [(&quot;order_id.shopify_instance_id&quot;, &quot;!=&quot;, False), (&quot;order_id.fiscal_position_id.vat_required&quot;, &quot;=&quot;, True)]
+# Action:   Execute Code
+#
+# Safety net: Emipro creates order lines WITHOUT tax when Shopify sends no tax lines
+# (reverse charge). Such a line gets the product tax mapped through the order&#x27;s
+# fiscal position (-&gt; 0% EU D). Lines that already have a tax are never touched.
+
+tax_field = &quot;tax_ids&quot; if env[&quot;ir.model.fields&quot;].search_count([(&quot;model&quot;, &quot;=&quot;, &quot;sale.order.line&quot;), (&quot;name&quot;, &quot;=&quot;, &quot;tax_ids&quot;)]) else &quot;tax_id&quot;
+for line in records:
+    try:
+        order = line.order_id
+        fp = order.fiscal_position_id
+        if not fp or not fp.vat_required or line[tax_field] or not line.product_id:
+            continue
+        taxes = line.product_id.taxes_id.filtered(lambda t: t.company_id == order.company_id)
+        mapped = fp.map_tax(taxes)
+        if mapped:
+            line.write({tax_field: [(6, 0, mapped.ids)]})
+            order.message_post(body=&quot;IQ VAT: line &#x27;%s&#x27; -&gt; tax %s (fiscal position %s).&quot; % (line.product_id.display_name, &quot;, &quot;.join(mapped.mapped(&quot;name&quot;)), fp.display_name))
+    except Exception as e:
+        line.order_id.message_post(body=&quot;IQ VAT: tax on line skipped because of an error: %s&quot; % e)
+</code></pre>
+<h3>Dry run server action (read only)</h3>
+<pre><code># Odoo 19 - Server Action (read only report, changes nothing)
+# Name:  IQ - VAT dry run (read only)
+# Model: Sales Order, Type: Execute Code, then &quot;Create Contextual Action&quot;.
+# Use:   select orders &gt; Action &gt; IQ - VAT dry run (read only) -&gt; popup report.
+
+MARK = &quot;A valid VAT number:&quot;
+QUERY = &quot;query($id: ID!) { order(id: $id) { totalTaxSet { shopMoney { amount } } events(first: 50) { nodes { message } } } }&quot;
+out = []
+for order in records:
+    try:
+        code = order.partner_shipping_id.country_id.code or &quot;&quot;
+        if not order.shopify_order_id or not order.shopify_instance_id:
+            out.append(&quot;%s: not a Shopify order - skip&quot; % order.name)
+            continue
+        res = order.shopify_instance_id.get_graphql_client().execute(QUERY, {&quot;id&quot;: &quot;gid://shopify/Order/%s&quot; % order.shopify_order_id})
+        if not isinstance(res, dict):
+            res = res.to_dict()
+        so = (res.get(&quot;data&quot;, res) or {}).get(&quot;order&quot;) or {}
+        tax = float(((so.get(&quot;totalTaxSet&quot;) or {}).get(&quot;shopMoney&quot;) or {}).get(&quot;amount&quot;) or 0)
+        vat = False
+        for ev in ((so.get(&quot;events&quot;) or {}).get(&quot;nodes&quot;) or []):
+            msg = ev.get(&quot;message&quot;) or &quot;&quot;
+            if &quot;Reverse charge was applied&quot; in msg and MARK in msg:
+                vat = msg.split(MARK)[1].strip().split(&quot; &quot;)[0].strip()
+        out.append(&quot;%s: %s | Shopify tax %.2f | reverse-charge VAT: %s | Odoo fiscal position: %s | Odoo tax %.2f&quot;
+                   % (order.name, code, tax, vat or &quot;-&quot;, order.fiscal_position_id.display_name or &quot;-&quot;, order.amount_tax))
+    except Exception as e:
+        out.append(&quot;%s: error %s&quot; % (order.name, e))
+raise UserError(&quot;\n&quot;.join(out))
+</code></pre>
+
+<h2 id="s9">9. Tests</h2>
+<table>
+<tr><th>Test</th><th>Where</th><th>Result</th></tr>
+<tr><td>Read VAT from Shopify events (#1134/#1133 FOUND HU26095745; #1132 tax 8.26 → nothing; #1131 DE → nothing)</td><td>Staging, server action</td><td class="ok">OK</td></tr>
+<tr><td>#1135 HU + VAT: fiscal position set, but lines without tax → Automation 2 added</td><td>Staging</td><td class="ok">Fixed</td></tr>
+<tr><td>#1136 HU private → OSS Hungary 27%</td><td>Staging</td><td class="ok">OK</td></tr>
+<tr><td>#1138 / #1139 (IQD-POS-1139) HU + VAT → fiscal position 6, 0% EU D, VAT + VIES valid on customer, chatter notes</td><td>Staging (fixed tax display)</td><td class="ok">OK</td></tr>
+<tr><td>Dynamic: HU private €280.80, HU + VAT €221.10, fixed: €279.90 both</td><td>Test store checkout only</td><td class="ok">OK</td></tr>
+<tr><td>Dealer order via company: #IQD-99203 CaniTess – totals equal, 0% EU D</td><td>Production</td><td class="ok">OK</td></tr>
+<tr><td><strong>Import of Dynamic-priced orders into Odoo</strong> (DE, HU private, HU + VAT, AT/NL, CH, company)</td><td>—</td><td class="open">Not tested before the live switch → monitor first live orders (query 5)</td></tr>
+</table>
+<p>Test VAT ID for test store/staging only: <code>HU26095745</code> (real company – never use in the live shop). Invalid test: <code>HU12345678</code>.</p>
+
+<h2 id="s10">10. Past orders (01.04.–28.10.2026)</h2>
+<table>
+<tr><th>Status</th><th>Orders</th><th>Amount</th></tr>
+<tr><td>Already refunded</td><td>#IQD-98418 (Shopify refund 02.10), #IQD-97529 (RRE/2026/00441), #IQD-96441 (RRE/2026/00230)</td><td>€225.30</td></tr>
+<tr><td class="open">Still open</td><td>#IQD-98001 ActiveOutdoorGear NL €217.24, #IQD-97415 ProDogs GR €112.31</td><td>€329.55</td></tr>
+<tr><td>To confirm</td><td>#IQD-95400 Edog – invoice already 0%, Shopify "payment pending" – probably nothing to refund</td><td>(€329.79)</td></tr>
+<tr><td>To check</td><td>ProDogs credit balance −€703.41 (= order total, possible double payment); #IQD-97529 / #IQD-96441 original invoices still contain ES/HU OSS VAT (OSS correction? – Florian)</td><td></td></tr>
+<tr><td>New</td><td>#IQD-99202 – €308.80 gross, bank deposit pending: correct to net before payment? (Patricia)</td><td></td></tr>
+</table>
+
+<h2 id="s11">11. Open items / next steps</h2>
 <ol>
-<li><strong>Settings → Taxes and duties → European Union:</strong> is "Collect VAT" set up for Germany / OSS, and is the option to <em>not charge VAT for businesses with a valid VAT number</em> available/enabled for the store?</li>
-<li><strong>Checkout:</strong> where does the customer enter the VAT ID (company/VAT field, app, customer account)? Does Shopify validate it (VIES)?</li>
-<li><strong>Customers:</strong> open an affected customer – is "Collect tax" / tax exemption set? Shopify only drops VAT when the customer or the checkout VAT number is recognised as tax-exempt.</li>
-<li><strong>Markets:</strong> are prices shown including tax ("Dynamic tax-inclusive pricing")? This changes how net prices look for EU customers.</li>
-<li><strong>Apps:</strong> any VAT/B2B app (e.g. VAT validation) installed – what does it do, is it still active?</li>
-</ol>
-<h2>4. Affected orders since 1 April 2026 (Odoo, read only)</h2>
-<p>Orders from EU countries except Germany where the customer has a VAT ID but tax was charged:</p>
-<pre><code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "SELECT so.name, so.date_order::date, c.code AS country, p.vat, so.amount_untaxed, so.amount_tax, so.amount_total FROM sale_order so JOIN res_partner p ON p.id = so.partner_invoice_id LEFT JOIN res_country c ON c.id = coalesce(p.country_id, (SELECT country_id FROM res_partner WHERE id = p.commercial_partner_id)) WHERE so.name LIKE '#IQD-%' AND so.date_order &gt;= '2026-04-01' AND coalesce(p.vat, '') &lt;&gt; '' AND c.code IN ('AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE') AND so.amount_tax &gt; 0 AND so.state &lt;&gt; 'cancel' ORDER BY so.date_order;"</code></pre>
-<p>If the VAT ID is stored on the company contact and not the invoice address, also run the query with <code>p.commercial_partner_id</code>. Export the result for Patricia (order, date, country, VAT ID, net, tax, total).</p>
-<h2>5. Next steps</h2>
-<ol>
-<li>Run query 4 → list for Patricia.</li>
-<li>Screenshots of the Shopify settings in section 3 → identify the cause.</li>
-<li>Write the cause and 1–2 solution options (Shopify setting, VAT app, manual credit note process) for Patricia.</li>
-<li>Decision with Patricia / tax advisor: correction of past orders (credit notes / corrected invoices) – Odoo invoices are the legal documents.</li>
-<li>Test any change first in the Shopify test store (iq-dogsport-test) with an EU test customer and VAT ID.</li>
+<li><strong>Monitor the first live orders after the Dynamic switch</strong> (query 5): Shopify total = Odoo total for DE, EU private, EU + VAT ID, non-EU and one company order.</li>
+<li>Check Emipro tax setting <code>apply_tax_in_order</code> on production and staging (query 1).</li>
+<li>Patricia: EU market price adjustment (e.g. −2%) and non-EU prices (now shown without VAT).</li>
+<li>Patricia/Florian: refunds #IQD-98001, #IQD-97415, #IQD-99202; confirm #IQD-95400; ProDogs credit; OSS correction.</li>
+<li>Austria #IQD-98746 / #IQD-94400 – find why no VAT was charged.</li>
+<li>Elena: add the VAT number to every EU company location; tell dealers to always order logged in.</li>
+<li>Check German dealers (company location "collect tax"): is 19% added on top of the catalog price or included?</li>
+<li>Cleanup: delete Dev Dashboard apps "IQ VAT prototype (TEST ONLY)" and "TEST2"; test store sub-market "EU – Hungary 27%" if not needed.</li>
+<li>Florian: legal note text for reverse-charge invoices.</li>
 </ol>
 
+<h2 id="s12">12. Rollback</h2>
+<ul>
+<li><strong>Odoo:</strong> Settings → Technical → Automation Rules → open each "IQ – EU VAT …" rule → untick <em>Active</em>. Nothing else to undo (VAT IDs on customers stay, they are correct).</li>
+<li><strong>Shopify:</strong> Markets → European Union → Taxes and duties → switch Dynamic tax-inclusive pricing off. Orders already placed are not changed.</li>
+</ul>
+
+<h2 id="s13">13. Read-only queries</h2>
+<p>Run with <code>PGOPTIONS='-c default_transaction_read_only=on' psql -P pager=off -c "…"</code>.</p>
+<pre><code>-- All read only. Run on Odoo.sh shell with:
+-- PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -P pager=off -c &quot;&lt;query&gt;&quot;
+
+-- 1. Emipro tax setting (decides whether Odoo or Shopify taxes are used on import)
+SELECT id, name, apply_tax_in_order FROM shopify_instance_ept;
+
+-- 2. VIES check switch per company
+SELECT id, name, vat_check_vies FROM res_company;
+
+-- 3. EU orders since 01.04 where the customer has a VAT ID but VAT was charged
+SELECT so.name, so.date_order::date, c.code AS country, cp.vat, cp.vies_valid,
+       fp.name-&gt;&gt;&#x27;en_US&#x27; AS fiscal_position, so.amount_untaxed, so.amount_tax, so.amount_total
+FROM sale_order so
+JOIN res_partner p ON p.id = so.partner_invoice_id
+JOIN res_partner cp ON cp.id = p.commercial_partner_id
+LEFT JOIN res_partner sh ON sh.id = so.partner_shipping_id
+LEFT JOIN res_country c ON c.id = sh.country_id
+LEFT JOIN account_fiscal_position fp ON fp.id = so.fiscal_position_id
+WHERE so.name LIKE &#x27;#IQD-%&#x27; AND so.date_order &gt;= &#x27;2026-04-01&#x27; AND so.state &lt;&gt; &#x27;cancel&#x27;
+  AND coalesce(cp.vat,&#x27;&#x27;) &lt;&gt; &#x27;&#x27; AND c.code &lt;&gt; &#x27;DE&#x27;
+ORDER BY so.amount_tax DESC, so.date_order;
+
+-- 4. Orders touched by the new automations (chatter notes)
+SELECT m.date, so.name, left(regexp_replace(m.body, &#x27;&lt;[^&gt;]+&gt;&#x27;, &#x27;&#x27;, &#x27;g&#x27;), 160) AS note
+FROM mail_message m JOIN sale_order so ON so.id = m.res_id AND m.model = &#x27;sale.order&#x27;
+WHERE m.body LIKE &#x27;%IQ VAT:%&#x27; ORDER BY m.date DESC LIMIT 50;
+
+-- 5. Shopify vs Odoo totals after the Dynamic switch (compare with Shopify admin)
+SELECT so.name, so.date_order::date, c.code, fp.name-&gt;&gt;&#x27;en_US&#x27; AS fiscal_position,
+       so.amount_untaxed, so.amount_tax, so.amount_total
+FROM sale_order so
+LEFT JOIN res_partner sh ON sh.id = so.partner_shipping_id
+LEFT JOIN res_country c ON c.id = sh.country_id
+LEFT JOIN account_fiscal_position fp ON fp.id = so.fiscal_position_id
+WHERE so.name LIKE &#x27;#IQD-%&#x27; AND so.date_order &gt;= &#x27;2026-10-28 17:00&#x27;
+ORDER BY so.date_order;
+</code></pre>
 </main></body></html>
