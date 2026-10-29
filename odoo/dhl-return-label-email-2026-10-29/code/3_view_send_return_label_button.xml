@@ -1,0 +1,17 @@
+<!--
+Odoo 19 - inherited view (PRODUCTION)
+View Name:              IQ – Send return label button
+View Type:              Form
+Model:                  Transfer (stock.picking)
+Inherited View:         stock.picking.form  (External ID stock.view_picking_form, the one WITHOUT parent)
+View inheritance mode:  Extension View
+Access Rights:          empty (all users)
+name = id of the server action "Send return label" (production 1777 - NOT the staging id 1774)
+-->
+<xpath expr="//header" position="inside">
+    <button name="1777" type="action" string="Retourenlabel senden" class="btn-primary"
+            invisible="not is_return_picking or state == 'done' or picking_type_code != 'incoming' or carrier_tracking_ref"/>
+    <button name="1777" type="action" string="Retourenlabel erneut senden" class="btn-secondary"
+            confirm="Für diese Retoure wurde bereits ein Label erstellt. Erneut an den Kunden senden?"
+            invisible="not is_return_picking or state == 'done' or picking_type_code != 'incoming' or not carrier_tracking_ref"/>
+</xpath>

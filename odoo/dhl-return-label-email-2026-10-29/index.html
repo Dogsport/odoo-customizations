@@ -1,0 +1,271 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DHL Return Label Email</title><style>
+:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f;--ok:#1d5e2a;--okbg:#e6f2e8;--warnbg:#fff5d6}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:34px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block} h3{margin:22px 0 6px}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto;margin:8px 0} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top} th{background:#efeeeb}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-word} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)}
+.note{background:#fff;border-left:4px solid var(--accent);padding:8px 12px;margin:10px 0}
+.good{background:var(--okbg);border-left:4px solid var(--ok);padding:8px 12px;margin:10px 0}
+.warn{background:var(--warnbg);border-left:4px solid #b7791f;padding:8px 12px;margin:10px 0}
+.flow{background:#fff;border:1px solid var(--line);padding:12px 16px;font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;overflow-x:auto}
+figure{margin:12px 0;background:#fff;border:1px solid var(--line);padding:8px} figure img{max-width:100%;height:auto;display:block} figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:700px){.grid{grid-template-columns:1fr}}
+.toc{background:#fff;border:1px solid var(--line);padding:10px 16px;columns:2;font-size:14px} .toc a{text-decoration:none} @media(max-width:640px){.toc{columns:1}}
+@media print{.flow{font-size:9.5px;white-space:pre} table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a,.toc{display:none} tr,pre,figure{break-inside:avoid} h2{break-after:avoid} .grid{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a>
+<h1>DHL return label + reclamation form by email – one button (29.10.2026)</h1></div></header>
+<main>
+<p style="font-size:13px"><a href="DHL_Return_Label_Email_2026-10-29.pdf">PDF version</a> · <a href="code/">Code files</a></p>
+<div class="good"><strong>Status 29.10.2026 – live in production.</strong> One button on a return creates the DHL return label (if needed) and opens a prepared email to the customer with the label and the reclamation form, in German or English. Returns from a ticket are emailed from the ticket, so replies land in the ticket. Owner: Hamza. Users: Elena / Customer Care.</div>
+
+<div class="toc">
+<a href="#s1">1. What it does</a><br><a href="#s2">2. How staff use it</a><br><a href="#s3">3. Components</a><br><a href="#s4">4. Automation: DHL carrier</a><br>
+<a href="#s5">5. Email templates</a><br><a href="#s6">6. Server action</a><br><a href="#s7">7. Button view</a><br><a href="#s8">8. Tests</a><br>
+<a href="#s9">9. Problems found &amp; fixes</a><br><a href="#s10">10. Limits / open items</a><br><a href="#s11">11. Rollback</a>
+</div>
+
+<h2 id="s1">1. What it does</h2>
+<div class="flow">Return created (from ticket, sales order or delivery)
+  └─ Automation: German customer + carrier empty → Carrier = DHL Parcel DE, Receiver = deu
+Click "Retourenlabel senden"
+  ├─ label already on the return?  → reuse it (no second DHL label)
+  ├─ no label yet                  → create it via DHL (= "Print Return Label")
+  │                                  DHL error → error shown, no email window
+  ├─ customer language de_*        → template (DE) + Retourenschein DE
+  │  otherwise                     → template (EN) + Retourenschein EN
+  └─ email window opens (editable) with label + Retourenschein
+       return belongs to a ticket → email posted in the TICKET (replies come back there)
+       no ticket                  → email posted in the RETURN
+Click "Senden" → email to the customer (from mail@iq-dogsport.de)
+Label exists → button changes to "Retourenlabel erneut senden" (asks for confirmation, reuses label)</div>
+
+<h2 id="s2">2. How staff use it</h2>
+<ol>
+<li>Create the return as usual (ticket → <em>Return</em>, sales order or delivery → <em>Return</em>).</li>
+<li>Check: Carrier <strong>DHL Parcel DE</strong>, DHL Return Receiver <strong>deu</strong> (set automatically for customers in Germany).</li>
+<li>Click <strong>Retourenlabel senden</strong>. Wait a few seconds (DHL).</li>
+<li>Check the email (text, recipient, 2 PDFs), change the text if needed, click <strong>Senden</strong>.</li>
+<li>If the window was closed without sending: click <strong>Retourenlabel erneut senden</strong> – the same label is used.</li>
+</ol>
+<div class="warn">Closing the email window does <strong>not</strong> delete the label – it was already created at DHL. Unused return labels are not charged (DHL bills only transported returns – confirm against the IQ Dogsport contract).</div>
+<figure><a href="img/12-production-send-window.jpg"><img src="img/12-production-send-window.jpg" alt="Production: email window from ticket #00889 with Retourenschein + DHL label" loading="lazy"></a><figcaption>Production: email window from ticket #00889 with Retourenschein + DHL label</figcaption></figure>
+
+<h2 id="s3">3. Components</h2>
+<table>
+<tr><th>#</th><th>Type</th><th>Name</th><th>Where</th></tr>
+<tr><td>1</td><td>Automation rule</td><td>IQ – Return: DHL carrier for Germany</td><td>Settings › Technical › Automation Rules</td></tr>
+<tr><td>2</td><td>Email templates</td><td>IQ – Return label for customer (DE) / (EN)</td><td>Settings › Technical › Email Templates</td></tr>
+<tr><td>3</td><td>Server action</td><td>Send return label (production id <strong>1777</strong>, staging 1774)</td><td>Settings › Technical › Server Actions</td></tr>
+<tr><td>4</td><td>Inherited view</td><td>IQ – Send return label button</td><td>Settings › Technical › User Interface › Views</td></tr>
+<tr><td>–</td><td>Existing, unchanged</td><td>DHL – Automatic Return Receiver; DHL connector (BrowseInfo) method <code>print_return_label</code></td><td></td></tr>
+</table>
+<p>No new fields, no module, no schema change.</p>
+
+<h2 id="s4">4. Automation: DHL carrier for Germany</h2>
+<p>Odoo does not copy the carrier from the delivery to the return, and the sales-order carrier rules do not apply to returns. Without a carrier the DHL buttons are hidden.</p>
+<pre><code># Odoo 19 - Automation Rule (PRODUCTION since 29.10.2026)
+# Name:          IQ - Return: DHL carrier for Germany
+# Model:         Transfer (stock.picking)
+# Trigger:       On create and edit
+# Apply on:      [(&quot;picking_type_code&quot;, &quot;=&quot;, &quot;incoming&quot;), (&quot;return_id&quot;, &quot;!=&quot;, False),
+#                 (&quot;carrier_id&quot;, &quot;=&quot;, False), (&quot;state&quot;, &quot;not in&quot;, [&quot;done&quot;, &quot;cancel&quot;])]
+# When updating: Carrier, Contact, Type of Operation, Return of, Status
+# Action:        Execute Code (below)
+#
+# Sets DHL Parcel DE + return receiver &quot;deu&quot; on open returns of German customers.
+# &quot;On create&quot; alone did not work: Odoo fills &quot;Return of&quot;/state only after create.
+# The receiver is set here as well because &quot;DHL - Automatic Return Receiver&quot; does not
+# fire while the return is still being created.
+
+carrier = env[&quot;delivery.carrier&quot;].search([(&quot;name&quot;, &quot;=&quot;, &quot;DHL Parcel DE&quot;)], limit=1)
+for picking in records:
+    if picking.carrier_id or not carrier:
+        continue
+    partner = picking.partner_id
+    country = partner.country_id or partner.commercial_partner_id.country_id
+    if country.code != &quot;DE&quot;:
+        continue
+    vals = {&quot;carrier_id&quot;: carrier.id}
+    if not picking.dhl_return_receiver_id:
+        vals[&quot;dhl_return_receiver_id&quot;] = &quot;deu&quot;
+    picking.write(vals)
+    picking.message_post(body=&quot;IQ Return: carrier set to %s, return receiver %s (customer in Germany).&quot; % (carrier.name, picking.dhl_return_receiver_id or &quot;-&quot;))
+</code></pre>
+<div class="grid"><figure><a href="img/01-automation-carrier-rule.jpg"><img src="img/01-automation-carrier-rule.jpg" alt="Rule: On create and edit, domain, When updating" loading="lazy"></a><figcaption>Rule: On create and edit, domain, When updating</figcaption></figure><figure><a href="img/02-return-carrier-deu-set.jpg"><img src="img/02-return-carrier-deu-set.jpg" alt="Result: DHL Parcel DE + deu, chatter note" loading="lazy"></a><figcaption>Result: DHL Parcel DE + deu, chatter note</figcaption></figure></div>
+
+<h2 id="s5">5. Email templates</h2>
+<pre><code>EMAIL TEMPLATES (Settings &gt; Technical &gt; Email Templates) - names must contain &quot;Return label for customer (DE)/(EN)&quot;
+
+IQ – Return label for customer (DE)
+  Applies to: Transfer
+  Subject:    Ihr DHL-Retourenlabel – Bestellung {{ object.sale_id.name or object.origin }}
+  Language:   {{ object.partner_id.lang }}
+  Send From:  empty (= mail@iq-dogsport.de, the only address allowed by the Office 365 mail server)
+  Reply To:   empty
+  Attachment: Retourenschein (DE) PDF
+  Body:
+    Guten Tag,
+    vielen Dank für Ihre Nachricht. Im Anhang finden Sie Ihr kostenloses DHL-Retourenlabel sowie unser Reklamationsformular.
+    So geht&#x27;s:
+    1. Formular ausfüllen und dem Paket beilegen
+    2. Label ausdrucken und gut sichtbar auf das Paket kleben
+    3. Paket in einer DHL-Filiale, Packstation oder bei Ihrem Zusteller abgeben
+    Sobald Ihre Rücksendung bei uns eingegangen ist, melden wir uns bei Ihnen.
+    Viele Grüße
+    Ihr IQ Dogsport Team
+
+IQ – Return label for customer (EN)
+  Subject:    Your DHL return label – order {{ object.sale_id.name or object.origin }}
+  Attachment: Retourenschein (EN) PDF
+  Body:
+    Hello,
+    thank you for your message. Attached you will find your free DHL return label and our reclamation form.
+    How it works:
+    1. Fill in the form and put it in the parcel
+    2. Print the label and stick it clearly on the parcel
+    3. Drop the parcel off at a DHL shop, Packstation or with your DHL courier
+    As soon as your return has arrived, we will get back to you.
+    Kind regards
+    Your IQ Dogsport team
+
+Note: {{ }} placeholders only work in the Subject. In the body use /field (or no name, as now).
+</code></pre>
+<div class="grid"><figure><a href="img/04-template-de-body.jpg"><img src="img/04-template-de-body.jpg" alt="Template (DE) body" loading="lazy"></a><figcaption>Template (DE) body</figcaption></figure><figure><a href="img/03-template-de-attachment.jpg"><img src="img/03-template-de-attachment.jpg" alt="Template (DE) with Retourenschein attachment" loading="lazy"></a><figcaption>Template (DE) with Retourenschein attachment</figcaption></figure></div>
+
+<h2 id="s6">6. Server action “Send return label”</h2>
+<pre><code># Odoo 19 - Server Action (PRODUCTION id 1777, staging id 1774)
+# Name:  Send return label
+# Model: Transfer (stock.picking), Type: Execute Code, &quot;Create Contextual Action&quot; done
+# Used by the buttons &quot;Retourenlabel senden&quot; / &quot;Retourenlabel erneut senden&quot; (view 3).
+#
+# 1. uses the existing LabelReturn PDF, or creates it via the DHL connector (print_return_label)
+# 2. picks template (DE) or (EN) by the customer&#x27;s language
+# 3. opens the email composer on the HELPDESK TICKET if the return belongs to one
+#    (customer replies come back into the ticket), otherwise on the return
+# 4. attaches the DHL label + the reclamation form (Retourenschein) from the template
+
+picking = record
+
+def find_label(p):
+    return env[&quot;ir.attachment&quot;].search([
+        (&quot;res_model&quot;, &quot;=&quot;, &quot;stock.picking&quot;), (&quot;res_id&quot;, &quot;=&quot;, p.id),
+        (&quot;mimetype&quot;, &quot;=&quot;, &quot;application/pdf&quot;), (&quot;name&quot;, &quot;ilike&quot;, &quot;LabelReturn&quot;)], order=&quot;id desc&quot;, limit=1)
+
+label = find_label(picking)
+if not label:
+    if not picking.is_return_picking or picking.picking_type_code != &quot;incoming&quot; or picking.state == &quot;done&quot;:
+        raise UserError(&quot;%s is not an open return - no return label can be created.&quot; % picking.name)
+    if not picking.carrier_id:
+        raise UserError(&quot;No carrier on %s - please set DHL Parcel DE first.&quot; % picking.name)
+    picking.print_return_label()
+    label = find_label(picking)
+    if not label:
+        raise UserError(&quot;The return label was created, but no &#x27;LabelReturn&#x27; PDF was found on %s. Please check the chatter.&quot; % picking.name)
+
+lang = (picking.partner_id.lang or &quot;&quot;).lower()
+key = &quot;(DE)&quot; if lang.startswith(&quot;de&quot;) else &quot;(EN)&quot;
+template = env[&quot;mail.template&quot;].search([(&quot;model&quot;, &quot;=&quot;, &quot;stock.picking&quot;), (&quot;name&quot;, &quot;ilike&quot;, &quot;Return label for customer &quot; + key)], limit=1)
+if not template:
+    raise UserError(&quot;Email template &#x27;IQ – Return label for customer %s&#x27; not found.&quot; % key)
+tmp = env[&quot;mail.compose.message&quot;].create({
+    &quot;model&quot;: &quot;stock.picking&quot;, &quot;res_ids&quot;: str([picking.id]),
+    &quot;composition_mode&quot;: &quot;comment&quot;, &quot;template_id&quot;: template.id})
+subject, body = tmp.subject, tmp.body
+
+ticket = env[&quot;helpdesk.ticket&quot;]
+# .sudo(): ir.model.fields is readable for administrators only (access error for Elena on 29.10.)
+if env[&quot;ir.model.fields&quot;].sudo().search_count([(&quot;model&quot;, &quot;=&quot;, &quot;helpdesk.ticket&quot;), (&quot;name&quot;, &quot;=&quot;, &quot;picking_ids&quot;)]):
+    ticket = env[&quot;helpdesk.ticket&quot;].search([(&quot;picking_ids&quot;, &quot;in&quot;, picking.ids)], order=&quot;id desc&quot;, limit=1)
+model, res_id = (&quot;helpdesk.ticket&quot;, ticket.id) if ticket else (&quot;stock.picking&quot;, picking.id)
+
+composer = env[&quot;mail.compose.message&quot;].create({
+    &quot;model&quot;: model, &quot;res_ids&quot;: str([res_id]), &quot;composition_mode&quot;: &quot;comment&quot;,
+    &quot;subject&quot;: subject, &quot;body&quot;: body,
+    &quot;partner_ids&quot;: [(6, 0, [picking.partner_id.id])]})
+# template attachments are not copied when the composer is created from code -&gt; copy them
+form_ids = [att.copy({&quot;res_model&quot;: &quot;mail.compose.message&quot;, &quot;res_id&quot;: composer.id}).id for att in template.attachment_ids]
+composer.write({&quot;attachment_ids&quot;: [(4, label.id)] + [(4, i) for i in form_ids]})
+# no tmp.unlink(): server actions may not delete mail.compose.message (access error); Odoo cleans it up
+
+action = {
+    &quot;type&quot;: &quot;ir.actions.act_window&quot;,
+    &quot;name&quot;: &quot;Send return label&quot; + (&quot; – Ticket %s&quot; % ticket.display_name if ticket else &quot;&quot;),
+    &quot;res_model&quot;: &quot;mail.compose.message&quot;, &quot;res_id&quot;: composer.id,
+    &quot;view_mode&quot;: &quot;form&quot;, &quot;views&quot;: [[False, &quot;form&quot;]], &quot;target&quot;: &quot;new&quot;}
+</code></pre>
+<figure><a href="img/05-print-return-label-method.jpg"><img src="img/05-print-return-label-method.jpg" alt="Debug tooltip: Print Return Label = print_return_label (public method, callable from code)" loading="lazy"></a><figcaption>Debug tooltip: Print Return Label = print_return_label (public method, callable from code)</figcaption></figure>
+
+<h2 id="s7">7. Button view</h2>
+<pre><code>&lt;!--
+Odoo 19 - inherited view (PRODUCTION)
+View Name:              IQ – Send return label button
+View Type:              Form
+Model:                  Transfer (stock.picking)
+Inherited View:         stock.picking.form  (External ID stock.view_picking_form, the one WITHOUT parent)
+View inheritance mode:  Extension View
+Access Rights:          empty (all users)
+name = id of the server action &quot;Send return label&quot; (production 1777 - NOT the staging id 1774)
+--&gt;
+&lt;xpath expr=&quot;//header&quot; position=&quot;inside&quot;&gt;
+    &lt;button name=&quot;1777&quot; type=&quot;action&quot; string=&quot;Retourenlabel senden&quot; class=&quot;btn-primary&quot;
+            invisible=&quot;not is_return_picking or state == &#x27;done&#x27; or picking_type_code != &#x27;incoming&#x27; or carrier_tracking_ref&quot;/&gt;
+    &lt;button name=&quot;1777&quot; type=&quot;action&quot; string=&quot;Retourenlabel erneut senden&quot; class=&quot;btn-secondary&quot;
+            confirm=&quot;Für diese Retoure wurde bereits ein Label erstellt. Erneut an den Kunden senden?&quot;
+            invisible=&quot;not is_return_picking or state == &#x27;done&#x27; or picking_type_code != &#x27;incoming&#x27; or not carrier_tracking_ref&quot;/&gt;
+&lt;/xpath&gt;
+</code></pre>
+<div class="grid"><figure><a href="img/06-choose-inherited-view.jpg"><img src="img/06-choose-inherited-view.jpg" alt="Inherited View: choose stock.view_picking_form (no parent)" loading="lazy"></a><figcaption>Inherited View: choose stock.view_picking_form (no parent)</figcaption></figure><figure><a href="img/07-view-buttons-german.jpg"><img src="img/07-view-buttons-german.jpg" alt="Final view (production id 1777, German labels)" loading="lazy"></a><figcaption>Final view (production id 1777, German labels)</figcaption></figure></div>
+
+<h2 id="s8">8. Tests</h2>
+<table>
+<tr><th>Test</th><th>Where</th><th>Result</th></tr>
+<tr><td>German return gets DHL + deu automatically (RET/00507, 00508)</td><td>Staging</td><td>OK</td></tr>
+<tr><td>Return outside Germany keeps empty carrier</td><td>Staging</td><td>to confirm</td></tr>
+<tr><td>Button creates label + opens email with 2 PDFs (RET/00510)</td><td>Staging</td><td>OK</td></tr>
+<tr><td>Return from order → email in return chatter (RET/00513)</td><td>Staging</td><td>OK</td></tr>
+<tr><td>Return from ticket #00821 → email in ticket chatter</td><td>Staging</td><td>OK</td></tr>
+<tr><td>Resend reuses label</td><td>Staging</td><td>OK</td></tr>
+<tr><td>Ticket #00889 Sandra Fey (RET/00576), user Elena</td><td>Production</td><td>OK after <code>.sudo()</code> fix</td></tr>
+</table>
+<div class="grid"><figure><a href="img/08-email-window-two-pdfs.jpg"><img src="img/08-email-window-two-pdfs.jpg" alt="Email window: Retourenschein + LabelReturn" loading="lazy"></a><figcaption>Email window: Retourenschein + LabelReturn</figcaption></figure><figure><a href="img/10-email-logged-in-ticket.jpg"><img src="img/10-email-logged-in-ticket.jpg" alt="Email logged in ticket #00821" loading="lazy"></a><figcaption>Email logged in ticket #00821</figcaption></figure></div>
+<div class="grid"><figure><a href="img/09-email-logged-on-return.jpg"><img src="img/09-email-logged-on-return.jpg" alt="Return without ticket: email logged on the return" loading="lazy"></a><figcaption>Return without ticket: email logged on the return</figcaption></figure><figure><a href="img/11-resend-button.jpg"><img src="img/11-resend-button.jpg" alt="After label: Resend button" loading="lazy"></a><figcaption>After label: Resend button</figcaption></figure></div>
+
+<h2 id="s9">9. Problems found &amp; fixes</h2>
+<table>
+<tr><th>Problem</th><th>Cause</th><th>Fix</th></tr>
+<tr><td>Carrier stayed empty with trigger “On create”</td><td>Odoo fills Return of / state after create</td><td>Trigger “On create and edit” + state filter</td></tr>
+<tr><td>Receiver ID empty when carrier set by automation</td><td>“DHL – Automatic Return Receiver” does not fire during creation</td><td>Automation sets <code>dhl_return_receiver_id = deu</code> itself</td></tr>
+<tr><td>DHL API Error 401 “no apiproduct match found” (staging)</td><td>DHL app without Returns API</td><td>Parcel DE Returns enabled in DHL developer portal</td></tr>
+<tr><td><code>{{ }}</code> printed literally in body</td><td>Placeholders only work in Subject</td><td>Greeting without name</td></tr>
+<tr><td>Retourenschein missing in email</td><td>Template attachments not copied when composer is created by code</td><td>Copy <code>template.attachment_ids</code></td></tr>
+<tr><td>“not allowed to delete Email composition wizard”</td><td><code>tmp.unlink()</code></td><td>Line removed</td></tr>
+<tr><td>Validation error “action_confirm is not a valid action on stock.picking.type”</td><td>Model of the view = Picking Type</td><td>Model Transfer, Extension View, parent stock.view_picking_form</td></tr>
+<tr><td>Production button ran the VAT code</td><td>Staging id 1774 used (= VAT action in production)</td><td>Production id 1777</td></tr>
+<tr><td>Elena: Zugriffsfehler ir.model.fields</td><td>Only admins may read ir.model.fields</td><td><code>.sudo()</code> on that check</td></tr>
+<tr><td>“no validated outbound DHL shipment (with tracking reference)”</td><td>Connector requires the original delivery shipped with DHL</td><td>See limits</td></tr>
+</table>
+<div class="grid"><figure><a href="img/13-elena-access-error.jpg"><img src="img/13-elena-access-error.jpg" alt="Elena&#x27;s access error before the .sudo() fix" loading="lazy"></a><figcaption>Elena's access error before the .sudo() fix</figcaption></figure><figure><a href="img/14-dhl-401-returns-api.jpg"><img src="img/14-dhl-401-returns-api.jpg" alt="DHL 401: Returns API missing on the app" loading="lazy"></a><figcaption>DHL 401: Returns API missing on the app</figcaption></figure></div>
+
+<h2 id="s10">10. Limits / open items</h2>
+<ul>
+<li><strong>Only orders shipped with DHL:</strong> the BrowseInfo connector refuses a return label when the original delivery has no DHL tracking (orders shipped with GLS / before 27.10). For those: create the label manually in the DHL business portal, or ask BrowseInfo to make the check optional.</li>
+<li><strong>Reply To</strong> in the email window showed the sender's personal address (hamza.mohsin@…). Check where a customer reply lands; option: set Reply To to the ticket team alias (customer-care@ / b2b@).</li>
+<li>Germany only (receiver <code>deu</code>). deu vs deu_SZ decision with Florian still open – if it changes, update this automation <em>and</em> “DHL – Automatic Return Receiver”.</li>
+<li>Carrier name “DHL Parcel DE” is hard-coded – do not rename the carrier.</li>
+<li>A German return cannot stay without carrier (the rule sets DHL again when emptied); choose another carrier instead.</li>
+<li>Price-only Shopify carriers (GLS Deutschland, DHL Paket, GLS EU) can still be validated without label – extension of “Block Validate without Carrier” proposed.</li>
+<li>Confirm with DHL that unused return labels are not charged.</li>
+</ul>
+
+<h2 id="s11">11. Rollback</h2>
+<ul>
+<li>Button: archive view “IQ – Send return label button”.</li>
+<li>Automatic carrier: untick Active on “IQ – Return: DHL carrier for Germany”.</li>
+<li>Templates / server action can stay; nothing else to undo. Labels already created stay on the returns.</li>
+</ul>
+</main></body></html>

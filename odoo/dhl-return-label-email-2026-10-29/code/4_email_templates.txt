@@ -1,0 +1,35 @@
+EMAIL TEMPLATES (Settings > Technical > Email Templates) - names must contain "Return label for customer (DE)/(EN)"
+
+IQ – Return label for customer (DE)
+  Applies to: Transfer
+  Subject:    Ihr DHL-Retourenlabel – Bestellung {{ object.sale_id.name or object.origin }}
+  Language:   {{ object.partner_id.lang }}
+  Send From:  empty (= mail@iq-dogsport.de, the only address allowed by the Office 365 mail server)
+  Reply To:   empty
+  Attachment: Retourenschein (DE) PDF
+  Body:
+    Guten Tag,
+    vielen Dank für Ihre Nachricht. Im Anhang finden Sie Ihr kostenloses DHL-Retourenlabel sowie unser Reklamationsformular.
+    So geht's:
+    1. Formular ausfüllen und dem Paket beilegen
+    2. Label ausdrucken und gut sichtbar auf das Paket kleben
+    3. Paket in einer DHL-Filiale, Packstation oder bei Ihrem Zusteller abgeben
+    Sobald Ihre Rücksendung bei uns eingegangen ist, melden wir uns bei Ihnen.
+    Viele Grüße
+    Ihr IQ Dogsport Team
+
+IQ – Return label for customer (EN)
+  Subject:    Your DHL return label – order {{ object.sale_id.name or object.origin }}
+  Attachment: Retourenschein (EN) PDF
+  Body:
+    Hello,
+    thank you for your message. Attached you will find your free DHL return label and our reclamation form.
+    How it works:
+    1. Fill in the form and put it in the parcel
+    2. Print the label and stick it clearly on the parcel
+    3. Drop the parcel off at a DHL shop, Packstation or with your DHL courier
+    As soon as your return has arrived, we will get back to you.
+    Kind regards
+    Your IQ Dogsport team
+
+Note: {{ }} placeholders only work in the Subject. In the body use /field (or no name, as now).

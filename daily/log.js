@@ -174,4 +174,12 @@ window.IQ_LOG = [
     status: "Live",
     link: "shopify/eu-b2b-vat-reverse-charge/"
   },
+  {
+    date: "2026-10-29",
+    area: "Odoo · Returns",
+    title: "DHL return label + reclamation form by email – one button",
+    summary: "Automation sets DHL Parcel DE + deu on German returns; server action 'Send return label' (prod id 1777) creates the DHL label via print_return_label and opens DE/EN email with label + Retourenschein, posted in the ticket when the return comes from one. Fixes: trigger on create+edit, receiver set in same write, template attachments copied, no unlink, prod id, .sudo() for ir.model.fields. Limit: only for deliveries shipped with DHL.",
+    status: "Live",
+    link: "odoo/dhl-return-label-email-2026-10-29/"
+  },
 ];
