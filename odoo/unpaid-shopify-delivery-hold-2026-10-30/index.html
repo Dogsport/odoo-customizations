@@ -1,19 +1,14 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Unpaid Shopify Delivery Hold</title>
-<style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unpaid Shopify deliveries jump from Waiting to Ready – fix of automation rule 21</title><style>
 :root{--bg:#fff;--fg:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#714B67;--code:#f6f8fa}
 @media (prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#9ca3af;--line:#374151;--accent:#c79bbd;--code:#1f2937}}
 body{background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.55;max-width:920px;margin:24px auto;padding:0 16px}
 h1{color:var(--accent);font-size:1.6rem}h2{color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:32px}
 table{border-collapse:collapse;width:100%;margin:8px 0 16px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
 th{background:var(--accent);color:#fff}code,pre{background:var(--code);border-radius:4px}code{padding:1px 4px;font-size:.9em}pre{padding:12px;overflow-x:auto;font-size:.85em}
-blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}
-</style></head><body>
-<p><a href="../../index.html">← Odoo customizations</a></p>
-<h1>Unpaid Shopify deliveries jump from Waiting to Ready – fix of automation rule 21</h1>
+blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>Unpaid Shopify deliveries jump from Waiting to Ready – fix of automation rule 21</h1>
 <p><strong>Date:</strong> 30.10.2026 · <strong>Author:</strong> Hamza Mohsin · <strong>System:</strong> Odoo 19 (Inventory)
-<strong>Status:</strong> Staging ✅ tested 30.10.2026 · Production ⏳ <em><strong>_</strong> (date)
-<strong>Asana:</strong> </em>(add task link)_</p>
+<strong>Status:</strong> Staging ✅ tested 30.10.2026 · Production ❌ went live 30.10. ~11:30, <strong>rolled back 30.10. ~19:50</strong> (see <em>Production incident</em>) · Open: corrected fix
+<strong>Asana:</strong> <em>(add task link)</em></p>
 <h2>Problem</h2>
 <p>Unpaid Shopify delivery orders (tag "Zahlung ausstehend") sometimes changed from <strong>Waiting</strong> to <strong>Ready</strong> by themselves.
 The chatter showed the change under the name of the user who was working at that moment (e.g. Elena), although she never opened that order.</p>
@@ -136,7 +131,28 @@ Same pattern: <strong>WH1/OUT/06641</strong> reserved at 28.10.2026 11:48 when <
 </tbody>
 </table>
 <p>Observation: a receipt/return only reserves the products that came in; an order stays Waiting until it is complete (shipping policy "all products ready").</p>
-<h2>Production rollout</h2>
+<h2>⚠️ Production incident 30.10.2026 – new code rolled back</h2>
+<p><strong>What happened:</strong> the AFTER code was put live in production at ~11:30 (Berlin). Every <strong>new</strong> Shopify order went from Ready back to Waiting with the note "Shopify-Bestellung nicht bezahlt – automatisch zurück auf Wartend", even when paid (e.g. WH1/OUT/07446, #IQD-99243, invoice RE/2026/05343 "In Payment").</p>
+<p><strong>Root cause:</strong> the Shopify connector imports an order in steps within ~1–2 seconds:
+1. confirm sales order → delivery created + stock reserved → <strong>Ready</strong> → <strong>rule 21 runs here</strong>
+2. invoice created and posted (<code>validate_and_paid_invoices_ept</code>)
+3. payment registered → In Payment</p>
+<p>At step 1 the invoice does <strong>not exist yet</strong>, so the payment check (<code>so.invoice_ids … payment_state</code>) saw every new order as unpaid. The staging tests only used <strong>existing</strong> orders whose invoices already existed – a test with a <strong>newly imported</strong> order was missing.</p>
+<p><strong>Impact:</strong> 14 deliveries put back to Waiting between ~11:30 and 18:56 (WH1/OUT/07436 … 07452).</p>
+<p><strong>Rollback (~19:50):</strong> rule 21 restored to the BEFORE version (code, Apply on incl. <code>auto unreserved is not set</code> + fiscal position 5/6 / Bank Deposit, When updating incl. auto unreserved + Sales Order). Stuck orders released with Check Availability → 13 back to Ready; <strong>WH1/OUT/07438</strong> still to check.</p>
+<p><strong>Verification query (production shell):</strong></p>
+<pre><code class="language-bash">psql -c &quot;select p.name, p.state, m.create_date from mail_message m join stock_picking p on p.id = m.res_id where m.model = 'stock.picking' and m.body ilike '%nicht bezahlt%' order by m.create_date desc limit 50;&quot;
+</code></pre>
+<p>No new rows after 18:56 Berlin = rollback works.</p>
+<p><strong>State now:</strong> production runs the BEFORE code again – the original loophole (return re-reserves unpaid B2B/Bank Deposit orders) still exists.</p>
+<h2>Next fix (not yet built)</h2>
+<ul>
+<li>Decide "paid" by <strong>Shopify's payment status on the sales order</strong> (set by the connector before the delivery is created), not by the invoice.</li>
+<li>First keep the old scope (B2B EU/abroad + Bank Deposit), widen later.</li>
+<li>Staging tests must include: <strong>new paid</strong> Shopify import (stays Ready), <strong>new unpaid</strong> import (Waiting), return/receipt test, allowed-user Check Availability.</li>
+<li>Needed: field name → <code>grep -n "financial" ~/src/user/shopify_ept/models/sale_order.py | head -30</code> (staging shell).</li>
+</ul>
+<h2>Production rollout (original plan)</h2>
 <ol>
 <li>Backup: copy old code (= BEFORE file) + screenshot of Apply on / When updating.</li>
 <li>Apply on, When updating, Code as above. Save.</li>
@@ -152,11 +168,10 @@ Same pattern: <strong>WH1/OUT/06641</strong> reserved at 28.10.2026 11:48 when <
 <li>Tag "Zahlung ausstehend" is manual and can be outdated (e.g. 06820 is card-paid).</li>
 <li>Related, separate topics: Zoll orders are not held by any rule; Shipping Policy "When all products are ready" for partly available orders.</li>
 </ul>
-<h2>Team message</h2>
+<h2>Team message (NOT valid – change was rolled back)</h2>
 <blockquote>
 <p>Ab heute werden unbezahlte Shopify-Bestellungen automatisch auf „Wartend" zurückgesetzt, sobald sie „Bereit" werden (z. B. nach dem Validieren einer Retoure). Der Chatter zeigt den Grund. Nur Anastasiia, Florian, Elena und Hamza können eine unbezahlte Bestellung mit „Check Availability" freigeben. Kartenzahlungen („In Payment") gelten als bezahlt.</p>
-</blockquote>
-<h2>Code – before</h2><pre><code># Automation rule 21 &quot;Change status of Transfer (For Business Partners EU and Abroad)&quot;
+</blockquote><h2>Code – before (currently live again)</h2><pre><code># Automation rule 21 &quot;Change status of Transfer (For Business Partners EU and Abroad)&quot;
 # Server action 1602 (Execute Code) - ORIGINAL code before 2026-10-30
 # Model: Transfer | Trigger: On create and edit
 # Before Update: [(&quot;state&quot;, &quot;!=&quot;, &quot;assigned&quot;)]
@@ -203,8 +218,7 @@ for picking in records:
         &#x27;state&#x27;: &#x27;confirmed&#x27;,
         &#x27;x_studio_auto_unreserved&#x27;: True
     })
-</code></pre>
-<h2>Code – after</h2><pre><code># Automation rule 21 (suggested new name: &quot;Unbezahlte Shopify-Lieferung zurück auf Wartend&quot;)
+</code></pre><h2>Code – after (rolled back, do not use)</h2><pre><code># Automation rule 21 (suggested new name: &quot;Unbezahlte Shopify-Lieferung zurück auf Wartend&quot;)
 # Server action 1602 (Execute Code) - NEW code from 2026-10-30
 # Model: Transfer | Trigger: On create and edit
 # Before Update: [(&quot;state&quot;, &quot;!=&quot;, &quot;assigned&quot;)]          (unchanged)
@@ -253,5 +267,4 @@ for picking in records:
             move.write({&#x27;state&#x27;: &#x27;confirmed&#x27;})
     picking.write({&#x27;state&#x27;: &#x27;confirmed&#x27;})
     picking.message_post(body=&#x27;Shopify-Bestellung nicht bezahlt – automatisch zurück auf Wartend.&#x27;)
-</code></pre>
-</body></html>
+</code></pre></body></html>

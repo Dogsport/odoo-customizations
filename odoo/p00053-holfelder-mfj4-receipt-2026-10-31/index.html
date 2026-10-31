@@ -1,0 +1,115 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>P00053 corrected + partial receipt WH1/IN/00058 (MFJ 4.0 Damen, Holfelder)</title><style>
+:root{--bg:#fff;--fg:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#714B67;--code:#f6f8fa}
+@media (prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#9ca3af;--line:#374151;--accent:#c79bbd;--code:#1f2937}}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.55;max-width:920px;margin:24px auto;padding:0 16px}
+h1{color:var(--accent);font-size:1.6rem}h2{color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:32px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--accent);color:#fff}code,pre{background:var(--code);border-radius:4px}code{padding:1px 4px;font-size:.9em}pre{padding:12px;overflow-x:auto;font-size:.85em}
+blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>P00053 corrected + partial receipt WH1/IN/00058 (MFJ 4.0 Damen, Holfelder)</h1>
+<p><strong>Date:</strong> 30./31.10.2026 · <strong>Author:</strong> Hamza Mohsin · <strong>System:</strong> Odoo 19 (Purchase / Inventory) + Shopify
+<strong>Status:</strong> PO corrected ✅ (staging → production) · Partial receipt 294 pcs ✅ · Rest in backorder ⏳ (Monday with Florian)
+<strong>Asana:</strong> <em>(add task link)</em> · Task by Patricia: "P00053 does not match Holfelder order confirmation 2026-232475"</p>
+<h2>Problem</h2>
+<p>Purchase order <strong>P00053</strong> did not match Holfelder's order confirmation <strong>AB 2026-232475</strong> (confirmed: 500 MFJ 4.0 Damen grau, 500 MFJ 4.0 Unisex grau, 500 MFJ 4.0 Damen schwarz, all 97.50 €, net 146,250.00 €):
+- 500 black women's jackets were entered as the <strong>old MFJ 3.0 Damen Schwarz</strong> (IQD-EKL-MJD3.BK.<em>) at </em><em>88.70 €</em><em> – wrong product, wrong price.
+- MFJ 4.0 Damen grau only </em><em>490</em>*: 2XL/3XL/4XL had 24/3/3 (the black quantities, copied by mistake).
+- Odoo net 140,875.00 € instead of 146,250.00 €.</p>
+<h2>Documents</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AB 2026-232475 (share Buchhaltung/2026/05)</td>
+<td>3 × 500 at 97.50 €, net 146,250.00 €</td>
+</tr>
+<tr>
+<td>Delivery note 2026-344396 (28.10.2026)</td>
+<td>Pos 1–8 Damen grau 25/95/150/125/65/30/4/5 = <strong>499</strong> · Pos 9–16 Damen schwarz 14/85/196/99/77/24/3/3 = <strong>501</strong> · zippers Herren 21 / Damen 68 · "Teillieferung" (unisex not included)</td>
+</tr>
+<tr>
+<td>Counting sheet (warehouse, "MZ")</td>
+<td>GESAMT gezählt = delivery note on every line · "davon Kontrolle (QC)" = jackets taken out for QC</td>
+</tr>
+</tbody>
+</table>
+<h2>PO correction (staging first, then production)</h2>
+<ol>
+<li>8 lines <strong>IQD-EKL-MJD3.BK.*</strong> → quantity <strong>0</strong> (confirmed PO lines cannot be deleted: <em>"Cannot delete a purchase order line which is in state Purchase Order"</em>; 0-lines are not received or billed).</li>
+<li>Added <strong>IQD-EKL-MJD4.BK.*</strong> (variants already existed) at <strong>97.50 €</strong>: XS 14 / S 85 / M 196 / L 99 / XL 77 / 2XL 24 / 3XL 3 / 4XL 3 = <strong>501</strong>.</li>
+<li><strong>IQD-EKL-MJD4.GR.2XL/3XL/4XL</strong>: 24/3/3 → <strong>30/4/5</strong> (grey = 499).</li>
+<li>Result: <strong>Untaxed 146,250.00 €</strong> = AB ✅ (1,000 women's jackets × 97.50 + 500 unisex × 97.50).</li>
+<li>Receipt WH1/IN/00058 updated automatically (MJD3 lines demand 0, MJD4.BK lines added). PO exceptions ("3.0 Units … instead of 30.0") closed with Mark Done.</li>
+<li>Note: AB split 500/500, delivery 499 grey / 501 black – same total.</li>
+</ol>
+<h2>Partial receipt 31.10.2026 (approved by Patricia: "1/3 is good")</h2>
+<p>QC not finished (112 jackets taken for QC, 56 grey / 56 black, some defects) → book <strong>1/3</strong> for the weekend, rest in backorder.</p>
+<table>
+<thead>
+<tr>
+<th>Size</th>
+<th>XS</th>
+<th>S</th>
+<th>M</th>
+<th>L</th>
+<th>XL</th>
+<th>2XL</th>
+<th>3XL</th>
+<th>4XL</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Grau (MJD4.GR) booked</td>
+<td>7</td>
+<td>28</td>
+<td>44</td>
+<td>37</td>
+<td>19</td>
+<td>9</td>
+<td>1</td>
+<td>1</td>
+<td><strong>146</strong></td>
+</tr>
+<tr>
+<td>Schwarz (MJD4.BK) booked</td>
+<td>4</td>
+<td>25</td>
+<td>58</td>
+<td>29</td>
+<td>23</td>
+<td>7</td>
+<td>1</td>
+<td>1</td>
+<td><strong>148</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Steps: Quantity set per table, <strong>Unisex grau (MFJ4.GR.*) = 0</strong> (not delivered), MJD3 = 0 → 16 quality checks <strong>Pass</strong> (note on 1/16) → <strong>Validate → Create Backorder</strong> (never "No Backorder").
+- Destination: WH1/Stock/Picklager · Effective date 31.10.2026 07:36
+- Product MFJ 4.0 Damen: On hand <strong>294</strong>, Forecasted <strong>1,000</strong>, Purchased <strong>1,000</strong>
+- Shopify stock export queue: <strong>16/16 done</strong>, Shopify shows grey 146 / black 148, total 294, price 279.90 €</p>
+<h2>Backorder (open)</h2>
+<ul>
+<li>706 women's jackets (incl. 112 QC jackets)</li>
+<li>500 MFJ 4.0 Unisex grau (not delivered yet)</li>
+</ul>
+<h2>Open – Monday with Florian</h2>
+<ul>
+<li>Book the rest after QC: OK → WH1/Stock, defective → Defektlager <strong>or</strong> return/claim to Holfelder (decide with Patricia).</li>
+<li>Zippers (Herren 21 / Damen 68) on delivery note but not on PO – clarify.</li>
+<li>Customers who waited for MFJ 3.0 Damen Schwarz from this PO – forecast dropped, check orders.</li>
+<li>Counting sheet date (24.10.?) vs. delivery note 28.10 / arrival 30.10 – clarify.</li>
+<li>After booking: check "Zahlung ausstehend" deliveries that became Ready from the new stock.</li>
+</ul>
+<h2>Lessons</h2>
+<ul>
+<li>Check PO against AB <strong>per size and product</strong> before confirming (grey 2XL–4XL had black quantities, MFJ 3.0 instead of 4.0).</li>
+<li>Partial receipt = enter only the quantity to book now + <strong>Create Backorder</strong>.</li>
+<li>Inventory adjustment would double stock – always receive via the PO receipt.</li>
+</ul></body></html>

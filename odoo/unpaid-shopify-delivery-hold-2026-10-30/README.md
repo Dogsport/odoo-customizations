@@ -1,7 +1,7 @@
 # Unpaid Shopify deliveries jump from Waiting to Ready – fix of automation rule 21
 
 **Date:** 30.10.2026 · **Author:** Hamza Mohsin · **System:** Odoo 19 (Inventory)
-**Status:** Staging ✅ tested 30.10.2026 · Production ⏳ ______ (date)
+**Status:** Staging ✅ tested 30.10.2026 · Production ❌ went live 30.10. ~11:30, **rolled back 30.10. ~19:50** (see *Production incident*) · Open: corrected fix
 **Asana:** _(add task link)_
 
 ## Problem
@@ -59,7 +59,35 @@ Field `x_studio_auto_unreserved` is no longer used (not deleted). No new fields.
 
 Observation: a receipt/return only reserves the products that came in; an order stays Waiting until it is complete (shipping policy "all products ready").
 
-## Production rollout
+## ⚠️ Production incident 30.10.2026 – new code rolled back
+**What happened:** the AFTER code was put live in production at ~11:30 (Berlin). Every **new** Shopify order went from Ready back to Waiting with the note "Shopify-Bestellung nicht bezahlt – automatisch zurück auf Wartend", even when paid (e.g. WH1/OUT/07446, #IQD-99243, invoice RE/2026/05343 "In Payment").
+
+**Root cause:** the Shopify connector imports an order in steps within ~1–2 seconds:
+1. confirm sales order → delivery created + stock reserved → **Ready** → **rule 21 runs here**
+2. invoice created and posted (`validate_and_paid_invoices_ept`)
+3. payment registered → In Payment
+
+At step 1 the invoice does **not exist yet**, so the payment check (`so.invoice_ids … payment_state`) saw every new order as unpaid. The staging tests only used **existing** orders whose invoices already existed – a test with a **newly imported** order was missing.
+
+**Impact:** 14 deliveries put back to Waiting between ~11:30 and 18:56 (WH1/OUT/07436 … 07452).
+
+**Rollback (~19:50):** rule 21 restored to the BEFORE version (code, Apply on incl. `auto unreserved is not set` + fiscal position 5/6 / Bank Deposit, When updating incl. auto unreserved + Sales Order). Stuck orders released with Check Availability → 13 back to Ready; **WH1/OUT/07438** still to check.
+
+**Verification query (production shell):**
+```bash
+psql -c "select p.name, p.state, m.create_date from mail_message m join stock_picking p on p.id = m.res_id where m.model = 'stock.picking' and m.body ilike '%nicht bezahlt%' order by m.create_date desc limit 50;"
+```
+No new rows after 18:56 Berlin = rollback works.
+
+**State now:** production runs the BEFORE code again – the original loophole (return re-reserves unpaid B2B/Bank Deposit orders) still exists.
+
+## Next fix (not yet built)
+- Decide "paid" by **Shopify's payment status on the sales order** (set by the connector before the delivery is created), not by the invoice.
+- First keep the old scope (B2B EU/abroad + Bank Deposit), widen later.
+- Staging tests must include: **new paid** Shopify import (stays Ready), **new unpaid** import (Waiting), return/receipt test, allowed-user Check Availability.
+- Needed: field name → `grep -n "financial" ~/src/user/shopify_ept/models/sale_order.py | head -30` (staging shell).
+
+## Production rollout (original plan)
 1. Backup: copy old code (= BEFORE file) + screenshot of Apply on / When updating.
 2. Apply on, When updating, Code as above. Save.
 3. Smoke test: unpaid Waiting Shopify order → Check Availability (as allowed user) → Ready + release note → Unreserve.
@@ -74,5 +102,5 @@ Observation: a receipt/return only reserves the products that came in; an order 
 - Tag "Zahlung ausstehend" is manual and can be outdated (e.g. 06820 is card-paid).
 - Related, separate topics: Zoll orders are not held by any rule; Shipping Policy "When all products are ready" for partly available orders.
 
-## Team message
+## Team message (NOT valid – change was rolled back)
 > Ab heute werden unbezahlte Shopify-Bestellungen automatisch auf „Wartend" zurückgesetzt, sobald sie „Bereit" werden (z. B. nach dem Validieren einer Retoure). Der Chatter zeigt den Grund. Nur Anastasiia, Florian, Elena und Hamza können eine unbezahlte Bestellung mit „Check Availability" freigeben. Kartenzahlungen („In Payment") gelten als bezahlt.

@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rückgabegründe column only on returns</title><style>
+:root{--bg:#fff;--fg:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#714B67;--code:#f6f8fa}
+@media (prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#9ca3af;--line:#374151;--accent:#c79bbd;--code:#1f2937}}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.55;max-width:920px;margin:24px auto;padding:0 16px}
+h1{color:var(--accent);font-size:1.6rem}h2{color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:32px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--accent);color:#fff}code,pre{background:var(--code);border-radius:4px}code{padding:1px 4px;font-size:.9em}pre{padding:12px;overflow-x:auto;font-size:.85em}
+blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>Rückgabegründe column only on returns</h1>
+<p><strong>Date:</strong> 31.10.2026 · <strong>Author:</strong> Hamza Mohsin · <strong>System:</strong> Odoo 19 (Inventory) · <strong>Status:</strong> Staging ✅ · Production ✅</p>
+<h2>Problem</h2>
+<p>The column <strong>Rückgabegründe (Wareneingang)</strong> (<code>x_studio_ruckgabegrunde_wareneingang</code>, stock.move, many2many → <code>x_ruckgabegrund</code>) showed in the Operations list of <strong>every</strong> transfer (receipts, deliveries), e.g. on WH1/IN/00058. The cells were empty, but the column header was always visible.</p>
+<h2>Cause</h2>
+<p>In view <strong>5643</strong> "Odoo Studio: stock.picking.form customization" the field had <code>invisible="picking_type_id not in [116]"</code> (116 = Returns operation type). In a list, <code>invisible</code> only hides the <strong>cells</strong>, not the column.</p>
+<h2>Find the view</h2>
+<pre><code class="language-bash">psql -c &quot;select id, name::text from ir_ui_view where arch_db::text ilike '%x_studio_ruckgabegrunde_wareneingang%';&quot;
+psql -At -c &quot;select arch_db-&gt;&gt;'en_US' from ir_ui_view where id = 5643;&quot; | grep -n &quot;ruckgabegrunde_wareneingang&quot;
+</code></pre>
+<p>Same ID (5643) and same line 32 in staging and production.</p>
+<h2>Change</h2>
+<p>Before:</p>
+<pre><code class="language-xml">&lt;field widget=&quot;many2many_tags&quot; optional=&quot;show&quot; name=&quot;x_studio_ruckgabegrunde_wareneingang&quot; options=&quot;{&amp;quot;color_field&amp;quot;:&amp;quot;x_studio_color&amp;quot;}&quot; invisible=&quot;picking_type_id not in [116]&quot;/&gt;
+</code></pre>
+<p>After:</p>
+<pre><code class="language-xml">&lt;field widget=&quot;many2many_tags&quot; optional=&quot;show&quot; name=&quot;x_studio_ruckgabegrunde_wareneingang&quot; options=&quot;{&amp;quot;color_field&amp;quot;:&amp;quot;x_studio_color&amp;quot;}&quot; column_invisible=&quot;parent.picking_type_id not in [116]&quot;/&gt;
+</code></pre>
+<p>Edited via Settings → Technical → Views → 5643 → Architecture (backup copied first).</p>
+<h2>Check</h2>
+<ul>
+<li>Receipt / delivery: column gone ✅</li>
+<li>Return (WH1/RET/…): column still visible ✅</li>
+</ul>
+<p><strong>Rollback:</strong> paste the backup XML back.
+<strong>Note:</strong> module views (e.g. shopify_ept) must not be edited directly – changes would be overwritten on update.</p></body></html>
