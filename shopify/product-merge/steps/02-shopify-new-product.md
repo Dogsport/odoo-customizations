@@ -34,3 +34,11 @@ preview must show 1 product with all variants → **Import products**.
 - **Publishing:** tick all sales channels (Online Store etc.). Status stays Draft.
   Needed so Judge.me can see the product.
 - **Variant Galerie** metafield per variant: that colour's images, front view first
+
+## Alternative for small products: duplicate + add option
+Used for the K9 patches (11 variants). See [../merges/patches-k9/README.md](../merges/patches-k9/README.md).
+1. Old main product → **Duplicate**: Media, SKUs, Barcodes, Translations ✓ – **Inventory quantities ✗** – Draft.
+2. **Add another option** (e.g. `Farbe`) with all values → existing variants get the first value.
+3. **Delete** the combinations that don't exist in Odoo.
+4. ⋯ → Edit SKU / barcodes / weight / price for the new variants (copy SKUs from Odoo).
+5. Check the price **before** the Odoo import (the import writes it into Odoo's Shopify pricelist).

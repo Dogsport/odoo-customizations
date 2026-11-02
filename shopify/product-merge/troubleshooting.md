@@ -11,6 +11,10 @@
 | New product shows 0 reviews in the group list | The list counts own reviews only | Check the product page in Preview |
 | "Handle already in use" | Old product still has the handle | Rename old handle to `-alt` first |
 | "Target can't redirect to another redirect" | Redirect exists from the target URL | Delete that redirect first |
+| Extra variant after adding an option (e.g. Diensthundeführer / dunkelblau) | Shopify creates all combinations | Delete the combination that doesn't exist in Odoo |
+| Odoo shows a different price after import (12,10 instead of 12,00) | Import copies the Shopify price into Odoo's Shopify pricelist | Fix the price in Shopify, then Import products by ID again |
+| Shopify record in Odoo shows only one "Product Template" | The field holds one product only | Check the Variants tab; each line is linked by SKU |
+| Redirect doesn't work | The old product is still Active at that URL | Set the old product to Draft; test in a private window |
 | New product at the end of a collection | Collection sorted manually | Drag it up in each collection |
 
 ## Example: IQ Mini keychain (16.10.2026)

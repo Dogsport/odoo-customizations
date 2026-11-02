@@ -15,9 +15,12 @@ code{font:13px ui-monospace,Menlo,monospace;background:#efede9;padding:1px 5px;b
 pre{background:#1d1d1b;color:#f2f2f2;padding:14px;border-radius:6px;overflow:auto}pre code{background:none;color:inherit;padding:0}
 a{color:var(--accent)}
 @media (max-width:760px){.layout{grid-template-columns:1fr}nav{position:static;flex-direction:row;flex-wrap:wrap}}
+section img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;margin:6px 0 14px;display:block}
 </style></head><body>
 <header><div class="in"><div class="eyebrow">IQ Dogsport · Shopify · Odoo · Judge.me</div><h1>Product merge: colour products → one product with variants</h1><a href="../../index.html">← All documentation</a></div></header>
-<div class="layout"><nav><a href="#readme">Overview</a><a href="#steps-01-odoo-check">1 · Odoo check</a><a href="#steps-02-shopify-new-product">2 · New Shopify product</a><a href="#steps-03-odoo-connector">3 · Odoo connector</a><a href="#steps-04-judgeme-reviews">4 · Judge.me reviews</a><a href="#steps-05-go-live">5 · Go live</a><a href="#steps-06-after-go-live">6 · After go-live</a><a href="#troubleshooting">Troubleshooting</a><a href="#merges-mfj-3-0-unisex-readme">Merge: MFJ 3.0 Unisex</a><a href="#merges-mfj-3-0-damen-readme">Merge: MFJ 3.0 Damen</a><a href="#templates-merge-checklist">Template: merge checklist</a></nav><main><section id="readme" class="card"><h1>Product merge: colour products → one product with variants</h1>
+<div class="layout"><nav><a href="#readme">Overview</a><a href="#steps-01-odoo-check">1 · Odoo check</a><a href="#steps-02-shopify-new-product">2 · New Shopify product</a><a href="#steps-03-odoo-connector">3 · Odoo connector</a><a href="#steps-04-judgeme-reviews">4 · Judge.me reviews</a><a href="#steps-05-go-live">5 · Go live</a><a href="#steps-06-after-go-live">6 · After go-live</a><a href="#troubleshooting">Troubleshooting</a><a href="#merges-mfj-3-0-unisex-readme">Merge: MFJ 3.0 Unisex</a><a href="#merges-mfj-3-0-damen-readme">Merge: MFJ 3.0 Damen</a><a href="#merges-patches-k9-readme">Merge: Patches K9</a><a href="#templates-merge-checklist">Template: merge checklist</a></nav>
+<main>
+<section id="readme" class="card"><h1>Product merge: colour products → one product with variants</h1>
 <p>How we merge several Shopify products (one per colour) into <strong>one product</strong>
 with the options <strong>Farbe</strong> and <strong>Größe</strong>, without breaking the Odoo stock sync,
 the reviews or the old URLs.</p>
@@ -101,8 +104,13 @@ is merged in Odoo.</p>
 </tr>
 <tr>
 <td>MFJ 3.0 Damen</td>
-<td>Built as Draft, go-live pending</td>
+<td>Live (Oct 2026)</td>
 <td><a href="#merges-mfj-3-0-damen-readme">merges/mfj-3-0-damen</a></td>
+</tr>
+<tr>
+<td>Patches K9 (black + blue)</td>
+<td>Live (02.11.2026) – duplicate + add option</td>
+<td><a href="#merges-patches-k9-readme">merges/patches-k9</a></td>
 </tr>
 </tbody>
 </table>
@@ -112,7 +120,8 @@ is merged in Odoo.</p>
 <li>Never change <strong>SKUs</strong> of merged variants.</li>
 <li>In Odoo, never use <strong>"Update/Export product"</strong> or <strong>"Unpublish"</strong> on a merged product. Only <strong>Export stock</strong>.</li>
 <li>Never leave old and new products <strong>Active at the same time</strong> (duplicate listings).</li>
-</ul></section><section id="steps-01-odoo-check" class="card"><h1>Step 1: Odoo check – every SKU exists once</h1>
+</ul></section>
+<section id="steps-01-odoo-check" class="card"><h1>Step 1: Odoo check – every SKU exists once</h1>
 <p><strong>Why:</strong> the Emipro connector links Shopify variants to Odoo variants by SKU.
 If a SKU exists twice in Odoo, the connector may pick the wrong (empty) product,
 and Shopify shows "Ausverkauft" (sold out).</p>
@@ -134,7 +143,8 @@ and Shopify shows "Ausverkauft" (sold out).</p>
 <ul>
 <li>Don't merge the Odoo products. 3 Odoo products behind 1 Shopify product is correct.</li>
 <li>Don't create new fields in Odoo for this.</li>
-</ul></section><section id="steps-02-shopify-new-product" class="card"><h1>Step 2: Build and import the new Shopify product (Draft)</h1>
+</ul></section>
+<section id="steps-02-shopify-new-product" class="card"><h1>Step 2: Build and import the new Shopify product (Draft)</h1>
 <p><strong>Why a new product instead of editing an old one:</strong> the old products stay
 untouched and live until the switch, so nothing breaks while we build.</p>
 <h2>1. Export the old products</h2>
@@ -165,7 +175,15 @@ preview must show 1 product with all variants → <strong>Import products</stron
 <li><strong>Publishing:</strong> tick all sales channels (Online Store etc.). Status stays Draft.
   Needed so Judge.me can see the product.</li>
 <li><strong>Variant Galerie</strong> metafield per variant: that colour's images, front view first</li>
-</ul></section><section id="steps-03-odoo-connector" class="card"><h1>Step 3: Link the new product in Odoo and sync stock</h1>
+</ul>
+<h2>Alternative for small products: duplicate + add option</h2>
+<p>Used for the K9 patches (11 variants). See <a href="#merges-patches-k9-readme">../merges/patches-k9/README.md</a>.
+1. Old main product → <strong>Duplicate</strong>: Media, SKUs, Barcodes, Translations ✓ – <strong>Inventory quantities ✗</strong> – Draft.
+2. <strong>Add another option</strong> (e.g. <code>Farbe</code>) with all values → existing variants get the first value.
+3. <strong>Delete</strong> the combinations that don't exist in Odoo.
+4. ⋯ → Edit SKU / barcodes / weight / price for the new variants (copy SKUs from Odoo).
+5. Check the price <strong>before</strong> the Odoo import (the import writes it into Odoo's Shopify pricelist).</p></section>
+<section id="steps-03-odoo-connector" class="card"><h1>Step 3: Link the new product in Odoo and sync stock</h1>
 <h2>How the connector works</h2>
 <p>The connector keeps a <strong>link row per Shopify variant</strong>, each pointing to one
 Odoo variant (matched by SKU). Before the old links are removed, one Odoo
@@ -193,7 +211,8 @@ the changeover.</p>
 <li>"Product Template" on the record shows only one Odoo product name. It's just a label.</li>
 <li>Line titles may still show old product names. That's cosmetic, don't "fix" it with an export.</li>
 <li>Shopify shows <strong>on hand − reserved</strong>, so small differences to Odoo "On Hand" are normal.</li>
-</ul></section><section id="steps-04-judgeme-reviews" class="card"><h1>Step 4: Reviews – Judge.me product group</h1>
+</ul></section>
+<section id="steps-04-judgeme-reviews" class="card"><h1>Step 4: Reviews – Judge.me product group</h1>
 <p>Judge.me can <strong>no longer move reviews</strong> between products (confirmed by Judge.me
 support, Shopify rules). Instead we use a <strong>static product group</strong>: every product
 in the group shows all reviews of the group, with verified badges. Included in
@@ -218,7 +237,8 @@ our plan (Awesome).</p>
 <li>Never delete the old products. Their reviews are what the group shows.</li>
 <li>Don't also import the review CSV, or reviews show twice.</li>
 <li>Each review shows "Bewertung für [old product]". After go-live that link redirects to the new product.</li>
-</ul></section><section id="steps-05-go-live" class="card"><h1>Step 5: Go live – handles, status, redirects</h1>
+</ul></section>
+<section id="steps-05-go-live" class="card"><h1>Step 5: Go live – handles, status, redirects</h1>
 <p>Takes about 2 minutes. Do the steps directly after each other.</p>
 <h2>Before</h2>
 <ul>
@@ -248,7 +268,8 @@ our plan (Awesome).</p>
 </ul>
 <h2>Rollback</h2>
 <p>New product → Draft; old products → Active; swap the handles back. Odoo keeps
-syncing both, as long as the old links in Odoo are not removed yet.</p></section><section id="steps-06-after-go-live" class="card"><h1>Step 6: After go-live</h1>
+syncing both, as long as the old links in Odoo are not removed yet.</p></section>
+<section id="steps-06-after-go-live" class="card"><h1>Step 6: After go-live</h1>
 <h2>Same day</h2>
 <ul>
 <li>☐ Open the old URLs (DE + EN) in a private window: they land on the new product.</li>
@@ -268,7 +289,8 @@ syncing both, as long as the old links in Odoo are not removed yet.</p></section
 <ul>
 <li>Old products stay as <strong>Draft</strong> forever (reviews, order history).</li>
 <li>Odoo products stay as they are.</li>
-</ul></section><section id="troubleshooting" class="card"><h1>Troubleshooting</h1>
+</ul></section>
+<section id="troubleshooting" class="card"><h1>Troubleshooting</h1>
 <table>
 <thead>
 <tr>
@@ -324,6 +346,26 @@ syncing both, as long as the old links in Odoo are not removed yet.</p></section
 <td>Delete that redirect first</td>
 </tr>
 <tr>
+<td>Extra variant after adding an option (e.g. Diensthundeführer / dunkelblau)</td>
+<td>Shopify creates all combinations</td>
+<td>Delete the combination that doesn't exist in Odoo</td>
+</tr>
+<tr>
+<td>Odoo shows a different price after import (12,10 instead of 12,00)</td>
+<td>Import copies the Shopify price into Odoo's Shopify pricelist</td>
+<td>Fix the price in Shopify, then Import products by ID again</td>
+</tr>
+<tr>
+<td>Shopify record in Odoo shows only one "Product Template"</td>
+<td>The field holds one product only</td>
+<td>Check the Variants tab; each line is linked by SKU</td>
+</tr>
+<tr>
+<td>Redirect doesn't work</td>
+<td>The old product is still Active at that URL</td>
+<td>Set the old product to Draft; test in a private window</td>
+</tr>
+<tr>
 <td>New product at the end of a collection</td>
 <td>Collection sorted manually</td>
 <td>Drag it up in each collection</td>
@@ -334,7 +376,8 @@ syncing both, as long as the old links in Odoo are not removed yet.</p></section
 <p>4 Odoo variants for 2 SKUs: the connector had created duplicates
 ("IQ Mini-Apportierholz Schlüsselanhänger" without attribute). Fixed by renaming
 them to <code>IQD-APH-HETZ-ALT</code> / <code>IQD-APH-LIGHT-ALT</code>, deleting the 3 wrong lines and
-re-importing Shopify product 12141783613704.</p></section><section id="merges-mfj-3-0-unisex-readme" class="card"><h1>MFJ 3.0 Unisex merge</h1>
+re-importing Shopify product 12141783613704.</p></section>
+<section id="merges-mfj-3-0-unisex-readme" class="card"><h1>MFJ 3.0 Unisex merge</h1>
 <p>Status: <strong>live</strong> (October 2026)</p>
 <table>
 <thead>
@@ -417,7 +460,8 @@ re-importing Shopify product 12141783613704.</p></section><section id="merges-mf
 <ul>
 <li>The review backup CSV (197 reviews pointing to the new product) is <strong>not</strong> stored in Git,
   because it contains customer names and email addresses. Keep it on the company drive.</li>
-</ul></section><section id="merges-mfj-3-0-damen-readme" class="card"><h1>MFJ 3.0 Damen merge</h1>
+</ul></section>
+<section id="merges-mfj-3-0-damen-readme" class="card"><h1>MFJ 3.0 Damen merge</h1>
 <p>Status: <strong>built as Draft, go-live pending</strong> (October 2026)</p>
 <table>
 <thead>
@@ -500,7 +544,340 @@ re-importing Shopify product 12141783613704.</p></section><section id="merges-mf
 <h2>Files</h2>
 <ul>
 <li><code>MFJ3-Damen-new-product-import.csv</code>: the import file used (stock left empty on purpose)</li>
-</ul></section><section id="templates-merge-checklist" class="card"><h1>Merge checklist – <product name></h1>
+</ul></section>
+<section id="merges-patches-k9-readme" class="card"><h1>Patches K9 merge – black + blue patches → one product</h1>
+<p>Status: <strong>live</strong> (2 November 2026) · done by Hamza Mohsin · method: <strong>duplicate + add option</strong> (no CSV import)</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New product</td>
+<td><strong>Patches für K9 Jacke &amp; Hundeführerweste</strong>, Shopify ID <strong>12411509899528</strong></td>
+</tr>
+<tr>
+<td>URL DE</td>
+<td><code>/products/patches-k9-jacke-weste-schwarz</code></td>
+</tr>
+<tr>
+<td>URL EN</td>
+<td><code>/en/products/k9-jacket-vest-patches-black-1</code></td>
+</tr>
+<tr>
+<td>Options</td>
+<td><strong>Druck</strong> (6 values) × <strong>Farbe</strong> (<code>Schwarz</code>, <code>dunkelblau</code>)</td>
+</tr>
+<tr>
+<td>Variants</td>
+<td><strong>11</strong> = Schwarz 6 + dunkelblau 5 (Diensthundeführer exists only in black)</td>
+</tr>
+<tr>
+<td>SKUs</td>
+<td><code>IQD-EKL-PAS.*</code> (black), <code>IQD-EKL-PAB.*</code> (blue) – unchanged</td>
+</tr>
+<tr>
+<td>Price</td>
+<td>12,00 € all variants</td>
+</tr>
+<tr>
+<td>Odoo</td>
+<td>2 products, <strong>unchanged</strong>: <em>Patches K9 Jacket / Vest Black</em> (6) + <em>Patches dog handler vest blue</em> (5)</td>
+</tr>
+<tr>
+<td>Stock at go-live</td>
+<td>1,684 (326 black + 1,358 blue) – identical in Shopify after Export stock</td>
+</tr>
+<tr>
+<td>Reviews</td>
+<td>old products had 0 reviews → no Judge.me group needed</td>
+</tr>
+<tr>
+<td>Service ID</td>
+<td>upload + confirmation required for Polizei, Zoll, Justiz, Police (app <em>Mini: Image Upload</em>)</td>
+</tr>
+</tbody>
+</table>
+<h2>Why</h2>
+<p>Two Shopify products ("Patches K9 Jacke / Weste schwarz" and "Patches Hundeführerweste blau") for the
+same item in two colours. Merged so the customer picks print and colour on one page, like the MFJ jackets.</p>
+<h2>How it fits together</h2>
+<pre><code>ODOO (unchanged)                                 SHOPIFY
+Patches K9 Jacket / Vest Black  PAS.* (6) ──┐
+                                            ├──► Patches für K9 Jacke &amp; Hundeführerweste
+Patches dog handler vest blue   PAB.* (5) ──┘     Druck × Farbe = 11 variants, linked by SKU
+Old Shopify products → Draft + URL redirects to the new product
+</code></pre>
+<h2>Variants and SKUs</h2>
+<table>
+<thead>
+<tr>
+<th>Druck</th>
+<th>Schwarz</th>
+<th>dunkelblau</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Leerer Patch</td>
+<td><code>IQD-EKL-PAS.Leer</code></td>
+<td><code>IQD-EKL-PAB.Leer</code></td>
+</tr>
+<tr>
+<td>Diensthundeführer</td>
+<td><code>IQD-EKL-PAS.DHF</code></td>
+<td>– (does not exist)</td>
+</tr>
+<tr>
+<td>Polizei (nur mit Dienstausweis)</td>
+<td><code>IQD-EKL-PAS.Poz</code></td>
+<td><code>IQD-EKL-PAB.Poz</code></td>
+</tr>
+<tr>
+<td>Zoll (nur mit Dienstausweis)</td>
+<td><code>IQD-EKL-PAS.Zoll</code></td>
+<td><code>IQD-EKL-PAB.Zoll</code></td>
+</tr>
+<tr>
+<td>Justiz (nur mit Dienstausweis)</td>
+<td><code>IQD-EKL-PAS.Jus</code></td>
+<td><code>IQD-EKL-PAB.Jus</code></td>
+</tr>
+<tr>
+<td>Police (nur mit Dienstausweis)</td>
+<td><code>IQD-EKL-PAS.Poc</code></td>
+<td><code>IQD-EKL-PAB.Poc</code></td>
+</tr>
+</tbody>
+</table>
+<p>Barcode = SKU on all variants (same as in Odoo).</p>
+<hr />
+<h2>Step 1 – Odoo check (nothing changed)</h2>
+<ul>
+<li>Product Variants → search Internal Reference <code>IQD-EKL-PA</code> → <strong>11 variants, each SKU once</strong>.</li>
+<li>6 × <code>PAS</code> on <em>Patches K9 Jacket / Vest Black</em>, 5 × <code>PAB</code> on <em>Patches dog handler vest blue</em>.</li>
+<li>Saved the search <code>IQD-EKL-PA</code> as a favourite = "one list" of all 11 variants in Odoo.</li>
+<li>In <em>Sales → Products</em> Odoo still shows <strong>2 products</strong> – correct, Odoo is not merged.</li>
+</ul>
+<p><img alt="Odoo: the two patch products" src="merges/patches-k9/images/01-odoo-two-products.jpg" loading="lazy" /></p>
+<h2>Step 2 – Shopify: build the new product (Draft)</h2>
+<p><strong>2.1 Duplicate the old black product</strong> (More actions → Duplicate): Media ✓, SKUs ✓, Barcodes ✓,
+Translations ✓, <strong>Inventory quantities ✗</strong> (stock only from Odoo), status <strong>Draft</strong>.</p>
+<p><img alt="Duplicate dialog" src="merges/patches-k9/images/02-duplicate-product.jpg" loading="lazy" /></p>
+<p><strong>2.2 Add option <code>Farbe</code></strong> with <code>Schwarz</code>, <code>dunkelblau</code> – the existing 6 variants became Schwarz.</p>
+<p><img alt="Farbe option added" src="merges/patches-k9/images/03-add-option-farbe.jpg" loading="lazy" /></p>
+<p><strong>2.3 Delete the combination that doesn't exist:</strong> Shopify created 12 combinations →
+deleted <em>Diensthundeführer / dunkelblau</em> → <strong>11 variants</strong> (Diensthundeführer = 1 variant).</p>
+<p><img alt="Diensthundeführer only Schwarz" src="merges/patches-k9/images/04-delete-variant.jpg" loading="lazy" /></p>
+<p><strong>2.4 SKUs, barcodes, weight, price</strong> (select all → ⋯):
+- Edit SKU: the 5 <code>IQD-EKL-PAB.*</code> (copied from Odoo, exact case)
+- Edit barcodes: dunkelblau = SKU
+- Edit weight: as on the old products (EU shipping rates are weight-based)
+- Edit price: 12,00 €</p>
+<p><img alt="All 11 SKUs" src="merges/patches-k9/images/05-edit-skus.jpg" loading="lazy" />
+<img alt="Barcodes – dunkelblau still empty at this point" src="merges/patches-k9/images/06-edit-barcodes.jpg" loading="lazy" /></p>
+<p><strong>2.5 Content:</strong> images for every variant (blue patches uploaded), description for both colours,
+SEO title/description, published to all channels (still Draft).</p>
+<p><img alt="Search engine listing" src="merges/patches-k9/images/14-seo-listing.jpg" loading="lazy" /></p>
+<h2>Step 3 – Odoo: link and sync</h2>
+<ol>
+<li>Shopify → Operations → <strong>Import products</strong> → ID <code>12411509899528</code> → queue <strong>PDQ007027</strong> Done.</li>
+</ol>
+<p><img alt="Import queue done" src="merges/patches-k9/images/07-odoo-import-queue.jpg" loading="lazy" /></p>
+<ol>
+<li>Shopify product record: <strong>Total Variants 11 / Total Synced Variants 11</strong>.
+   "Product Template" shows only one product – that is only a label.</li>
+</ol>
+<p><img alt="Odoo Shopify record 11/11" src="merges/patches-k9/images/08-odoo-shopify-record.jpg" loading="lazy" /></p>
+<ol>
+<li>Variants tab: every line → the right Odoo variant by SKU.</li>
+</ol>
+<p><img alt="11 variant links" src="merges/patches-k9/images/09-odoo-variant-links.jpg" loading="lazy" /></p>
+<ol>
+<li><strong>Export stock</strong> → Shopify = Odoo (e.g. Polizei 774 = 41 + 733, total 1,684).</li>
+</ol>
+<p><img alt="Stock in Shopify after Export stock" src="merges/patches-k9/images/10-shopify-stock.jpg" loading="lazy" /></p>
+<ol>
+<li>Price: the first import wrote 12,10 € into Odoo's Shopify pricelist → price fixed in Shopify → <strong>Import products</strong> again → 12,00 €.</li>
+</ol>
+<p><img alt="Odoo pricelist 12,00" src="merges/patches-k9/images/11-odoo-price-12.jpg" loading="lazy" /></p>
+<h2>Step 4 – Storefront check</h2>
+<ul>
+<li>Colour switch changes the image; dunkelblau shows the blue patches.</li>
+<li>Diensthundeführer + dunkelblau → crossed out / <em>Nicht verfügbar</em> (combination doesn't exist).</li>
+</ul>
+<p><img alt="dunkelblau selected" src="merges/patches-k9/images/12-storefront-dunkelblau.jpg" loading="lazy" />
+<img alt="Diensthundeführer not available in dunkelblau" src="merges/patches-k9/images/13-storefront-unavailable.jpg" loading="lazy" /></p>
+<h2>Step 5 – Go live and redirects</h2>
+<ol>
+<li>Old black product: handle <code>patches-hundefuhrerweste-schwarz</code> → <code>…-schwarz-alt</code> (no redirect), <strong>Draft</strong>.</li>
+<li>New product: handle <code>patches-k9-jacke-weste-schwarz</code> (was <code>…-copy</code>), <strong>Active</strong>.</li>
+<li>Old blue product (<code>patch-hundefuhrerweste-blau</code>) → <strong>Draft</strong>.</li>
+<li>Online Store → Navigation → <strong>URL redirects</strong>:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/products/patches-hundefuhrerweste-schwarz</code></td>
+<td><code>/products/patches-k9-jacke-weste-schwarz</code></td>
+</tr>
+<tr>
+<td><code>/products/patches-hundefuhrerweste-schwarz-alt</code></td>
+<td><code>/products/patches-k9-jacke-weste-schwarz</code></td>
+</tr>
+<tr>
+<td><code>/products/patch-hundefuhrerweste-blau</code></td>
+<td><code>/products/patches-k9-jacke-weste-schwarz?variant=59324793946376</code> (opens <em>Leerer Patch / dunkelblau</em>)</td>
+</tr>
+</tbody>
+</table>
+<p>A redirect only works when no <strong>active</strong> product uses the old URL → old products must be Draft.
+Test in a private window (not logged in, no theme preview).</p>
+<p><img alt="Create redirect" src="merges/patches-k9/images/15-create-redirect.jpg" loading="lazy" />
+<img alt="Redirect list" src="merges/patches-k9/images/16-redirect-list.jpg" loading="lazy" /></p>
+<h2>Step 6 – Service ID upload (app <em>Mini: Image Upload</em>)</h2>
+<p>The official prints may only be sold with a service ID.</p>
+<ul>
+<li>The app block <strong>Image Upload</strong> sits in the <em>Default product</em> template (all products);
+  the app decides per <strong>field</strong> where it shows. Theme code unchanged.</li>
+<li>Existing field <strong>"Polizeiweste blau"</strong> (jacket / vests) left unchanged.</li>
+</ul>
+<p><img alt="App block in the theme" src="merges/patches-k9/images/17-theme-image-upload-block.jpg" loading="lazy" /></p>
+<p><strong>New field "New Field – 2" (patches):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Setup</td>
+<td>Visibility <strong>Specific variants</strong> → the <strong>8</strong> variants Polizei, Zoll, Justiz, Police × Schwarz/dunkelblau (not Leerer Patch, not Diensthundeführer) · cart label <code>Datei</code></td>
+</tr>
+<tr>
+<td>Appearance</td>
+<td>Subtitle <code>Dienstausweis hochladen</code> · description <code>Datei hochladen als JPG, PNG, oder PDF bis zu 10 MB.</code></td>
+</tr>
+<tr>
+<td>Upload rules</td>
+<td>Allowed file types <strong>Images + Documents (PDF)</strong> · max <strong>10 MB</strong> · <strong>Required upload</strong> · German error texts</td>
+</tr>
+<tr>
+<td>Additional fields</td>
+<td><strong>Checkbox</strong> header <code>Berechtigung</code>, option <code>Ich bestätige, dass ich zum Tragen dieses behördlichen Patches berechtigt bin.</code> – <strong>required</strong>, warning <code>Bitte bestätige deine Berechtigung zum Tragen des Patches.</code></td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Setup – visibility" src="merges/patches-k9/images/18-app-field-setup.jpg" loading="lazy" />
+<img alt="Select the 8 variants" src="merges/patches-k9/images/19-app-select-variants.jpg" loading="lazy" />
+<img alt="Appearance" src="merges/patches-k9/images/20-app-appearance.jpg" loading="lazy" />
+<img alt="Upload rules" src="merges/patches-k9/images/21-app-upload-rules.jpg" loading="lazy" />
+<img alt="Checkbox field" src="merges/patches-k9/images/22-app-checkbox.jpg" loading="lazy" /></p>
+<p>The app's language dropdown ("English ⌄") only changes the <strong>app interface</strong>, not the shop texts.</p>
+<h2>Step 7 – English translations (Translate &amp; Adapt)</h2>
+<p>Duplicating copied the <strong>old black product's English texts</strong>; option values were auto-translated wrongly
+("Pressure", Polizei → "Police" twice).</p>
+<p><strong>Product</strong> (Translate &amp; Adapt → English → Products → the product):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>English</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Title</td>
+<td><code>Patches for K9 Jacket &amp; Dog Handler Vest</code></td>
+</tr>
+<tr>
+<td>Product type</td>
+<td><code>Dog handler equipment</code></td>
+</tr>
+<tr>
+<td>Meta title</td>
+<td><code>Velcro Patches Black &amp; Dark Blue for K9 Jacket &amp; Vest \| IQ Dogsport</code></td>
+</tr>
+<tr>
+<td>Description / meta description</td>
+<td>both colours, see the German text</td>
+</tr>
+<tr>
+<td>Option Druck</td>
+<td><code>Print</code></td>
+</tr>
+<tr>
+<td>Option Farbe</td>
+<td><code>Color</code></td>
+</tr>
+<tr>
+<td>Leerer Patch</td>
+<td><code>Blank patch</code></td>
+</tr>
+<tr>
+<td>Diensthundeführer</td>
+<td><code>Diensthundeführer</code></td>
+</tr>
+<tr>
+<td>Polizei / Zoll / Justiz / Police (nur mit Dienstausweis)</td>
+<td><code>Polizei / Zoll / Justiz / Police (only with official ID)</code> – <strong>print names stay German</strong> (text on the patch)</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Translate &amp; Adapt – product" src="merges/patches-k9/images/23-translate-product.jpg" loading="lazy" /></p>
+<p><strong>Colour values</strong> are not on the product page: Farbe is linked to Shopify's colour <strong>metaobjects</strong> →
+Translate &amp; Adapt → dropdown <strong>Metaobjects</strong> → <code>Schwarz</code> → <code>Black</code>, <code>dunkelblau</code> → <code>Dark blue</code>.
+Always click the black <strong>Save</strong> (top right) before switching entries.</p>
+<p><img alt="Translate &amp; Adapt – colour metaobject" src="merges/patches-k9/images/24-translate-color.jpg" loading="lazy" />
+<img alt="English product page" src="merges/patches-k9/images/25-storefront-english.jpg" loading="lazy" />
+<img alt="English page with upload field" src="merges/patches-k9/images/26-storefront-upload-en.jpg" loading="lazy" /></p>
+<hr />
+<h2>Checks done</h2>
+<ul>
+<li>☑ 11 SKUs = Odoo, no duplicates</li>
+<li>☑ Odoo 11/11 synced, stock 1,684 = Odoo</li>
+<li>☑ Price 12,00 € in Shopify and Odoo</li>
+<li>☑ Barcodes and weight on all variants</li>
+<li>☑ Product page DE: colour switch, images, Diensthundeführer unavailable for dunkelblau</li>
+<li>☑ Upload field + checkbox only on the 4 official prints</li>
+</ul>
+<h2>Open</h2>
+<ul>
+<li>☐ EN option values saved correctly (Polizei/Zoll/Justiz as above, no double "Police")</li>
+<li>☐ EN colour labels Black / Dark blue saved; <strong>dunkelblau swatch white on the EN page</strong> → check the colour (hex) of the <code>dunkelblau</code> metaobject in Content → Metaobjects</li>
+<li>☐ EN texts of the upload field and checkbox (Translate &amp; Adapt or app support)</li>
+<li>☐ Produktdetails metafield still "schwarz" only (DE + EN); Google colour metafield <code>Schwarz</code> on the 5 blue variants → <code>Dunkelblau</code></li>
+<li>☐ Test all redirects in a private window (DE + <code>/en/</code>); delete wrong redirect <code>/products/patches-k9-jacke-weste-schwarz-alt</code></li>
+<li>☐ Rename app field "New Field – 2" → <code>Patches – Dienstausweis</code></li>
+<li>☐ Xboost Bundle offers with the old patch products → new product</li>
+<li>☐ Collections: Bestseller / K9 Ausrüstung position; tag <code>NEW</code> / Neuheiten keep or remove</li>
+<li>☐ Optional: option order Farbe before Druck</li>
+<li>☐ After a few days (with Florian): Odoo → each old Shopify patch record → Variants tab → 🗑 lines (link only)</li>
+</ul>
+<h2>Lessons for the playbook</h2>
+<ul>
+<li>For products with few variants, <strong>duplicate + add option</strong> is faster than the CSV import.</li>
+<li>Untick <strong>Inventory quantities</strong> when duplicating – stock only comes from Odoo.</li>
+<li>Adding an option creates <strong>all combinations</strong> → delete those that don't exist in Odoo.</li>
+<li>The first Odoo import copies the Shopify price into Odoo's Shopify pricelist → set prices <strong>before</strong> importing.</li>
+<li>Odoo's "Product Template" on the Shopify record shows one product only; the real links are the variant lines.</li>
+<li>A redirect only works when the old URL has no active product.</li>
+<li>Duplicating copies the old English translations → check Translate &amp; Adapt; colour values are translated under <strong>Metaobjects</strong>.</li>
+<li>Duplicating also copies variant metafields (e.g. Google colour) → check them for the new colour.</li>
+<li>Upload apps: create a <strong>separate field per product type</strong> with <em>Specific variants</em> instead of changing a shared field.</li>
+</ul></section>
+<section id="templates-merge-checklist" class="card"><h1>Merge checklist – <product name></h1>
 <p>Copy this file to <code>merges/&lt;product&gt;/README.md</code> for each new merge.</p>
 <table>
 <thead>
@@ -568,7 +945,9 @@ re-importing Shopify product 12141783613704.</p></section><section id="merges-mf
 <li>☐ 4 Judge.me group created, reviews visible in Preview</li>
 <li>☐ 5 Old main handle → <code>-alt</code> (no redirect), new handle set, new Active, old Draft</li>
 <li>☐ 5 Redirects created and tested (DE + EN)</li>
+<li>☐ 5 English translation of option names/values (Translate &amp; Adapt → Product options) <!-- [Hamza 2026-10-19] --></li>
 <li>☐ 6 Collections re-sorted</li>
 <li>☐ 6 After a few days: old links removed in Odoo (with Florian)</li>
-</ul></section></main></div>
+</ul></section>
+</main></div>
 </body></html>

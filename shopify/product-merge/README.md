@@ -42,7 +42,8 @@ is merged in Odoo.
 | Merge | Status | Notes |
 |---|---|---|
 | MFJ 3.0 Unisex | Live | [merges/mfj-3-0-unisex](merges/mfj-3-0-unisex/README.md) |
-| MFJ 3.0 Damen | Built as Draft, go-live pending | [merges/mfj-3-0-damen](merges/mfj-3-0-damen/README.md) |
+| MFJ 3.0 Damen | Live (Oct 2026) | [merges/mfj-3-0-damen](merges/mfj-3-0-damen/README.md) |
+| Patches K9 (black + blue) | Live (02.11.2026) – duplicate + add option | [merges/patches-k9](merges/patches-k9/README.md) |
 
 ## Never do this
 - Never **delete** the old products: their reviews disappear from the group.
