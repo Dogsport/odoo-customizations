@@ -1,0 +1,25 @@
+<!--
+  View: IQ – Steuerfrei-Hinweise korrigiert
+  Settings → Technical → User Interface → Views
+  View Type: QWeb · Inherited View: account.report_invoice_document · Extension View · Sequence 20
+-->
+<data>
+    <!-- [Hamza 2026-11-02] tax-free notes only where they apply: 1b = EU (not DE) with VAT ID, 1a = non-EU; none for DE -->
+    <xpath expr="//div[@id='no_tax_note']" position="replace">
+        <t t-set="iq_country" t-value="(o.partner_shipping_id or o.partner_id).country_id"/>
+        <t t-set="iq_is_eu" t-value="'EU' in iq_country.country_group_ids.mapped('code')"/>
+        <t t-set="iq_vat" t-value="o.partner_id.commercial_partner_id.vat"/>
+        <div id="no_tax_note" class="row col-12" t-if="o.move_type == 'out_invoice' and not o.tax_totals['tax_amount'] and iq_country and iq_country.code != 'DE'">
+            <div class="row" t-if="iq_is_eu and iq_vat">
+                <div class="col-12 text-left">
+                    <p>Steuerfreie innergemeinschaftliche Lieferung gem. § 4 Nr. 1b UStG | Tax free delivery according to §4 Nr.1b UStG</p>
+                </div>
+            </div>
+            <div class="row" t-if="not iq_is_eu">
+                <div class="col-12 text-left">
+                    <p>Steuerfreie Ausfuhrlieferung gem. § 4 Nr. 1a UStG | Tax free delivery according to §4 Nr.1a UStG</p>
+                </div>
+            </div>
+        </div>
+    </xpath>
+</data>

@@ -1,0 +1,239 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invoice tax-free notes § 4 Nr. 1a / 1b</title><style>
+:root{--bg:#fff;--fg:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#714B67;--code:#f6f8fa}
+@media (prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#9ca3af;--line:#374151;--accent:#c79bbd;--code:#1f2937}}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.55;max-width:920px;margin:24px auto;padding:0 16px}
+h1{color:var(--accent);font-size:1.6rem}h2{color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:32px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--accent);color:#fff}code,pre{background:var(--code);border-radius:4px}code{padding:1px 4px;font-size:.9em}pre{padding:12px;overflow-x:auto;font-size:.85em}
+blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>Invoice tax-free notes (§ 4 Nr. 1a / 1b UStG) – only where they apply</h1>
+<p><strong>Status: Live in production (02.11.2026)</strong> · tested in staging first · done by Hamza Mohsin</p>
+<h2>In one sentence</h2>
+<p>Invoices without VAT printed <strong>both</strong> tax-free notes ("EU business sale" <strong>and</strong> "export outside the EU"),
+even for EU customers and German gift card orders. Now each invoice shows <strong>only the note that is true</strong> – or none.</p>
+<h2>What the two notes mean</h2>
+<table>
+<thead>
+<tr>
+<th>Note</th>
+<th>Simple meaning</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>§ 4 Nr. 1b UStG</strong> – steuerfreie innergemeinschaftliche Lieferung</td>
+<td>No German VAT because the buyer is a <strong>company in another EU country</strong> with an EU VAT ID (pays VAT in its own country, reverse charge)</td>
+<td>Company in Spain with VAT ID</td>
+</tr>
+<tr>
+<td><strong>§ 4 Nr. 1a UStG</strong> – steuerfreie Ausfuhrlieferung</td>
+<td>No German VAT because the goods go <strong>outside the EU</strong> (buyer pays import tax there)</td>
+<td>Customer in Switzerland</td>
+</tr>
+</tbody>
+</table>
+<p>When VAT <strong>is</strong> charged (Germany 19 %, EU private customers via OSS e.g. 21 % ES IVA), no note is printed –
+the VAT on the invoice says everything.</p>
+<h2>Problem</h2>
+<ul>
+<li>Invoice for a German customer (gift card, 0 % VAT): showed <strong>1b and 1a</strong> – both wrong.</li>
+<li>Invoice for a Spanish company with VAT ID: showed <strong>1b and 1a</strong> – 1a ("export") wrong.</li>
+<li>Affected: <strong>every</strong> customer invoice with 0 € VAT.</li>
+</ul>
+<h2>Cause</h2>
+<p>The text is not a tax setting – it comes from the invoice template of the Emipro module
+<strong><code>commercial_invoice_ept</code></strong>, view <code>commercial_invoice_ept.report_invoice_document</code>
+(inherits <code>account.report_invoice_document</code>), block <code>&lt;div id="no_tax_note"&gt;</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Line</th>
+<th>Condition in the module</th>
+<th>Problem</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>whole block</td>
+<td>invoice type out_invoice <strong>and</strong> VAT amount = 0</td>
+<td>ok</td>
+</tr>
+<tr>
+<td>§ 4 Nr. 1b</td>
+<td>customer country is in country group <strong>EU</strong></td>
+<td>Germany is also in the EU; VAT ID not checked</td>
+</tr>
+<tr>
+<td>§ 4 Nr. 1a</td>
+<td><strong>none</strong></td>
+<td>printed on every 0-VAT invoice</td>
+</tr>
+</tbody>
+</table>
+<p>Original block: <a href="code/commercial_invoice_ept_ORIGINAL_block.xml">code/commercial_invoice_ept_ORIGINAL_block.xml</a></p>
+<h2>How we found it</h2>
+<ol>
+<li>Settings → Technical → Reporting → <strong>Reports</strong> → "Invoice PDF" = <code>account.report_invoice_with_payments</code>
+   (uses <code>account.report_invoice_document</code>).</li>
+<li>Settings → Technical → User Interface → <strong>Views</strong> → search <code>report_invoice_document</code> → 10 views.</li>
+<li>Opened the non-standard ones: <code>commercial_invoice_ept.report_invoice_document_custom</code> = only the info block
+   top right; <strong><code>commercial_invoice_ept.report_invoice_document</code></strong> = contains the § 4 text.</li>
+</ol>
+<h2>Solution</h2>
+<p><strong>No change to the Emipro module</strong> (a module update would overwrite it). Instead one <strong>new extension view</strong>
+that replaces only the <code>no_tax_note</code> block with the correct rules. Theme, taxes, accounting and data unchanged,
+no new fields.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>View Name</td>
+<td><code>IQ – Steuerfrei-Hinweise korrigiert</code></td>
+</tr>
+<tr>
+<td>View Type</td>
+<td>QWeb</td>
+</tr>
+<tr>
+<td>Inherited View</td>
+<td><code>account.report_invoice_document</code> (row with empty "Inherited" column)</td>
+</tr>
+<tr>
+<td>Inheritance mode</td>
+<td>Extension View</td>
+</tr>
+<tr>
+<td>Sequence</td>
+<td><strong>20</strong> (after the module's 16)</td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td><a href="code/iq_steuerfrei_hinweise_view.xml">code/iq_steuerfrei_hinweise_view.xml</a></td>
+</tr>
+</tbody>
+</table>
+<h3>New rule (checked live when a PDF is generated)</h3>
+<pre><code>VAT on the invoice &gt; 0                     → nothing
+VAT = 0 and delivery country Germany       → nothing
+VAT = 0, EU country and customer VAT ID    → § 4 Nr. 1b only
+VAT = 0, country outside the EU            → § 4 Nr. 1a only
+VAT = 0, EU country without VAT ID         → nothing (and the tax setting of that order is wrong)
+</code></pre>
+<ul>
+<li>Country = <strong>delivery address</strong> (falls back to the customer); VAT ID = company of the customer.</li>
+<li>Works for manual and <strong>automatic</strong> (Shopify / Emipro workflow) invoices – the rule runs whenever the PDF is generated.</li>
+<li>PDFs already generated/sent before the change keep the old text.</li>
+</ul>
+<h2>Test results (staging, 02.11.2026)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Case</th>
+<th>Invoice</th>
+<th>Expected</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Spanish company with VAT ID – order from Shopify <strong>test store</strong>, invoice created automatically</td>
+<td>RE/2026/05084</td>
+<td>only 1b</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Switzerland, private, manual order (fiscal position non-EU, 0 %)</td>
+<td>RE/2026/05085</td>
+<td>only 1a</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Spain, private, no VAT ID → 21 % ES IVA</td>
+<td>RE/2026/05087</td>
+<td>nothing</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Germany + gift card (0 %)</td>
+<td>–</td>
+<td>nothing</td>
+<td>rule-wise covered (country DE)</td>
+</tr>
+</tbody>
+</table>
+<p>Then created the same view in <strong>production</strong>.</p>
+<h2>Rollback</h2>
+<p>Settings → Technical → Views → <code>IQ – Steuerfrei-Hinweise korrigiert</code> → <strong>Active off</strong> → save.
+Invoices look exactly like before.</p>
+<h2>Open</h2>
+<ul>
+<li>☐ Invoices already sent with the wrong notes (filter: Customer invoices, posted, Tax = 0) – Florian / tax advisor decide whether to correct them</li>
+<li>☐ Check that <strong>Verify VAT Numbers (VIES)</strong> is on in Invoicing settings</li>
+<li>☐ Optional: tell Emipro that § 4 Nr. 1a is printed without a condition</li>
+<li>☐ Side note: shipping line on the Spanish B2B invoice had no tax – check shipping tax on German orders</li>
+</ul>
+<h2>Notes</h2>
+<ul>
+<li>Wording of legal notes: agreed with Florian; ideally confirmed by the tax advisor.</li>
+<li>Test customers in staging: TEST ES B2B, TEST CH Privat, TEST ES Privat, TEST DE Privat (fictional data).</li>
+</ul><hr><h2>iq_steuerfrei_hinweise_view.xml</h2><pre><code>&lt;!--
+  View: IQ – Steuerfrei-Hinweise korrigiert
+  Settings → Technical → User Interface → Views
+  View Type: QWeb · Inherited View: account.report_invoice_document · Extension View · Sequence 20
+--&gt;
+&lt;data&gt;
+    &lt;!-- [Hamza 2026-11-02] tax-free notes only where they apply: 1b = EU (not DE) with VAT ID, 1a = non-EU; none for DE --&gt;
+    &lt;xpath expr=&quot;//div[@id=&#x27;no_tax_note&#x27;]&quot; position=&quot;replace&quot;&gt;
+        &lt;t t-set=&quot;iq_country&quot; t-value=&quot;(o.partner_shipping_id or o.partner_id).country_id&quot;/&gt;
+        &lt;t t-set=&quot;iq_is_eu&quot; t-value=&quot;&#x27;EU&#x27; in iq_country.country_group_ids.mapped(&#x27;code&#x27;)&quot;/&gt;
+        &lt;t t-set=&quot;iq_vat&quot; t-value=&quot;o.partner_id.commercial_partner_id.vat&quot;/&gt;
+        &lt;div id=&quot;no_tax_note&quot; class=&quot;row col-12&quot; t-if=&quot;o.move_type == &#x27;out_invoice&#x27; and not o.tax_totals[&#x27;tax_amount&#x27;] and iq_country and iq_country.code != &#x27;DE&#x27;&quot;&gt;
+            &lt;div class=&quot;row&quot; t-if=&quot;iq_is_eu and iq_vat&quot;&gt;
+                &lt;div class=&quot;col-12 text-left&quot;&gt;
+                    &lt;p&gt;Steuerfreie innergemeinschaftliche Lieferung gem. § 4 Nr. 1b UStG | Tax free delivery according to §4 Nr.1b UStG&lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;row&quot; t-if=&quot;not iq_is_eu&quot;&gt;
+                &lt;div class=&quot;col-12 text-left&quot;&gt;
+                    &lt;p&gt;Steuerfreie Ausfuhrlieferung gem. § 4 Nr. 1a UStG | Tax free delivery according to §4 Nr.1a UStG&lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/xpath&gt;
+&lt;/data&gt;
+</code></pre><h2>commercial_invoice_ept_ORIGINAL_block.xml</h2><pre><code>&lt;!-- Original block in commercial_invoice_ept.report_invoice_document (Emipro module) – NOT changed, replaced by the IQ view --&gt;
+&lt;xpath expr=&quot;//div[@id=&#x27;payment_term&#x27;]&quot; position=&quot;before&quot;&gt;
+    &lt;table class=&quot;table-borderless&quot; style=&quot;width:100%;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td colspan=&quot;2&quot;&gt;
+                &lt;div id=&quot;no_tax_note&quot; class=&quot;row col-12&quot; t-if=&quot;o.move_type in (&#x27;out_invoice&#x27;) and not o.tax_totals[&#x27;tax_amount&#x27;]&quot;&gt;
+                    &lt;div class=&quot;row&quot; t-if=&quot;&#x27;EU&#x27; in o.partner_id.country_id.country_group_ids.mapped(&#x27;code&#x27;)&quot;&gt;
+                        &lt;div class=&quot;col-12 text-left&quot;&gt;
+                            &lt;p&gt;Steuerfreie innergemeinschaftliche Lieferung gem. § 4 Nr. 1b UStG | Tax free
+                                delivery according to §4 Nr.1b UStG
+                            &lt;/p&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;row&quot;&gt;   &lt;!-- no condition: printed on every 0-VAT invoice --&gt;
+                        &lt;div class=&quot;col-12 text-left&quot;&gt;
+                            &lt;p&gt;Steuerfreie Ausfuhrlieferung gem. § 4 Nr. 1a UStG | Tax free delivery according
+                                to §4 Nr.1a UStG
+                            &lt;/p&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+&lt;/xpath&gt;
+</code></pre></body></html>

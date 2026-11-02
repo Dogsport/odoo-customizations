@@ -1,0 +1,25 @@
+<!-- Original block in commercial_invoice_ept.report_invoice_document (Emipro module) – NOT changed, replaced by the IQ view -->
+<xpath expr="//div[@id='payment_term']" position="before">
+    <table class="table-borderless" style="width:100%;">
+        <tr>
+            <td colspan="2">
+                <div id="no_tax_note" class="row col-12" t-if="o.move_type in ('out_invoice') and not o.tax_totals['tax_amount']">
+                    <div class="row" t-if="'EU' in o.partner_id.country_id.country_group_ids.mapped('code')">
+                        <div class="col-12 text-left">
+                            <p>Steuerfreie innergemeinschaftliche Lieferung gem. § 4 Nr. 1b UStG | Tax free
+                                delivery according to §4 Nr.1b UStG
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">   <!-- no condition: printed on every 0-VAT invoice -->
+                        <div class="col-12 text-left">
+                            <p>Steuerfreie Ausfuhrlieferung gem. § 4 Nr. 1a UStG | Tax free delivery according
+                                to §4 Nr.1a UStG
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</xpath>

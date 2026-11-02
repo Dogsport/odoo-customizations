@@ -182,4 +182,20 @@ window.IQ_LOG = [
     status: "Live",
     link: "odoo/dhl-return-label-email-2026-10-29/"
   },
+  {
+    date: "2026-11-02",
+    area: "Shopify",
+    title: "Product merge: Patches K9 black + blue → one product",
+    summary: "Duplicate + option Farbe, 11 variants (SKUs PAS/PAB unchanged), Odoo import 11/11, stock 1,684, price 12,00, redirects, service-ID upload field (Mini: Image Upload) only for Polizei/Zoll/Justiz/Police, EN translations.",
+    status: "Live",
+    link: "shopify/product-merge/#merges-patches-k9-readme"
+  },
+  {
+    date: "2026-11-02",
+    area: "Odoo",
+    title: "Invoice tax-free notes § 4 Nr. 1a / 1b – only where they apply",
+    summary: "Emipro view commercial_invoice_ept.report_invoice_document printed 1b + 1a on every 0-VAT invoice. New extension view 'IQ – Steuerfrei-Hinweise korrigiert' (seq 20): 1b = EU company with VAT ID, 1a = non-EU, none for DE. Tested in staging, live.",
+    status: "Live",
+    link: "odoo/invoice-tax-free-notes-2026-11-02/"
+  },
 ];
