@@ -1,0 +1,170 @@
+iq-dogsport-staging-40297587 [staging/19.0]:~$    odoo-bin shell
+2026-11-03 16:59:10,151 50 INFO ? odoo: Odoo version 19.0 
+2026-11-03 16:59:10,151 50 INFO ? odoo: Using configuration file at /home/odoo/.config/odoo/odoo.conf 
+2026-11-03 16:59:10,151 50 INFO ? odoo: addons paths: _NamespacePath(['/home/odoo/src/odoo/odoo/addons', '/home/odoo/src/odoo/odoo/addons', '/home/odoo/data/addons/19.0', '/home/odoo/src/odoo/addons', '/home/odoo/src/enterprise', '/home/odoo/src/themes', '/home/odoo/src/user', '/home/odoo/src/user/OCA/purchase-workflow', '/home/odoo/src/user/OCA/stock-logistics-workflow', '/home/odoo/src/user/printnode_base-19.0.2.8.0']) 
+2026-11-03 16:59:10,151 50 INFO ? odoo: database: p_iq_dogsport_staging_40297587@192.168.1.1:5432 
+2026-11-03 16:59:10,735 50 INFO ? odoo.service.server: Initiating shutdown 
+2026-11-03 16:59:10,735 50 INFO ? odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+2026-11-03 16:59:10,765 50 INFO iq-dogsport-staging-40297587 odoo.modules.loading: loading 1 modules... 
+2026-11-03 16:59:10,768 50 INFO iq-dogsport-staging-40297587 odoo.modules.loading: 1 modules loaded in 0.00s, 0 queries (+0 extra) 
+2026-11-03 16:59:10,797 50 WARNING iq-dogsport-staging-40297587 odoo.modules.module: Missing `license` key in manifest for 'shopify_remote_id_import_ept', defaulting to LGPL-3 
+2026-11-03 16:59:10,798 50 WARNING iq-dogsport-staging-40297587 odoo.modules.module: Missing `license` key in manifest for 'sale_delivery_manual_fix_v19', defaulting to LGPL-3 
+2026-11-03 16:59:10,816 50 WARNING iq-dogsport-staging-40297587 odoo.modules.module: Missing `license` key in manifest for 'mail_font_full_override_final', defaulting to LGPL-3 
+2026-11-03 16:59:10,820 50 WARNING iq-dogsport-staging-40297587 odoo.modules.module: Missing `license` key in manifest for 'stock_label_merge_advanced', defaulting to LGPL-3 
+2026-11-03 16:59:10,862 50 INFO iq-dogsport-staging-40297587 odoo.modules.loading: loading 377 modules... 
+2026-11-03 16:59:14,125 50 WARNING iq-dogsport-staging-40297587 odoo.registry: The model gls.germany.service has no _description 
+2026-11-03 16:59:14,253 50 WARNING iq-dogsport-staging-40297587 odoo.registry: The model gls.germany.service has no _description 
+2026-11-03 16:59:14,699 50 WARNING iq-dogsport-staging-40297587 odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define models.Constraint on the model. 
+2026-11-03 16:59:14,757 50 INFO iq-dogsport-staging-40297587 odoo.modules.loading: 377 modules loaded in 3.90s, 0 queries (+0 extra) 
+2026-11-03 16:59:15,165 50 INFO iq-dogsport-staging-40297587 odoo.modules.loading: Modules loaded. 
+2026-11-03 16:59:15,428 50 INFO iq-dogsport-staging-40297587 odoo.registry: Caches invalidated, signaling through the database: ['default'] 
+2026-11-03 16:59:15,430 50 INFO iq-dogsport-staging-40297587 odoo.registry: Registry loaded in 4.694s 
+env: <odoo.orm.environments.Environment object at 0x7f262b031490>
+odoo: <module 'odoo' (namespace) from ['/home/odoo/src/odoo/odoo', '/home/odoo/src/odoo/odoo']>
+openerp: <module 'odoo' (namespace) from ['/home/odoo/src/odoo/odoo', '/home/odoo/src/odoo/odoo']>
+self: res.users(1,)
+
+In [1]: moves = env['account.move'].search([
+   ...:     ('move_type', 'in', ('out_invoice', 'out_refund')),
+   ...:     ('state', '=', 'posted'),
+   ...:     ('invoice_date', '>=', '2026-10-01'),
+   ...:     ('invoice_date', '<=', '2026-10-31'),
+   ...:     ('invoice_pdf_report_id', '=', False),
+   ...:     ('amount_total', '!=', 0),
+   ...: ])
+   ...: print(len(moves))
+   ...: print(moves.mapped('name'))
+---------------------------------------------------------------------------
+ValueError                                Traceback (most recent call last)
+Cell In[1], line 1
+----> 1 moves = env['account.move'].search([
+      2     ('move_type', 'in', ('out_invoice', 'out_refund')),
+      3     ('state', '=', 'posted'),
+      4     ('invoice_date', '>=', '2026-10-01'),
+      5     ('invoice_date', '<=', '2026-10-31'),
+      6     ('invoice_pdf_report_id', '=', False),
+      7     ('amount_total', '!=', 0),
+      8 ])
+      9 print(len(moves))
+     10 print(moves.mapped('name'))
+
+File ~/src/odoo/odoo/orm/models.py:1391, in BaseModel.search(self, domain, offset, limit, order)
+   1374 @api.model
+   1375 @api.readonly
+   1376 def search(self, domain: DomainType, offset: int = 0, limit: int | None = None, order: str | None = None) -> Self:
+   1377     """Search for the records that satisfy the given ``domain``
+   1378     :ref:`search domain <reference/orm/domains>`.
+   1379 
+   (...)
+   1389     implementation is done by method :meth:`_search`.
+   1390     """
+-> 1391     return self.search_fetch(domain, [], offset=offset, limit=limit, order=order)
+
+File ~/src/odoo/odoo/orm/models.py:1421, in BaseModel.search_fetch(self, domain, field_names, offset, limit, order)
+   1404 """Search for the records that satisfy the given ``domain``
+   1405 :ref:`search domain <reference/orm/domains>`, and fetch the given fields
+   1406 to the cache.  This method is like a combination of methods :meth:`search`
+   (...)
+   1418 :raise AccessError: if user is not allowed to access requested information
+   1419 """
+   1420 # first determine a query that satisfies the domain and access rules
+-> 1421 query = self._search(domain, offset=offset, limit=limit, order=order or self._order)
+   1423 if query.is_empty():
+   1424     # optimization: don't execute the query at all
+   1425     if not self.env.su:  # check access to fields
+
+File ~/src/odoo/odoo/orm/models.py:5390, in BaseModel._search(self, domain, offset, limit, order, active_test, bypass_access)
+   5388 query = Query(self.env, self._table, self._table_sql)
+   5389 if not domain.is_true():
+-> 5390     query.add_where(domain._to_sql(self, self._table, query))
+   5392 # security access domain
+   5393 if check_access:
+
+File ~/src/odoo/odoo/orm/domains.py:672, in DomainNary._to_sql(self, model, alias, query)
+    671 def _to_sql(self, model: BaseModel, alias: str, query: Query) -> SQL:
+--> 672     return SQL("(%s)", self.OPERATOR_SQL.join(
+    673         c._to_sql(model, alias, query)
+    674         for c in self.children
+    675     ))
+
+File ~/src/odoo/odoo/tools/sql.py:184, in SQL.join(self, args)
+    182 def join(self, args: Iterable) -> SQL:
+    183     """ Join SQL objects or parameters with ``self`` as a separator. """
+--> 184     args = list(args)
+    185     # optimizations for special cases
+    186     if len(args) == 0:
+
+File ~/src/odoo/odoo/orm/domains.py:673, in <genexpr>(.0)
+    671 def _to_sql(self, model: BaseModel, alias: str, query: Query) -> SQL:
+    672     return SQL("(%s)", self.OPERATOR_SQL.join(
+--> 673         c._to_sql(model, alias, query)
+    674         for c in self.children
+    675     ))
+
+File ~/src/odoo/odoo/orm/domains.py:1116, in DomainCondition._to_sql(self, model, alias, query)
+   1114 field = self._field(model)
+   1115 model._check_field_access(field, 'read')
+-> 1116 return field.condition_to_sql(field_expr, operator, value, model, alias, query)
+
+File ~/src/odoo/odoo/orm/fields_relational.py:483, in Many2one.condition_to_sql(self, field_expr, operator, value, model, alias, query)
+    480 def condition_to_sql(self, field_expr: str, operator: str, value, model: BaseModel, alias: str, query: Query) -> SQL:
+    481     if operator not in ('any', 'not any', 'any!', 'not any!') or field_expr != self.name:
+    482         # for other operators than 'any', just generate condition based on column type
+--> 483         return super().condition_to_sql(field_expr, operator, value, model, alias, query)
+    485     comodel = model.env[self.comodel_name]
+    486     sql_field = model._field_to_sql(alias, field_expr, query)
+
+File ~/src/odoo/odoo/orm/fields.py:1257, in Field.condition_to_sql(self, field_expr, operator, value, model, alias, query)
+   1249 def condition_to_sql(self, field_expr: str, operator: str, value, model: BaseModel, alias: str, query: Query) -> SQL:
+   1250     """ Return an :class:`SQL` object that represents the domain condition
+   1251     given by the triple ``(field_expr, operator, value)`` with the given
+   1252     table alias, and in the context of the given query.
+   (...)
+   1255     of the field.
+   1256     """
+-> 1257     sql_expr = self._condition_to_sql(field_expr, operator, value, model, alias, query)
+   1258     if self.company_dependent:
+   1259         sql_expr = self._condition_to_sql_company(sql_expr, field_expr, operator, value, model, alias, query)
+
+File ~/src/odoo/odoo/orm/fields.py:1263, in Field._condition_to_sql(self, field_expr, operator, value, model, alias, query)
+   1262 def _condition_to_sql(self, field_expr: str, operator: str, value, model: BaseModel, alias: str, query: Query) -> SQL:
+-> 1263     sql_field = model._field_to_sql(alias, field_expr, query)
+   1265     if field_expr == self.name:
+   1266         def _value_to_column(v):
+
+File ~/src/odoo/addons/account/models/account_move.py:1381, in AccountMove._field_to_sql(self, alias, fname, query)
+   1375 elif fname == 'sanitize_payment_reference':
+   1376     return SQL(
+   1377         "regexp_replace(COALESCE(%(payment_ref)s, %(ref)s, ''), '[^a-zA-Z0-9]', '', 'g')",
+   1378         payment_ref=super()._field_to_sql(alias, "payment_reference", query),
+   1379         ref=super()._field_to_sql(alias, "ref", query),
+   1380     )
+-> 1381 return super()._field_to_sql(alias, fname, query=query)
+
+File ~/src/odoo/odoo/orm/models.py:2936, in BaseModel._field_to_sql(self, alias, field_expr, query)
+   2932     return model._field_to_sql(alias, related_expr, query)
+   2934 self._check_field_access(field, 'read')
+-> 2936 sql = field.to_sql(self, alias)
+   2937 if property_name:
+   2938     sql = field.property_to_sql(sql, property_name, self, alias, query)
+
+File ~/src/odoo/odoo/orm/fields_relational.py:467, in Many2one.to_sql(self, model, alias)
+    466 def to_sql(self, model: BaseModel, alias: str) -> SQL:
+--> 467     sql_field = super().to_sql(model, alias)
+    468     if self.company_dependent:
+    469         comodel = model.env[self.comodel_name]
+
+File ~/src/odoo/odoo/orm/fields.py:1216, in Field.to_sql(self, model, alias)
+   1210 """ Return an :class:`SQL` object that represents the value of the given
+   1211 field from the given table alias.
+   1212 
+   1213 The query object is necessary for fields that need to add tables to the query.
+   1214 """
+   1215 if not self.store or not self.column_type:
+-> 1216     raise ValueError(f"Cannot convert {self} to SQL because it is not stored")
+   1217 sql_field = SQL.identifier(alias, self.name, to_flush=self)
+   1218 if self.company_dependent:
+
+ValueError: Cannot convert account.move.invoice_pdf_report_id to SQL because it is not stored
+
+In [2]: 

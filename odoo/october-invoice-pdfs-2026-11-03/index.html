@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>October Invoice PDFs</title>
+<style>
+body{font:16px/1.6 -apple-system,Segoe UI,Arial,sans-serif;max-width:860px;margin:0 auto;padding:24px 16px;color:#171717;background:#fff}
+h1{font-size:28px;margin:0 0 4px}h2{font-size:20px;margin:28px 0 8px;border-bottom:1px solid #ddd;padding-bottom:4px}
+.meta{color:#555;font-size:14px}.ok{color:#2e7d32;font-weight:700}.warn{color:#a15c00;font-weight:700}
+code,pre{font-family:SFMono-Regular,Menlo,monospace;font-size:13px;background:#f4f4f2;border-radius:6px}
+code{padding:1px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;width:100%}
+td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}th{background:#f4f4f2}
+figure{margin:0}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}.g img{width:100%;border:1px solid #ddd;border-radius:6px}figcaption{font-size:12px;color:#555;overflow-wrap:anywhere}
+</style></head><body>
+<p><a href="../../index.html">← Back to overview</a></p>
+<h1>October 2026 invoice PDFs</h1>
+<p class="meta">03.11.2026 · Odoo 19 production · Hamza Mohsin · request: Patricia · Status: <span class="ok">DONE</span></p>
+
+<h2>Problem</h2>
+<ul>
+<li>The tax office package for October goes out on 04.11. Posted invoices and credit notes need a stored invoice PDF.</li>
+<li><b>Print → Invoice PDF</b> only downloads the file. It does not store it on the invoice.</li>
+<li><b>Send</b> in bulk has no e-mail checkbox ("79 invoice(s) by Email"), so it can't be used without e-mailing customers.</li>
+</ul>
+
+<h2>Solution</h2>
+<p>Single invoice in the UI: <b>Send → untick "by Email" → Generate</b>. This stores the PDF and sends no e-mail.</p>
+<p>For the rest, the same wizard was run in the Odoo.sh shell (<code>odoo-bin shell</code>), one document at a time:</p>
+<pre>wiz = env['account.move.send.wizard'].with_context(active_model='account.move', active_ids=m.ids).create({'move_id': m.id})
+wiz.sending_methods = False   # default ['email'] must be cleared
+wiz.action_send_and_print()
+env.cr.commit()</pre>
+<p>Scripts: <a href="code/1_count_missing.py">1_count_missing.py</a> · <a href="code/2_generate_pdfs.py">2_generate_pdfs.py</a> · <a href="code/3_verify.py">3_verify.py</a></p>
+
+<h2>Run</h2>
+<table>
+<tr><th>Step</th><th>Result</th></tr>
+<tr><td>Staging test</td><td>RE/2026/05083 + 05078–05082: PDF stored, 0 mails, no chatter entry</td></tr>
+<tr><td>Automation check</td><td>"Change Transfer state on Paid Invoice" triggers only on lines / type / payment state / state, so it was not triggered</td></tr>
+<tr><td>Production test</td><td>RE/2026/05385: PDF stored, 0 mails</td></tr>
+<tr><td>Production run</td><td>35 credit notes (RRE/2026/00897–00936). 34 in the loop; RRE/2026/00931 hit a concurrent update and was retried OK</td></tr>
+<tr><td>Manual UI</td><td>RE/2026/05097, RE/2026/05057</td></tr>
+<tr><td>Verification</td><td>1061 October documents. Only RE/2026/05314 and RE/2026/04645 (0 €) have no PDF. 0 mails, 0 e-mail messages</td></tr>
+</table>
+
+<h2>Side effects</h2>
+<ul>
+<li class="warn">Generated documents are marked "Sent" (<code>is_move_sent</code>). No e-mail is sent.</li>
+<li>The shell runs as superuser (OdooBot).</li>
+</ul>
+
+<h2>Learnings</h2>
+<ul>
+<li><code>invoice_pdf_report_id</code> is not stored, so it can't be used in a domain or UI filter ("Domain invalid"). Filter in Python instead.</li>
+<li>An attachment search alone isn't reliable. E-mailed PDFs count as attachments, and "Generate" stores the PDF in a field the search doesn't see. Use both checks.</li>
+<li>Print batches of 200 fail with wkhtmltopdf error -9. Use 100 or fewer.</li>
+<li>Always test on staging first, then 1 record on production, then the rest.</li>
+</ul>
+
+<h2>Commands and logs</h2>
+<ul><li><a href="logs/all-commands-and-results.md">All commands and results (summary)</a></li><li><a href="logs/staging-shell-1-search-error.txt">Staging shell, first attempt</a></li><li><a href="logs/production-shell-1-count-and-test.txt">Production shell: count + test</a></li><li><a href="logs/production-shell-2-full-run.txt">Production shell: full run</a></li></ul>
+<h2>Screenshots</h2>
+<div class="g">
+<figure><a href="screenshots/01-ui-filter-pdf-attachment-domain-invalid.png"><img src="screenshots/01-ui-filter-pdf-attachment-domain-invalid.png" loading="lazy" alt="ui filter pdf attachment domain invalid"></a><figcaption>01-ui-filter-pdf-attachment-domain-invalid</figcaption></figure>
+<figure><a href="screenshots/02-ui-main-attachment-not-set-44.png"><img src="screenshots/02-ui-main-attachment-not-set-44.png" loading="lazy" alt="ui main attachment not set 44"></a><figcaption>02-ui-main-attachment-not-set-44</figcaption></figure>
+<figure><a href="screenshots/03-ui-44-list-bottom.png"><img src="screenshots/03-ui-44-list-bottom.png" loading="lazy" alt="ui 44 list bottom"></a><figcaption>03-ui-44-list-bottom</figcaption></figure>
+<figure><a href="screenshots/04-ui-44-selected.png"><img src="screenshots/04-ui-44-selected.png" loading="lazy" alt="ui 44 selected"></a><figcaption>04-ui-44-selected</figcaption></figure>
+<figure><a href="screenshots/05-invoice-05359-no-pdf.png"><img src="screenshots/05-invoice-05359-no-pdf.png" loading="lazy" alt="invoice 05359 no pdf"></a><figcaption>05-invoice-05359-no-pdf</figcaption></figure>
+<figure><a href="screenshots/06-invoice-05342-no-pdf.png"><img src="screenshots/06-invoice-05342-no-pdf.png" loading="lazy" alt="invoice 05342 no pdf"></a><figcaption>06-invoice-05342-no-pdf</figcaption></figure>
+<figure><a href="screenshots/07-invoice-05324-no-pdf.png"><img src="screenshots/07-invoice-05324-no-pdf.png" loading="lazy" alt="invoice 05324 no pdf"></a><figcaption>07-invoice-05324-no-pdf</figcaption></figure>
+<figure><a href="screenshots/08-delivery-07411-waiting.png"><img src="screenshots/08-delivery-07411-waiting.png" loading="lazy" alt="delivery 07411 waiting"></a><figcaption>08-delivery-07411-waiting</figcaption></figure>
+<figure><a href="screenshots/09-forecast-parka-reserved.png"><img src="screenshots/09-forecast-parka-reserved.png" loading="lazy" alt="forecast parka reserved"></a><figcaption>09-forecast-parka-reserved</figcaption></figure>
+<figure><a href="screenshots/10-invoice-04859-reversed.png"><img src="screenshots/10-invoice-04859-reversed.png" loading="lazy" alt="invoice 04859 reversed"></a><figcaption>10-invoice-04859-reversed</figcaption></figure>
+<figure><a href="screenshots/11-ui-filter-domain-not-supported.png"><img src="screenshots/11-ui-filter-domain-not-supported.png" loading="lazy" alt="ui filter domain not supported"></a><figcaption>11-ui-filter-domain-not-supported</figcaption></figure>
+<figure><a href="screenshots/12-ui-delivered-no-pdf-5.png"><img src="screenshots/12-ui-delivered-no-pdf-5.png" loading="lazy" alt="ui delivered no pdf 5"></a><figcaption>12-ui-delivered-no-pdf-5</figcaption></figure>
+<figure><a href="screenshots/13-ui-not-delivered-no-pdf-36.png"><img src="screenshots/13-ui-not-delivered-no-pdf-36.png" loading="lazy" alt="ui not delivered no pdf 36"></a><figcaption>13-ui-not-delivered-no-pdf-36</figcaption></figure>
+<figure><a href="screenshots/14-ui-not-delivered-no-pdf-36-cont.png"><img src="screenshots/14-ui-not-delivered-no-pdf-36-cont.png" loading="lazy" alt="ui not delivered no pdf 36 cont"></a><figcaption>14-ui-not-delivered-no-pdf-36-cont</figcaption></figure>
+<figure><a href="screenshots/15-ui-no-filter-6495.png"><img src="screenshots/15-ui-no-filter-6495.png" loading="lazy" alt="ui no filter 6495"></a><figcaption>15-ui-no-filter-6495</figcaption></figure>
+<figure><a href="screenshots/16-ui-october-1061-selected.png"><img src="screenshots/16-ui-october-1061-selected.png" loading="lazy" alt="ui october 1061 selected"></a><figcaption>16-ui-october-1061-selected</figcaption></figure>
+<figure><a href="screenshots/17-ui-80-selected.png"><img src="screenshots/17-ui-80-selected.png" loading="lazy" alt="ui 80 selected"></a><figcaption>17-ui-80-selected</figcaption></figure>
+<figure><a href="screenshots/18-ui-print-menu.png"><img src="screenshots/18-ui-print-menu.png" loading="lazy" alt="ui print menu"></a><figcaption>18-ui-print-menu</figcaption></figure>
+<figure><a href="screenshots/19-ui-select-all-1061.png"><img src="screenshots/19-ui-select-all-1061.png" loading="lazy" alt="ui select all 1061"></a><figcaption>19-ui-select-all-1061</figcaption></figure>
+<figure><a href="screenshots/20-print-wkhtmltopdf-error-9.png"><img src="screenshots/20-print-wkhtmltopdf-error-9.png" loading="lazy" alt="print wkhtmltopdf error 9"></a><figcaption>20-print-wkhtmltopdf-error-9</figcaption></figure>
+<figure><a href="screenshots/21-invoice-05097-no-pdf-after-print.png"><img src="screenshots/21-invoice-05097-no-pdf-after-print.png" loading="lazy" alt="invoice 05097 no pdf after print"></a><figcaption>21-invoice-05097-no-pdf-after-print</figcaption></figure>
+<figure><a href="screenshots/22-send-dialog-email-ticked-STOP.png"><img src="screenshots/22-send-dialog-email-ticked-STOP.png" loading="lazy" alt="send dialog email ticked STOP"></a><figcaption>22-send-dialog-email-ticked-STOP</figcaption></figure>
+<figure><a href="screenshots/23-bulk-send-79-by-email-STOP.png"><img src="screenshots/23-bulk-send-79-by-email-STOP.png" loading="lazy" alt="bulk send 79 by email STOP"></a><figcaption>23-bulk-send-79-by-email-STOP</figcaption></figure>
+<figure><a href="screenshots/24-print-menu-export-zip.png"><img src="screenshots/24-print-menu-export-zip.png" loading="lazy" alt="print menu export zip"></a><figcaption>24-print-menu-export-zip</figcaption></figure>
+<figure><a href="screenshots/25-invoice-05097-still-no-pdf.png"><img src="screenshots/25-invoice-05097-still-no-pdf.png" loading="lazy" alt="invoice 05097 still no pdf"></a><figcaption>25-invoice-05097-still-no-pdf</figcaption></figure>
+<figure><a href="screenshots/26-send-dialog-05097-email-ticked.png"><img src="screenshots/26-send-dialog-05097-email-ticked.png" loading="lazy" alt="send dialog 05097 email ticked"></a><figcaption>26-send-dialog-05097-email-ticked</figcaption></figure>
+<figure><a href="screenshots/27-send-dialog-email-unticked-generate.png"><img src="screenshots/27-send-dialog-email-unticked-generate.png" loading="lazy" alt="send dialog email unticked generate"></a><figcaption>27-send-dialog-email-unticked-generate</figcaption></figure>
+<figure><a href="screenshots/28-invoice-05097-pdf-stored.png"><img src="screenshots/28-invoice-05097-pdf-stored.png" loading="lazy" alt="invoice 05097 pdf stored"></a><figcaption>28-invoice-05097-pdf-stored</figcaption></figure>
+<figure><a href="screenshots/29-invoice-05057-pdf-stored.png"><img src="screenshots/29-invoice-05057-pdf-stored.png" loading="lazy" alt="invoice 05057 pdf stored"></a><figcaption>29-invoice-05057-pdf-stored</figcaption></figure>
+<figure><a href="screenshots/30-staging-05083-pdf-stored.png"><img src="screenshots/30-staging-05083-pdf-stored.png" loading="lazy" alt="staging 05083 pdf stored"></a><figcaption>30-staging-05083-pdf-stored</figcaption></figure>
+<figure><a href="screenshots/31-ui-verify-custom-filter.png"><img src="screenshots/31-ui-verify-custom-filter.png" loading="lazy" alt="ui verify custom filter"></a><figcaption>31-ui-verify-custom-filter</figcaption></figure>
+<figure><a href="screenshots/32-ui-verify-empty-wrong-filter.png"><img src="screenshots/32-ui-verify-empty-wrong-filter.png" loading="lazy" alt="ui verify empty wrong filter"></a><figcaption>32-ui-verify-empty-wrong-filter</figcaption></figure>
+<figure><a href="screenshots/33-ui-verify-5-credit-notes.png"><img src="screenshots/33-ui-verify-5-credit-notes.png" loading="lazy" alt="ui verify 5 credit notes"></a><figcaption>33-ui-verify-5-credit-notes</figcaption></figure>
+</div>
+<h2>Open</h2>
+<ul><li>RE/2024/00001 (Iris Teuscher, 27.10., reversed) has a 2024 number with an October date. Flagged to Patricia.</li></ul>
+</body></html>
