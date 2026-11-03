@@ -1,0 +1,281 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invoice re-send fix</title><style>
+:root{--bg:#fff;--fg:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#714B67;--code:#f6f8fa}
+@media (prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#9ca3af;--line:#374151;--accent:#c79bbd;--code:#1f2937}}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.55;max-width:920px;margin:24px auto;padding:0 16px}
+h1{color:var(--accent);font-size:1.6rem}h2{color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:32px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--accent);color:#fff}code,pre{background:var(--code);border-radius:4px}code{padding:1px 4px;font-size:.9em}pre{padding:12px;overflow-x:auto;font-size:.85em}
+blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>Invoice re-sent on returns / exchanges – send only once, on the first delivery</h1>
+<p><strong>Status: Live in production (03.11.2026)</strong> · tested in staging first · done by Hamza Mohsin</p>
+<p><strong>Automation rule (production):</strong> <a href="https://iq-dogsport.odoo.com/odoo/automations/52?debug=1">IQ – Send invoice on first delivery</a> (id 52)</p>
+<h2>In one sentence</h2>
+<p>When someone validated a <strong>return</strong> (or an exchange / second delivery), Odoo emailed the customer <strong>all invoices of the order again</strong>.
+Now the invoice goes out automatically <strong>only once – with the first delivery</strong>. After that only by hand (<strong>Send</strong> button).</p>
+<h2>Problem</h2>
+<ul>
+<li>02.11.2026: a warehouse user only validated a return (stock back in). The customer got the invoice email again, under that user's name.</li>
+<li>Nobody clicked "Send" – the email was created automatically during <strong>Validate</strong>.</li>
+<li>Production log: <code>stock.picking/web_save</code> (validate) → invoice PDF rendered → email message posted on the invoice, all in the same second.</li>
+</ul>
+<h2>Cause</h2>
+<p>Third-party module <strong>Automatic Invoice And Post</strong> (Cybrosys, technical name <code>automatic_invoice_and_post</code>, version 19.0.1.0.0, AGPL-3) – installed from the Odoo.sh repo <code>src/user/</code>.</p>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Setting</td>
+<td>Settings → Accounting → <strong>Auto Invoice Post</strong> → <strong>Auto Send Invoice</strong> (system parameter <code>automatic_invoice_and_post.is_auto_send_invoice</code> = True)</td>
+</tr>
+<tr>
+<td>Model</td>
+<td><code>stock.picking</code> (transfers)</td>
+</tr>
+<tr>
+<td>Method</td>
+<td><code>button_validate()</code> → <code>_send_invoice_email()</code></td>
+</tr>
+<tr>
+<td>File / lines</td>
+<td><code>automatic_invoice_and_post/models/stock_picking.py</code>, lines 83–84</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">if auto_send_invoice and self.sale_id.invoice_ids.partner_id.mapped('email'):
+    self._send_invoice_email(self.sale_id.invoice_ids)   # ALL invoices, on EVERY validation
+</code></pre>
+<p>Missing checks: outgoing delivery or return? first delivery? invoice already sent (<code>is_move_sent</code>)? customer invoice or credit note?</p>
+<p>Full original code (not changed): <a href="code/cybrosys_stock_picking_ORIGINAL.py">code/cybrosys_stock_picking_ORIGINAL.py</a></p>
+<h3>How we found it</h3>
+<ol>
+<li>Production logs (Odoo.sh, times in <strong>UTC</strong>) – validate of the return, then invoice PDF + email in the same request.</li>
+<li>Automation rules / server actions checked – only notes, nothing that sends invoices.</li>
+<li>Staging shell, read-only search over custom modules:
+   <code>bash
+   grep -rn --include=*.py -E "_generate_and_send|account\.move\.send|action_invoice_sent|account_invoices" ~/src/user | grep -v /tests/
+   # → only result: automatic_invoice_and_post/models/stock_picking.py</code></li>
+<li>Settings → Technical → System Parameters → <code>automatic_invoice_and_post</code> → <code>is_auto_send_invoice = True</code>.</li>
+</ol>
+<h2>Solution (no change to the module code)</h2>
+<p>Options considered:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Result</th>
+<th>Chosen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A – untick "Auto Send Invoice" only</td>
+<td>no re-sends, but also <strong>no first email</strong></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>B – edit the Cybrosys Python file</td>
+<td>works, but a module update overwrites it; needs Git/deploy</td>
+<td>❌ (too risky)</td>
+</tr>
+<tr>
+<td><strong>C – untick "Auto Send Invoice" + own automation rule</strong></td>
+<td>first delivery sends once, returns/exchanges never; no module change; off with one click</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h3>1. Setting</h3>
+<p>Settings → Accounting → <strong>Auto Invoice Post</strong> → <strong>Auto Send Invoice = off</strong> (Auto Post invoice was already off).</p>
+<h3>2. Automation rule</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>IQ – Send invoice on first delivery</code></td>
+</tr>
+<tr>
+<td>Link</td>
+<td>https://iq-dogsport.odoo.com/odoo/automations/52?debug=1</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Transfer (<code>stock.picking</code>)</td>
+</tr>
+<tr>
+<td>Trigger</td>
+<td><strong>State is set to → Done</strong></td>
+</tr>
+<tr>
+<td>Apply on</td>
+<td>Status = Done · Type of Operation = Delivery · Return of is not set · Sales Order is set</td>
+</tr>
+<tr>
+<td>Action</td>
+<td>Execute Code – <a href="code/automation_send_invoice_first_delivery.py">code/automation_send_invoice_first_delivery.py</a></td>
+</tr>
+</tbody>
+</table>
+<p>Domain (code editor):</p>
+<pre><code class="language-python">[(&quot;state&quot;, &quot;=&quot;, &quot;done&quot;), (&quot;picking_type_code&quot;, &quot;=&quot;, &quot;outgoing&quot;), (&quot;return_id&quot;, &quot;=&quot;, False), (&quot;sale_id&quot;, &quot;!=&quot;, False)]
+</code></pre>
+<p>Code:</p>
+<pre><code class="language-python">for picking in records:
+    order = picking.sale_id
+    if order.picking_ids.filtered(lambda p: p.id != picking.id and p.picking_type_code == 'outgoing' and p.state == 'done'):
+        continue
+    invoices = order.invoice_ids.filtered(lambda m: m.move_type == 'out_invoice' and m.state == 'posted' and not m.is_move_sent and m.partner_id.email)
+    if invoices:
+        picking._send_invoice_email(invoices)
+</code></pre>
+<p>It reuses the module's own <code>_send_invoice_email()</code> → same email template, PDF and customer language as before.</p>
+<blockquote>
+<p>When choosing the trigger "State is set to → Done", Odoo <strong>resets</strong> the Apply on domain – set the domain <strong>after</strong> the trigger.</p>
+</blockquote>
+<h2>Behaviour now</h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Automatic email</th>
+<th>Manual "Send"</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>First delivery of the order (invoice posted, not sent yet)</td>
+<td>✅ once</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Return</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Exchange / second delivery / backorder</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Invoice already sent with the <strong>Send</strong> button before shipping</td>
+<td>❌ (marked as sent)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Invoice sent as chatter "Send message" with PDF / outside Odoo</td>
+<td>⚠️ sent again (not marked as sent)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Credit note</td>
+<td>❌ never automatically</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Customer without email</td>
+<td>❌</td>
+<td>–</td>
+</tr>
+<tr>
+<td>Shopify POS order (no delivery, direct stock move)</td>
+<td>handled by the POS scheduled action (below)</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Team rule:</strong> to send an invoice before shipping, always use the <strong>Send</strong> button on the invoice – never "Send message" with the PDF.</p>
+<p><strong>Backorders:</strong> an invoice created for a second (partial) delivery is <strong>not</strong> sent automatically → send by hand.</p>
+<h2>Shopify POS orders (not changed – existing jobs)</h2>
+<p>Shopify POS orders are imported by Emipro as sales orders <strong>without a delivery</strong> (direct stock move), so the rule above never runs for them. They are covered by existing scheduled actions (Settings → Technical → Scheduled Actions):</p>
+<table>
+<thead>
+<tr>
+<th>Scheduled action</th>
+<th>Interval</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Create delayed POS invoices (Sales Order)</td>
+<td>5 min</td>
+<td>creates the invoice for POS orders later</td>
+</tr>
+<tr>
+<td><strong>Send Shopify POS Invoice (Cash)</strong> (Journal Entry)</td>
+<td>2 min</td>
+<td>emails paid <strong>cash</strong> POS invoices to customers with an email, once (Studio field "Shopify POS Invoice Sent") – <a href="code/pos_cash_invoice_scheduled_action_REFERENCE.py">code</a></td>
+</tr>
+<tr>
+<td>Archive anonymous POS invoices (POS Customer)</td>
+<td>30 min</td>
+<td>archives invoices of the generic "POS Customer"</td>
+</tr>
+</tbody>
+</table>
+<p>Unticking the Cybrosys setting does <strong>not</strong> affect these (they use Odoo's standard <code>account.move.send</code>).
+The old automation rule "Send Shopify POS Invoice" (Journal Entry) is archived – the scheduled action replaced it.</p>
+<h2>Test results (staging, 03.11.2026)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Test</th>
+<th>Expected</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Test order S00486, invoice RE/2026/05088 posted, delivery WH1/OUT/06892 validated</td>
+<td>one email with PDF</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Return WH1/RET/00518 validated</td>
+<td>no new email</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Exchange</td>
+<td>no email</td>
+<td>⏳ not tested (rule only runs on deliveries; watch first real exchange)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Manual Send</td>
+<td>works</td>
+<td>⏳ standard Odoo, not affected</td>
+</tr>
+</tbody>
+</table>
+<p>Then created in production (03.11.2026, 08:39) and unticked "Auto Send Invoice".</p>
+<h2>Rollback (1 minute)</h2>
+<ol>
+<li><a href="https://iq-dogsport.odoo.com/odoo/automations/52?debug=1">Automation rule 52</a> → ⚙ → <strong>Archive</strong>.</li>
+<li>Settings → Accounting → Auto Invoice Post → tick <strong>Auto Send Invoice</strong> → Save.
+→ back to the old behaviour (including the re-sends).</li>
+</ol>
+<h2>Open</h2>
+<ul>
+<li>[ ] Check the first real delivery (one email) and the first real return / exchange (no email) in production</li>
+<li>[ ] Settings → Technical → Emails: nothing stuck in "Delivery Failed" (SMTP "Connection reset by peer" seen on 02.11.)</li>
+<li>[ ] Florian: should POS customers paying <strong>by card</strong> also get the invoice email? (POS job is cash only)</li>
+<li>[ ] Check that the contact "POS Customer (IQ Dogsport Shopify)" has <strong>no</strong> email</li>
+<li>[ ] Optional: report the bug to Cybrosys (odoo@cybrosys.com)</li>
+<li>[ ] If the Cybrosys module is updated / "Auto Send Invoice" ticked again → re-sends come back (and the first email is sent twice)</li>
+</ul>
+</body></html>

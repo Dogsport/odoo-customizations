@@ -198,4 +198,12 @@ window.IQ_LOG = [
     status: "Live",
     link: "odoo/invoice-tax-free-notes-2026-11-02/"
   },
+  {
+    date: "2026-11-03",
+    area: "Odoo",
+    title: "Invoice re-sent on returns – send only on the first delivery",
+    summary: "Cybrosys automatic_invoice_and_post (stock.picking.button_validate) emailed all invoices of the order on every validated transfer, incl. returns. 'Auto Send Invoice' unticked + automation rule 52 'IQ – Send invoice on first delivery' (Transfer, State → Done, delivery, not a return): sends unsent posted invoices once. POS cash job unchanged. Tested in staging, live.",
+    status: "Live",
+    link: "odoo/invoice-resend-on-return-fix-2026-11-03/"
+  },
 ];

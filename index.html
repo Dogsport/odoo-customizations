@@ -35,10 +35,10 @@
 <main>
   <h2>Daily log</h2>
   <div class="grid">
-    <a class="card" href="odoo/invoice-tax-free-notes-2026-11-02/">
-      <b>Invoice tax-free notes § 4 Nr. 1a / 1b – only where they apply</b>
-      <span>Both tax-free notes were printed on every 0-VAT invoice (Emipro template). Fixed with one extension view; tested in staging (ES B2B, CH, ES private), live in production.</span>
-      <em>02.11.2026 · Live</em>
+    <a class="card" href="odoo/invoice-resend-on-return-fix-2026-11-03/">
+      <b>Invoice re-sent on returns – send only on the first delivery</b>
+      <span>Cybrosys "Auto Send Invoice" emailed all invoices again on every validated transfer (returns too). Setting off + automation rule 52 sends once on the first delivery; tested in staging, live.</span>
+      <em>03.11.2026 · Live</em>
     </a>
     <a class="card" href="daily/">
       <b>Daily log – calendar</b>
@@ -82,6 +82,11 @@
 
   <h2>Odoo · Invoicing</h2>
   <div class="grid">
+    <a class="card" href="odoo/invoice-resend-on-return-fix-2026-11-03/">
+      <b>Invoice re-sent on returns – send only on the first delivery</b>
+      <span>Cause: Cybrosys module automatic_invoice_and_post (button_validate sends all invoices on any validation). Fix: "Auto Send Invoice" off + automation rule "IQ – Send invoice on first delivery" (id 52). POS jobs, tests, code, rollback.</span>
+      <em>03.11.2026 · Live</em>
+    </a>
     <a class="card" href="odoo/invoice-tax-free-notes-2026-11-02/">
       <b>Invoice tax-free notes § 4 Nr. 1a / 1b – only where they apply</b>
       <span>Emipro invoice template printed both tax-free notes on every 0-VAT invoice. New extension view: 1b only for EU companies with VAT ID, 1a only outside the EU, nothing for Germany. Tests, code, rollback.</span>
