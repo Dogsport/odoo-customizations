@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carrier Fallback Ticket Deliveries</title><style>:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f;--ok:#1d5e2a;--okbg:#e6f2e8;--warnbg:#fff5d6}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:34px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto;margin:8px 0} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top} th{background:#efeeeb}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-word} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)} .good{background:var(--okbg);border-left:4px solid var(--ok);padding:8px 12px;margin:10px 0} .warn{background:var(--warnbg);border-left:4px solid #b7791f;padding:8px 12px;margin:10px 0}
+.flow{background:#fff;border:1px solid var(--line);padding:12px 16px;font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;overflow-x:auto}
+figure{margin:12px 0;background:#fff;border:1px solid var(--line);padding:8px} figure img{max-width:100%;height:auto;display:block} figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:700px){.grid{grid-template-columns:1fr}}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre,figure{break-inside:avoid} h2{break-after:avoid}}</style></head><body>
+<header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a>
+<h1>Exchange deliveries from tickets without carrier – fallback rule (03.11.2026)</h1></div></header>
+<main>
+<p style="font-size:13px"><a href="Carrier_Fallback_Ticket_Deliveries_2026-11-03.pdf">PDF version</a> · <a href="code/">Code</a></p>
+<div class="warn"><strong>Status 03.11.2026: rule created in Staging, testing.</strong> Not yet in Production. Production cases are fixed by hand until the rollout. Owner: Hamza.</div>
+
+<h2>1. Problem</h2>
+<p>Exchange deliveries created from a Helpdesk ticket (button <em>Replace</em> / Umtausch) have <strong>no carrier</strong>. Without a carrier no DHL/GLS label is created, and "Block Validate without Carrier" stops validation.</p>
+<p>Example Production: <strong>WH1/OUT/07574</strong> (Sandra Fey, ticket #00889, order #IQD-99194) – carrier empty, set to DHL Parcel DE by hand on 03.11., label created afterwards. Staging: <strong>WH1/OUT/06894</strong> (ticket #00821) – same.</p>
+<div class="grid"><figure><a href="img/01-prod-exchange-no-carrier.jpg"><img src="img/01-prod-exchange-no-carrier.jpg" alt="Production WH1/OUT/07574 created from ticket #00889 – no carrier" loading="lazy"></a><figcaption>Production WH1/OUT/07574 created from ticket #00889 – no carrier</figcaption></figure><figure><a href="img/02-prod-exchange-carrier-set-by-hand.jpg"><img src="img/02-prod-exchange-carrier-set-by-hand.jpg" alt="Same delivery after carrier set by hand – DHL label created" loading="lazy"></a><figcaption>Same delivery after carrier set by hand – DHL label created</figcaption></figure></div>
+
+<h2>2. Cause</h2>
+<div class="flow">NORMAL ORDER (works)
+Shopify/Odoo order (quotation) → rule 8 / 45 sets DHL or GLS on the ORDER
+→ order confirmed → the ORDER creates the delivery
+→ route option "Propagation of carrier" copies the carrier → delivery has DHL/GLS ✓
+
+EXCHANGE FROM TICKET (empty)
+Ticket → Replace → the TICKET creates the delivery directly
+(sales order only written as a reference)
+→ no route, no "Propagation of carrier" → carrier EMPTY ✗
+→ rules 8 / 45 don't help: they only run on SALES ORDERS in quotation state</div>
+<p><strong>Why it worked before 27.10:</strong> rule <em>Auto Set Carrier</em> (id 7) ran on every delivery and always wrote GLS Germany – a safety net for deliveries without an order. It was archived at the DHL go-live (correct for normal orders, see <a href="../dhl-go-live-2026-10-27/">DHL go-live 27.10</a>), which removed the fallback for ticket/manual deliveries. Do <strong>not</strong> unarchive rule 7: it would switch every delivery back to GLS.</p>
+
+<h2>3. Fix – new automation rule</h2>
+<table>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Name</td><td>IQ – Delivery: carrier when empty (DE → DHL, else GLS)</td></tr>
+<tr><td>Model</td><td>Transfer</td></tr>
+<tr><td>Trigger</td><td>On create and edit</td></tr>
+<tr><td>Apply on</td><td>Operation Type = <em>IQ Dogsport Main Warehouse: Delivery Orders</em> · Carrier is not set · Status not Done/Cancelled</td></tr>
+<tr><td>When updating</td><td>Carrier, Contact, Operation Type, Status</td></tr>
+<tr><td>Action</td><td>Execute Code (below)</td></tr>
+</table>
+<pre><code># Odoo 19 - Automation Rule
+# Name:          IQ - Delivery: carrier when empty (DE -&gt; DHL, else GLS)
+# Model:         Transfer (stock.picking)
+# Trigger:       On create and edit
+# Apply on:      Operation Type = &quot;IQ Dogsport Main Warehouse: Delivery Orders&quot;
+#                AND Carrier is not set AND Status not in Done/Cancelled
+#                code: [(&quot;picking_type_id&quot;, &quot;=&quot;, &lt;Delivery Orders id&gt;), (&quot;carrier_id&quot;, &quot;=&quot;, False), (&quot;state&quot;, &quot;not in&quot;, [&quot;done&quot;, &quot;cancel&quot;])]
+# When updating: Carrier, Contact, Operation Type, Status
+# Action:        Execute Code (below)
+#
+# Fallback for deliveries that are NOT created by a sales order (Helpdesk Replace/exchange,
+# manual deliveries). Never overwrites an existing carrier. Skips POS transfers.
+
+dhl = env[&quot;delivery.carrier&quot;].search([(&quot;name&quot;, &quot;=&quot;, &quot;DHL Parcel DE&quot;)], limit=1)
+gls = env[&quot;delivery.carrier&quot;].search([(&quot;name&quot;, &quot;=&quot;, &quot;GLS Germany&quot;)], limit=1)
+has_pos = &quot;pos_order_id&quot; in env[&quot;stock.picking&quot;]._fields
+for picking in records:
+    if picking.carrier_id or picking.picking_type_code != &quot;outgoing&quot;:
+        continue
+    if has_pos and picking.pos_order_id:
+        continue
+    partner = picking.partner_id
+    country = partner.country_id or partner.commercial_partner_id.country_id
+    if not country:
+        continue
+    carrier = dhl if country.code == &quot;DE&quot; else gls
+    if not carrier:
+        continue
+    picking.write({&quot;carrier_id&quot;: carrier.id})
+    picking.message_post(body=&quot;IQ: carrier set to %s (delivery country %s, delivery not created from a sales order).&quot; % (carrier.name, country.code))
+</code></pre>
+<div class="grid"><figure><a href="img/04-domain-operation-type.jpg"><img src="img/04-domain-operation-type.jpg" alt="Apply on: choose Operation Type “Delivery Orders” from the list (Odoo inserts the id)" loading="lazy"></a><figcaption>Apply on: choose Operation Type “Delivery Orders” from the list (Odoo inserts the id)</figcaption></figure><figure><a href="img/05-rule-final.jpg"><img src="img/05-rule-final.jpg" alt="Final rule in Staging" loading="lazy"></a><figcaption>Final rule in Staging</figcaption></figure></div>
+<figure><a href="img/06-rule-code.jpg"><img src="img/06-rule-code.jpg" alt="Execute Code action" loading="lazy"></a><figcaption>Execute Code action</figcaption></figure>
+
+<h2>4. Why nothing else breaks</h2>
+<table>
+<tr><th>Risk</th><th>Protection</th></tr>
+<tr><td>Overwriting a chosen carrier (Direct Sales, DHL International, manual)</td><td>Runs only when the carrier is empty</td></tr>
+<tr><td>Normal order deliveries</td><td>Get the carrier from the order at creation → never empty → skipped</td></tr>
+<tr><td>POS / shop sales</td><td>Only operation type “Delivery Orders”; code skips POS transfers</td></tr>
+<tr><td>Returns, receipts</td><td>Only outgoing deliveries</td></tr>
+<tr><td>Done / cancelled deliveries</td><td>Excluded</td></tr>
+<tr><td>Customer without country</td><td>Skipped – set carrier by hand</td></tr>
+<tr><td>Other rules (Incoterm EFTA/Outside EU, Block Validate, packing card, 8/45)</td><td>Unchanged; incoterm rules may run after the carrier is set (only incoterm)</td></tr>
+<tr><td>Loop</td><td>After writing, “carrier empty” no longer matches</td></tr>
+</table>
+
+<h2>5. How the trigger behaves (important for tests)</h2>
+<ul>
+<li>On <strong>create</strong> the rule always runs → every new exchange from a ticket gets a carrier.</li>
+<li>On <strong>edit</strong> it runs only when Carrier, Contact, Operation Type or Status changes. Changing e.g. the Scheduled Date does <strong>not</strong> trigger it (first staging test on WH1/OUT/06894 showed exactly this). Scheduled Date is deliberately not added.</li>
+<li>Deliveries that existed before the rule (Staging: 25 open without carrier) are only filled when one of these fields changes, or with the one-off server action (section 7).</li>
+</ul>
+<figure><a href="img/03-staging-ticket-delivery-no-carrier.jpg"><img src="img/03-staging-ticket-delivery-no-carrier.jpg" alt="Staging WH1/OUT/06894 – created from ticket #00821 before the rule existed" loading="lazy"></a><figcaption>Staging WH1/OUT/06894 – created from ticket #00821 before the rule existed</figcaption></figure>
+
+<h2>6. Tests (Staging)</h2>
+<table>
+<tr><th>Test</th><th>Expected</th><th>Result</th></tr>
+<tr><td>Ticket → Replace, customer in Germany (new delivery)</td><td>DHL Parcel DE + chatter “IQ: carrier set …”</td><td>open</td></tr>
+<tr><td>Ticket → Replace, customer outside Germany</td><td>GLS Germany</td><td>open</td></tr>
+<tr><td>Normal sales order delivery</td><td>keeps order carrier, no IQ note</td><td>open</td></tr>
+<tr><td>WH1/OUT/06894: change Contact and back</td><td>DHL Parcel DE</td><td>open</td></tr>
+<tr><td>WH1/OUT/06894: change Scheduled Date</td><td>no change (field not watched)</td><td>✓ as expected</td></tr>
+<tr><td>POS sale (if used)</td><td>no carrier, no note</td><td>open</td></tr>
+</table>
+
+<h2>7. Production rollout</h2>
+<ol>
+<li>Run read-only check 2 (open deliveries without carrier). Deliveries that must stay without carrier (customer pickup): set <em>Direct Sales</em> first.</li>
+<li>Create the rule exactly as in section 3 (choose “Delivery Orders” from the list – the id differs between systems).</li>
+<li>Optional one-off for the existing open deliveries: Server Action <em>IQ – Fill empty carrier (one-off)</em>, Model Transfer, same code → Create Contextual Action → select the deliveries from check 2 → Action → run. Check result with check 3.</li>
+<li>Next exchange from a ticket: check carrier + chatter note.</li>
+<li>Add to the rule table of <a href="../dhl-go-live-2026-10-27/">DHL go-live 27.10</a>: “IQ – Delivery: carrier when empty – fallback for deliveries not created from a sales order”.</li>
+</ol>
+<p><strong>Rollback:</strong> untick Active on the rule. Carriers already set stay (correct values).</p>
+
+<h2>8. Read-only checks</h2>
+<pre><code>-- Read only: PGOPTIONS=&#x27;-c default_transaction_read_only=on&#x27; psql -P pager=off -c &quot;&lt;query&gt;&quot;
+
+-- 1. Outgoing operation types (find the id of &quot;Delivery Orders&quot;, WH1)
+SELECT t.id, t.code, to_jsonb(t)-&gt;&#x27;name&#x27;-&gt;&gt;&#x27;en_US&#x27; AS name, w.code AS wh FROM stock_picking_type t LEFT JOIN stock_warehouse w ON w.id=t.warehouse_id WHERE t.code=&#x27;outgoing&#x27; AND t.active ORDER BY t.id;
+
+-- 2. Open deliveries without carrier (check BEFORE activating / before the one-off fill)
+SELECT sp.name, sp.origin, sp.state, c.code AS country FROM stock_picking sp JOIN stock_picking_type t ON t.id=sp.picking_type_id LEFT JOIN res_partner p ON p.id=sp.partner_id LEFT JOIN res_country c ON c.id=p.country_id WHERE t.code=&#x27;outgoing&#x27; AND sp.carrier_id IS NULL AND sp.state NOT IN (&#x27;done&#x27;,&#x27;cancel&#x27;) ORDER BY sp.id;
+
+-- 3. Deliveries filled by the rule (chatter note)
+SELECT m.date, sp.name, left(regexp_replace(m.body,&#x27;&lt;[^&gt;]+&gt;&#x27;,&#x27;&#x27;,&#x27;g&#x27;),120) AS note FROM mail_message m JOIN stock_picking sp ON sp.id=m.res_id AND m.model=&#x27;stock.picking&#x27; WHERE m.body LIKE &#x27;%IQ: carrier set to%&#x27; ORDER BY m.date DESC LIMIT 30;
+</code></pre>
+</main></body></html>

@@ -214,4 +214,12 @@ window.IQ_LOG = [
     status: "Done",
     link: "odoo/p00053-holfelder-mfj4-receipt-2026-10-31/"
   },
+  {
+    date: "2026-11-03",
+    area: "Odoo · Shipping",
+    title: "Exchange deliveries from tickets without carrier – fallback rule",
+    summary: "WH1/OUT/07574 (ticket #00889) had no carrier: ticket Replace creates the delivery directly, no Propagation of carrier, rules 8/45 only on quotations, Auto Set Carrier archived since 27.10. New staging rule 'IQ – Delivery: carrier when empty' (DE → DHL Parcel DE, else GLS Germany, never overwrites). Edit trigger only on Carrier/Contact/Operation Type/Status.",
+    status: "Staging",
+    link: "odoo/carrier-fallback-ticket-deliveries-2026-11-03/"
+  },
 ];
