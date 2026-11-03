@@ -206,4 +206,12 @@ window.IQ_LOG = [
     status: "Live",
     link: "odoo/invoice-resend-on-return-fix-2026-11-03/"
   },
+  {
+    date: "2026-11-03",
+    area: "Odoo",
+    title: "P00053 – MFJ 4.0 Damen grau fully booked (WH1/IN/00080)",
+    summary: "Grey QC done (56 checked, 8 defective). Booked 345 in WH1/IN/00080 (XS 17, S 67, M 103, L 86, XL 44, 2XL 21, 3XL 3, 4XL 4), demand reduced for the 8 defective (claim Holfelder). 146 + 345 + 8 = 499. Backorder WH1/IN/00081 = 861 open: black 353 (QC running) + unisex 500 + 8 defective grey (claim).",
+    status: "Done",
+    link: "odoo/p00053-holfelder-mfj4-receipt-2026-10-31/"
+  },
 ];

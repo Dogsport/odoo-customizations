@@ -1,13 +1,13 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>P00053 corrected + partial receipt WH1/IN/00058 (MFJ 4.0 Damen, Holfelder)</title><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>P00053 receipts (MFJ 4.0 Damen)</title><style>
 :root{--bg:#fff;--fg:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#714B67;--code:#f6f8fa}
 @media (prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#9ca3af;--line:#374151;--accent:#c79bbd;--code:#1f2937}}
 body{background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.55;max-width:920px;margin:24px auto;padding:0 16px}
 h1{color:var(--accent);font-size:1.6rem}h2{color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:32px}
 table{border-collapse:collapse;width:100%;margin:8px 0 16px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
 th{background:var(--accent);color:#fff}code,pre{background:var(--code);border-radius:4px}code{padding:1px 4px;font-size:.9em}pre{padding:12px;overflow-x:auto;font-size:.85em}
-blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>P00053 corrected + partial receipt WH1/IN/00058 (MFJ 4.0 Damen, Holfelder)</h1>
-<p><strong>Date:</strong> 30./31.10.2026 · <strong>Author:</strong> Hamza Mohsin · <strong>System:</strong> Odoo 19 (Purchase / Inventory) + Shopify
-<strong>Status:</strong> PO corrected ✅ (staging → production) · Partial receipt 294 pcs ✅ · Rest in backorder ⏳ (Monday with Florian)
+blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>P00053 corrected + receipts WH1/IN/00058 and WH1/IN/00080 (MFJ 4.0 Damen, Holfelder)</h1>
+<p><strong>Date:</strong> 30./31.10.2026, update 03.11.2026 · <strong>Author:</strong> Hamza Mohsin · <strong>System:</strong> Odoo 19 (Purchase / Inventory) + Shopify
+<strong>Status:</strong> PO corrected ✅ · Receipt 1/3 294 pcs ✅ (31.10.) · <strong>All grey Damen booked ✅ (03.11., WH1/IN/00080, 345 pcs)</strong> · Black Damen after QC ⏳ · Unisex grau not delivered ⏳
 <strong>Asana:</strong> <em>(add task link)</em> · Task by Patricia: "P00053 does not match Holfelder order confirmation 2026-232475"</p>
 <h2>Problem</h2>
 <p>Purchase order <strong>P00053</strong> did not match Holfelder's order confirmation <strong>AB 2026-232475</strong> (confirmed: 500 MFJ 4.0 Damen grau, 500 MFJ 4.0 Unisex grau, 500 MFJ 4.0 Damen schwarz, all 97.50 €, net 146,250.00 €):
@@ -26,6 +26,10 @@ blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:v
 <tr>
 <td>AB 2026-232475 (share Buchhaltung/2026/05)</td>
 <td>3 × 500 at 97.50 €, net 146,250.00 €</td>
+</tr>
+<tr>
+<td>Booking summary 03.11.2026 (PDF)</td>
+<td><a href="files/P00053_MFJ4_Damen_grau_Booking_2026-11-03.pdf">files/P00053_MFJ4_Damen_grau_Booking_2026-11-03.pdf</a> – grey 499 delivered / 491 booked / 8 defective, backorder 861, photos</td>
 </tr>
 <tr>
 <td>Delivery note 2026-344396 (28.10.2026)</td>
@@ -94,14 +98,229 @@ blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:v
 - Destination: WH1/Stock/Picklager · Effective date 31.10.2026 07:36
 - Product MFJ 4.0 Damen: On hand <strong>294</strong>, Forecasted <strong>1,000</strong>, Purchased <strong>1,000</strong>
 - Shopify stock export queue: <strong>16/16 done</strong>, Shopify shows grey 146 / black 148, total 294, price 279.90 €</p>
-<h2>Backorder (open)</h2>
+<h2>Backorder after 31.10. (WH1/IN/00080)</h2>
 <ul>
 <li>706 women's jackets (incl. 112 QC jackets)</li>
 <li>500 MFJ 4.0 Unisex grau (not delivered yet)</li>
 </ul>
+<h2>Receipt 03.11.2026 – all grey Damen booked (WH1/IN/00080)</h2>
+<p>📄 <strong>Summary PDF (with defect photos):</strong> <a href="files/P00053_MFJ4_Damen_grau_Booking_2026-11-03.pdf">P00053_MFJ4_Damen_grau_Booking_2026-11-03.pdf</a></p>
+<p>QC grey finished on 02.11.: <strong>56 checked (1 per carton), 8 defective</strong> → book the rest of the grey women's jackets now.
+Basis: counting comparison "Abgleich MFJ 4.0 Damen, LS 2026-344396, Stand 02.11." (delivery note = counted on every line, no difference).</p>
+<table>
+<thead>
+<tr>
+<th>Grau (MJD4.GR)</th>
+<th>XS</th>
+<th>S</th>
+<th>M</th>
+<th>L</th>
+<th>XL</th>
+<th>2XL</th>
+<th>3XL</th>
+<th>4XL</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Delivery note / counted</td>
+<td>25</td>
+<td>95</td>
+<td>150</td>
+<td>125</td>
+<td>65</td>
+<td>30</td>
+<td>4</td>
+<td>5</td>
+<td><strong>499</strong></td>
+</tr>
+<tr>
+<td>Booked 31.10. (WH1/IN/00058)</td>
+<td>7</td>
+<td>28</td>
+<td>44</td>
+<td>37</td>
+<td>19</td>
+<td>9</td>
+<td>1</td>
+<td>1</td>
+<td><strong>146</strong></td>
+</tr>
+<tr>
+<td>Defective (QC) – <strong>not booked</strong></td>
+<td>1</td>
+<td>0</td>
+<td>3</td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td><strong>8</strong></td>
+</tr>
+<tr>
+<td><strong>Booked 03.11. (WH1/IN/00080)</strong></td>
+<td><strong>17</strong></td>
+<td><strong>67</strong></td>
+<td><strong>103</strong></td>
+<td><strong>86</strong></td>
+<td><strong>44</strong></td>
+<td><strong>21</strong></td>
+<td><strong>3</strong></td>
+<td><strong>4</strong></td>
+<td><strong>345</strong></td>
+</tr>
+<tr>
+<td>Check: 146 + 345 + 8</td>
+<td>25</td>
+<td>95</td>
+<td>150</td>
+<td>125</td>
+<td>65</td>
+<td>30</td>
+<td>4</td>
+<td>5</td>
+<td><strong>499 ✅</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The 48 good QC jackets went back into stock and are included in the 345.</p>
+<p>Steps in Odoo (production, 03.11.2026 08:26):
+1. WH1/IN/00080 → grey lines: <strong>Quantity</strong> = booked numbers above (only the good pieces). For the 4 sizes with defects Odoo reduced the demand (XS 18→17, M 106→103, L 88→86, XL 46→44) and moved the defective pieces to the backorder.
+2. Black Damen and Unisex grau: Quantity <strong>0</strong> (black QC still running, unisex not delivered).
+3. <strong>Validate → Create Backorder</strong> → new backorder <strong>WH1/IN/00081</strong>. Destination WH1/Stock/Picklager.</p>
+<p>Result – <strong>all 499 grey women's jackets are accounted for: 491 in stock (146 + 345), 8 defective (open in the backorder, claim Holfelder).</strong></p>
+<h3>Defective grey jackets (claim Holfelder, stored separately, not booked)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Size</th>
+<th>Defect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>XS</td>
+<td>R1.2 – seam lower hem + patch</td>
+</tr>
+<tr>
+<td>2</td>
+<td>M</td>
+<td>inner pocket / small pocket broken</td>
+</tr>
+<tr>
+<td>3</td>
+<td>M</td>
+<td>R1.3 – seams, patch</td>
+</tr>
+<tr>
+<td>4</td>
+<td>M</td>
+<td>R1.5 – seams, logo</td>
+</tr>
+<tr>
+<td>5</td>
+<td>L</td>
+<td>R1.4 – seams, patch, hem, front logo</td>
+</tr>
+<tr>
+<td>6</td>
+<td>L</td>
+<td>R1.1 – seams, hem, hood + patch</td>
+</tr>
+<tr>
+<td>7</td>
+<td>XL</td>
+<td>hole in the right inner pocket</td>
+</tr>
+<tr>
+<td>8</td>
+<td>XL</td>
+<td>seam open / not clean</td>
+</tr>
+</tbody>
+</table>
+<p>Photos 30.10. and 02.11.2026, R-no. = note on the label. Photos + list go to Holfelder for the claim.</p>
+<h2>Backorder now (WH1/IN/00081, open)</h2>
+<table>
+<thead>
+<tr>
+<th>Open</th>
+<th>XS</th>
+<th>S</th>
+<th>M</th>
+<th>L</th>
+<th>XL</th>
+<th>2XL</th>
+<th>3XL</th>
+<th>4XL</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Damen schwarz (MJD4.BK) – QC running</td>
+<td>10</td>
+<td>60</td>
+<td>138</td>
+<td>70</td>
+<td>54</td>
+<td>17</td>
+<td>2</td>
+<td>2</td>
+<td><strong>353</strong></td>
+</tr>
+<tr>
+<td>Unisex grau (MFJ4.GR) – not delivered</td>
+<td>–</td>
+<td>40</td>
+<td>100</td>
+<td>135</td>
+<td>125</td>
+<td>50</td>
+<td>30</td>
+<td>20</td>
+<td><strong>500</strong></td>
+</tr>
+<tr>
+<td>Damen grau (MJD4.GR) – defective, claim</td>
+<td>1</td>
+<td>0</td>
+<td>3</td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td><strong>8</strong></td>
+</tr>
+<tr>
+<td><strong>Total open</strong></td>
+<td>11</td>
+<td>100</td>
+<td>241</td>
+<td>207</td>
+<td>181</td>
+<td>67</td>
+<td>32</td>
+<td>22</td>
+<td><strong>861</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Black: after QC book <strong>353 minus defective</strong> the same way (reduce demand of the defective sizes, Create Backorder).</p>
+<blockquote>
+<p>The 8 defective grey jackets are <strong>still open in backorder WH1/IN/00081</strong> (checked on the WH1/IN/00081 delivery slip, 03.11.). On P00053 the grey lines show 491 of 499 received.
+Decide with Patricia/Florian: replacements from Holfelder (receive them on these backorder lines) or credit note (then set these lines to 0 and validate without backorder for them).</p>
+</blockquote>
 <h2>Open – Monday with Florian</h2>
 <ul>
-<li>Book the rest after QC: OK → WH1/Stock, defective → Defektlager <strong>or</strong> return/claim to Holfelder (decide with Patricia).</li>
+<li>~~Book grey rest after QC~~ ✅ 03.11. (345 booked, 8 defective not booked)</li>
+<li>Black Damen: book after QC (353 minus defective)</li>
+<li>Claim for the 8 defective grey jackets: replacement or credit note (Patricia / Florian)</li>
 <li>Zippers (Herren 21 / Damen 68) on delivery note but not on PO – clarify.</li>
 <li>Customers who waited for MFJ 3.0 Damen Schwarz from this PO – forecast dropped, check orders.</li>
 <li>Counting sheet date (24.10.?) vs. delivery note 28.10 / arrival 30.10 – clarify.</li>
@@ -112,4 +331,5 @@ blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:v
 <li>Check PO against AB <strong>per size and product</strong> before confirming (grey 2XL–4XL had black quantities, MFJ 3.0 instead of 4.0).</li>
 <li>Partial receipt = enter only the quantity to book now + <strong>Create Backorder</strong>.</li>
 <li>Inventory adjustment would double stock – always receive via the PO receipt.</li>
-</ul></body></html>
+</ul>
+</body></html>
