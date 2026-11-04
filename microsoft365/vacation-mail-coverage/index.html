@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vacation Mail Coverage – Microsoft 365</title>
+<style>
+  :root { --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --line:#d1d9e0; --accent:#0969da; --box:#f6f8fa; --warn:#fff8c5; --warn-line:#d4a72c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d; --accent:#4493f8; --box:#151b23; --warn:#272115; --warn-line:#9e6a03; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  h2 { font-size: 1.3rem; margin: 36px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+  .meta { color: var(--muted); font-size: .92rem; margin-bottom: 20px; }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .95rem; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--box); }
+  pre { background: var(--box); border: 1px solid var(--line); border-radius: 6px; padding: 12px; overflow-x: auto; white-space: pre-wrap; font-size: .9rem; }
+  code { background: var(--box); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  .note { background: var(--warn); border-left: 4px solid var(--warn-line); padding: 10px 14px; border-radius: 4px; margin: 14px 0; }
+  .status { display:inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--warn-line); background: var(--warn); font-size: .85rem; font-weight: 600; }
+  ul, ol { padding-left: 22px; }
+</style>
+</head>
+<body>
+<main>
+<p><a href="../../index.html">← Back to overview</a></p>
+<h1>Vacation Mail Coverage</h1>
+<div class="meta">Microsoft 365 / Exchange Online · Created 2026-11-04 · Owner: Hamza Mohsin · <span class="status">Waiting on decision</span></div>
+
+<p>Every employee on vacation must have an out-of-office reply naming a backup, and their emails must be forwarded to or visible to that backup. This page documents the problem, the setup, the decisions made and what is still open.</p>
+
+<h2>Background</h2>
+<ul>
+  <li><strong>Requested by:</strong> Patricia Knabl, 2026-11-04</li>
+  <li><strong>Asana:</strong> <a href="https://app.asana.com/1/1204131953626857/project/1215959222490380/task/1220185133425632">Out-of-office and backup for employees on vacation</a> (project "ToDo IT Hamza", due 2026-11-05)</li>
+  <li><strong>Trigger:</strong> Anastasiia was on vacation and minijobbers sent their October hours directly to her mailbox. Nobody else saw those emails.</li>
+</ul>
+
+<h2>Access and roles</h2>
+<table>
+  <tr><th>Role</th><th>Who</th><th>Notes</th></tr>
+  <tr><td>Global Administrator</td><td>Patricia Knabl, Dr. Florian Knabl</td><td>Can assign admin roles</td></tr>
+  <tr><td>Exchange Administrator</td><td>Patricia Knabl, Hamza Mohsin</td><td>Hamza assigned on 2026-11-04. Covers auto-replies, forwarding, mailbox permissions, shared mailboxes. No user, license or password management.</td></tr>
+</table>
+<div class="note">The Exchange Administrator role can grant access to any mailbox. Only open or share a mailbox when Patricia or Florian ask for it and the employee is informed. All actions are recorded in the audit log.</div>
+
+<h2>Decisions</h2>
+<table>
+  <tr><th>Date</th><th>Decision</th><th>By</th></tr>
+  <tr><td>2026-11-04</td><td>Each employee going on vacation sets up their own out-of-office reply and forwarding to their backup.</td><td>Florian</td></tr>
+  <tr><td>2026-11-04</td><td>Florian and Patricia decide who the backup is for each person.</td><td>Florian</td></tr>
+  <tr><td>2026-11-04</td><td>Do not forward vacation mail to <code>mail@iq-dogsport.de</code>: that mailbox already receives too many emails.</td><td>Florian</td></tr>
+</table>
+
+<h2>Open questions (with Patricia and Florian)</h2>
+<ol>
+  <li>Who is the backup for whom? Urgent for Anastasiia.</li>
+  <li>Are auto-replies and forwarding set centrally by Hamza (Microsoft 365 admin) or by each employee in Outlook using the guide?</li>
+</ol>
+
+<h2>Team guide</h2>
+<p>Published in Odoo Knowledge (Workspace, readable by all internal users): <a href="https://iq-dogsport.odoo.com/odoo/knowledge/172">Vacation Out-of-Office &amp; Mail Backup – Guide</a>. It contains a checklist, Outlook steps and a German/English template text.</p>
+<p>Share settings: General Access = Can Read, Show in Workspace = Everyone, Share to web = off.</p>
+
+<h3>Employee self-service steps (Outlook on the web)</h3>
+<ol>
+  <li><strong>Auto-reply:</strong> Settings → Account → Automatic replies → turn on, set time period, paste template (inside and outside organization) → Save.</li>
+  <li><strong>Forwarding:</strong> Settings → Mail → Forwarding → Enable forwarding → backup address → tick <em>Keep a copy of forwarded messages</em> → Save.</li>
+  <li><strong>After vacation:</strong> turn forwarding off. The auto-reply ends by itself if an end date was set.</li>
+</ol>
+
+<h2>Admin procedure (central setup)</h2>
+<p>Use when an employee forgot, is already away, or if central setup is chosen. Path: <strong>admin.microsoft.com → Users → Active users → [employee] → Mail</strong>.</p>
+<ol>
+  <li><strong>Read and manage permissions</strong> → add backup with <em>Read and manage (Full Access)</em>. The mailbox appears in the backup's Outlook within about an hour. This is the only way the backup also sees emails that arrived <em>before</em> setup.</li>
+  <li><strong>Manage email forwarding</strong> → forward to backup → tick <em>Keep a copy of forwarded emails</em>.</li>
+  <li><strong>Manage automatic replies</strong> → turn on with end date and backup name.</li>
+  <li>Test: send a mail from another account, check the forward arrives and the auto-reply comes back.</li>
+  <li>After the vacation: remove forwarding and Full Access again.</li>
+</ol>
+<p>Before opening a mailbox: get Patricia's or Florian's written OK and inform the employee (German data protection, especially if private use of email is allowed).</p>
+
+<h2>Next steps</h2>
+<ul>
+  <li>Patricia and Florian decide backups and central vs. self-service.</li>
+  <li>Set up Anastasiia's mailbox (Full Access + forwarding + auto-reply) once her backup is named.</li>
+  <li>Announce the Knowledge guide to the team.</li>
+  <li>Optional root-cause fix: route recurring topics such as minijob hours to a shared mailbox instead of personal inboxes.</li>
+</ul>
+
+<h2>Template text</h2>
+<pre>Vielen Dank für Ihre Nachricht.
+
+Ich bin vom [TT.MM.] bis einschließlich [TT.MM.JJJJ] nicht im Büro und habe in dieser Zeit keinen Zugriff auf meine E-Mails. Ihre Nachricht wird an meine Vertretung weitergeleitet.
+
+In dringenden Fällen wenden Sie sich bitte direkt an [Name der Vertretung]: [E-Mail der Vertretung]
+
+Mit freundlichen Grüßen
+[Ihr Name]
+IQ Dogsport GmbH
+
+---
+
+Thank you for your message.
+
+I am out of the office from [DD.MM.] until [DD.MM.YYYY] and have no access to my emails during this time. Your message will be forwarded to my colleague.
+
+For urgent matters, please contact [backup name] directly: [backup email]
+
+Best regards
+[Your name]
+IQ Dogsport GmbH</pre>
+</main>
+</body>
+</html>
