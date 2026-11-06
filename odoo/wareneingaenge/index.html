@@ -32,7 +32,7 @@
 <main>
 <p><a href="../../index.html">← Back to overview</a></p>
 <h1>Goods Receipts App (Wareneingänge)</h1>
-<div class="meta">Odoo 19 · Purchase / Inventory / Quality · Built 2026-11-04 – 2026-11-05 · Owner: Hamza Mohsin · <span class="status">Done in staging – production pending</span></div>
+<div class="meta">Odoo 19 · Purchase / Inventory / Quality · Built 2026-11-04 – 2026-11-05 · Owner: Hamza Mohsin · <span class="status">Live in production since 2026-11-06</span></div>
 
 <p>One card per supplier delivery. Each card pulls the numbers, receipts, quality checks and all files live from the purchase order, so nothing is typed twice. Deliveries without a purchase order and rejected deliveries are added by Excel import, by hand, or with the rejection form. A public read-only calendar shows the warehouse what is coming when.</p>
 
@@ -49,7 +49,7 @@
   <tr><th>Date</th><th>Step</th></tr>
   <tr><td>2026-11-04</td><td>Production backup taken. Staging rebuilt. App created and built in staging (cards, form, automations, Excel import, Upcoming deliveries).</td></tr>
   <tr><td>2026-11-05</td><td>Tested status logic (receipt booking, QC fail, inventory adjustment). Added: newest/last-changed sorting, calendar first, cards for all old POs, "No PO yet" badge and banner, source Excel attached to cards, Report rejected delivery, public delivery calendar + menu. Consolidated everything into one install script.</td></tr>
-  <tr><td>Next</td><td>Dry run of the install script on a fresh staging copy → production run → team guide.</td></tr>
+  <tr><td>2026-11-06</td><td>Production backup "Before Goods Receipts app install" (08:41 UTC). Install script run once in production. App live, icon set in Studio.</td></tr>
 </table>
 
 <h2>What the app contains</h2>
@@ -99,7 +99,22 @@
   <li>Upload the current delivery overview Excel once (staging test data is not carried over).</li>
   <li>Test: card on PO confirmation, status on receipt, files, rejection form, public link in a private window, DE/EN.</li>
 </ol>
-<p>The script is safe to run again (no deletions). It overwrites manual Studio edits to the "IQ …" views. The install script and the public calendar key are kept in <code>~/Documents/odoo-customizations/</code>, not in this public repo.</p>
+<p>The script is safe to run again (no deletions). It overwrites manual Studio edits to the "IQ …" views.</p>
+
+<h2>Code</h2>
+<div class="note">Public copies: the public-calendar key is removed. The original scripts with the key are kept only in <code>~/Documents/odoo-customizations/wareneingaenge/</code>. A database installed from these copies gets no key; set one in Settings → Technical → System Parameters → <code>iq.delivery_calendar_key</code> and run the script again so the menu link is updated.</div>
+<table>
+  <tr><th>File</th><th>What it is</th></tr>
+  <tr><td><a href="code/install_wareneingang.py">install_wareneingang.py</a></td><td>The complete app in one script (final version, used for production on 2026-11-06). Run once in an inactive Scheduled Action (Model: Contact) → Run Manually.</td></tr>
+  <tr><td><a href="code/PRODUCTION_ROLLOUT.md">PRODUCTION_ROLLOUT.md</a></td><td>Steps, checks and rollback.</td></tr>
+  <tr><td><a href="code/staging-fixes/fix_2026-11-05_order_and_calendar.py">fix_2026-11-05_order_and_calendar.py</a></td><td>Staging: newest cards on top, Upcoming deliveries opens in calendar.</td></tr>
+  <tr><td><a href="code/staging-fixes/fix_2026-11-05_noPO_sourcefile_oldPOs.py">fix_2026-11-05_noPO_sourcefile_oldPOs.py</a></td><td>Staging: Excel attached to cards, "No PO yet" badge and banner, cards for all old POs.</td></tr>
+  <tr><td><a href="code/staging-fixes/fix_2026-11-05_ALL.py">fix_2026-11-05_ALL.py</a></td><td>Staging: the two fixes above in one run.</td></tr>
+  <tr><td><a href="code/staging-fixes/fix_2026-11-05_rejected_report.py">fix_2026-11-05_rejected_report.py</a></td><td>Staging: Report rejected delivery.</td></tr>
+  <tr><td><a href="code/staging-fixes/fix_2026-11-05_public_calendar.py">fix_2026-11-05_public_calendar.py</a></td><td>Staging: public delivery calendar (website server action).</td></tr>
+</table>
+<p>The staging fixes are history only; everything in them is inside <code>install_wareneingang.py</code>.</p>
+<p><strong>Emergency stop:</strong> Settings → Technical → Automation Rules → archive the 4 rules starting with "IQ".</p>
 
 <h2>Open points</h2>
 <ul>
