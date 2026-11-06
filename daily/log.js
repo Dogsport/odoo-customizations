@@ -223,3 +223,24 @@ window.IQ_LOG = [
     link: "odoo/carrier-fallback-ticket-deliveries-2026-11-03/"
   },
 ];
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-04", area: "Odoo", status: "In progress",
+    title: "Goods Receipts app – built in staging",
+    summary: "One card per supplier delivery: numbers, receipts, quality checks and all files read live from the PO. Automations for PO confirmation and receipt booking, Excel delivery-overview import, Upcoming deliveries calendar, kit parts.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-04", area: "Microsoft 365", status: "Waiting on decision",
+    title: "Vacation mail coverage – out-of-office and backup",
+    summary: "Exchange Administrator role assigned. Team guide published in Odoo Knowledge (article 172). Florian: each employee sets their own auto-reply and forwarding; Patricia and Florian decide the backups; not to mail@." },
+  { date: "2026-11-04", area: "Outlook / Asana", status: "Done",
+    title: "CD Company delivery dates in Outlook and Asana",
+    summary: "4 delivery dates as milestones in Asana project Produktion CD and in the shared Outlook calendar CD Lieferungen (shared with Patricia, Florian, Elena, Anastasiia)." },
+  { date: "2026-11-05", area: "Odoo", status: "Done in staging",
+    title: "Goods Receipts app – tests, rejected deliveries, public calendar",
+    summary: "Status logic tested (receipt, QC fail, inventory adjustment). Added: last-changed sorting, cards for all old POs, No PO yet badge, Excel attached to cards, Report rejected delivery, public delivery calendar without login. All in one install script.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-06", area: "Odoo", status: "Live",
+    title: "Goods Receipts app live in production",
+    summary: "Install script reviewed for side effects, production backup taken, script run once. App live with cards for all POs, icon set in Studio. Docs page with code section published.",
+    link: "odoo/wareneingaenge/" }
+]);
