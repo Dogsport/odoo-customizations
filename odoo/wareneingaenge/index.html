@@ -32,9 +32,9 @@
 <main>
 <p><a href="../../index.html">← Back to overview</a></p>
 <h1>Goods Receipts App (Wareneingänge)</h1>
-<div class="meta">Odoo 19 · Purchase / Inventory / Quality · Built 2026-11-04 – 2026-11-05 · Owner: Hamza Mohsin · <span class="status">Live in production since 2026-11-06</span></div>
+<div class="meta">Odoo 19 · Purchase / Inventory / Quality · Built 2026-11-04 – 2026-11-06 · Owner: Hamza Mohsin · <span class="status" style="border-color:var(--ok-line);background:var(--ok)">Live in production since 2026-11-06</span></div>
 
-<p>One card per supplier delivery. Each card pulls the numbers, receipts, quality checks and all files live from the purchase order, so nothing is typed twice. Deliveries without a purchase order and rejected deliveries are added by Excel import, by hand, or with the rejection form. A public read-only calendar shows the warehouse what is coming when.</p>
+<p>One card per supplier delivery. Each card pulls the numbers, receipts, quality checks and all files live from the purchase order, so nothing is typed twice. Deliveries without a purchase order and rejected deliveries are added by Excel import, by hand, or with the rejection form. A password-protected calendar page shows the warehouse what is coming when and who is away. Supplier delivery notes (PDF) can be uploaded and are added to the calendar on the existing purchase order card.</p>
 
 <h2>Background</h2>
 <ul>
@@ -49,7 +49,8 @@
   <tr><th>Date</th><th>Step</th></tr>
   <tr><td>2026-11-04</td><td>Production backup taken. Staging rebuilt. App created and built in staging (cards, form, automations, Excel import, Upcoming deliveries).</td></tr>
   <tr><td>2026-11-05</td><td>Tested status logic (receipt booking, QC fail, inventory adjustment). Added: newest/last-changed sorting, calendar first, cards for all old POs, "No PO yet" badge and banner, source Excel attached to cards, Report rejected delivery, public delivery calendar + menu. Consolidated everything into one install script.</td></tr>
-  <tr><td>2026-11-06</td><td>Production backup "Before Goods Receipts app install" (08:41 UTC). Install script run once in production. App live, icon set in Studio.</td></tr>
+  <tr><td>2026-11-06</td><td>Installed in production (backup first). Calendar page: staff absences, one page password, IQ logo, new layout for phone and desktop, menu renamed to "Warehouse &amp; team calendar". Import delivery overview now reads PDF delivery notes (tested with Holfelder Lieferschein 2026-344819 → P00053). Calendar key and password changed; menu link updated.</td></tr>
+  <tr><td>Next</td><td>Team guide; open points below.</td></tr>
 </table>
 
 <h2>What the app contains</h2>
@@ -58,8 +59,8 @@
   <tr><td>Goods Receipt</td><td>Kanban by status: Expected · Partly booked · Done · Rejected. Sorted by last change. Badges: Overdue, This week, defective, No PO yet. Progress bar, open pieces, kit parts, file count.</td></tr>
   <tr><td>Card form</td><td>Tiles (Ordered, Booked, Open, Defective, Files), size × colour table with clickable bookings, tabs: Delivery schedule, Files (upload + preview), Defects, Notes and rejection, Order lines, Receipts, Quality. Chatter.</td></tr>
   <tr><td>Upcoming deliveries</td><td>Planned delivery lines, opens in calendar; list grouped by month with totals. Overdue lines red.</td></tr>
-  <tr><td>Public calendar</td><td>Opens the public read-only calendar page in a new tab (no login, secret key, no prices). Auto-refresh every 10 minutes.</td></tr>
-  <tr><td>Import delivery overview</td><td>Supplier Excel/CSV → planned lines and cards. Links to POs by vendor reference. Attaches the Excel to each card. Changes are noted in the chatter. PDFs are not read.</td></tr>
+  <tr><td>Warehouse &amp; team calendar</td><td>Opens the calendar page in a new tab: no Odoo login, protected by link key + page password (cookie for 30 days). Summary tiles (today, this month, overdue, away today), month grid, approved absences of the whole month (first name + initial only, no leave type), overdue list, deliveries per supplier. Phone: list view. No prices.</td></tr>
+  <tr><td>Import delivery overview</td><td>Supplier Excel/CSV → planned lines and cards. Links to POs by vendor reference. Attaches the Excel to each card. Changes are noted in the chatter.<br><strong>PDF delivery note:</strong> finds the purchase order by PO number or supplier order number (vendor reference), uses the existing card (no new card, no extra delivery), adds one calendar entry per article group with the quantities from the PDF, attaches the PDF. Uploading the same note again replaces its open entries. Scanned PDFs cannot be read.</td></tr>
   <tr><td>Report rejected delivery</td><td>Supplier or PO, reason (Quality root causes), note, files → card moved to (or created in) Rejected with the files attached.</td></tr>
   <tr><td>Configuration → Stages</td><td>Status names and order.</td></tr>
 </table>
@@ -83,7 +84,7 @@
   <tr><td>Delivery schedule line</td><td><code>x_wareneingang_line</code></td></tr>
   <tr><td>Excel upload</td><td><code>x_iq_delivery_upload</code> + server action "IQ Lieferübersicht verarbeiten"</td></tr>
   <tr><td>Rejection report</td><td><code>x_iq_rejection_report</code> + server action "IQ Abgelehnte Lieferung melden"</td></tr>
-  <tr><td>Public page</td><td>Website server action "IQ Public delivery calendar", path <code>iq-delivery-calendar</code>, key in system parameter <code>iq.delivery_calendar_key</code></td></tr>
+  <tr><td>Calendar page</td><td>Website server action "IQ Public delivery calendar", path <code>iq-delivery-calendar</code>. System parameters: <code>iq.delivery_calendar_key</code> (link key), <code>iq.delivery_calendar_password</code> (page password). Menu: URL action "Warehouse &amp; team calendar".</td></tr>
   <tr><td>Automations</td><td>IQ Wareneingang: anlegen bei Bestellbestätigung · IQ Wareneingang: Status bei Buchung · IQ Wareneingang: Lieferanten-Bestellnr. von Bestellung · IQ Lieferung manuell: Karte zuordnen</td></tr>
   <tr><td>Views</td><td>"IQ Wareneingang Kanban / Form / List / Search / Calendar", "IQ Delivery Line …", "IQ Delivery Upload …", "IQ Rejection Report …"</td></tr>
 </table>
@@ -99,27 +100,30 @@
   <li>Upload the current delivery overview Excel once (staging test data is not carried over).</li>
   <li>Test: card on PO confirmation, status on receipt, files, rejection form, public link in a private window, DE/EN.</li>
 </ol>
-<p>The script is safe to run again (no deletions). It overwrites manual Studio edits to the "IQ …" views.</p>
+<p>The script is safe to run again (no deletions). It overwrites manual Studio edits to the "IQ …" views. The install script and the public calendar key are kept in <code>~/Documents/odoo-customizations/</code>, not in this public repo.</p>
+
+<h2>Changing the link key or the password</h2>
+<ol>
+  <li>Settings → Technical → System Parameters → change <code>iq.delivery_calendar_key</code> or <code>iq.delivery_calendar_password</code>.</li>
+  <li>After a key change: run the scheduled action "IQ Calendar: update menu link" (Run Manually) and reload the browser (Cmd+Shift+R). The old link shows "Not found".</li>
+  <li>Any change logs out all devices; share the new link / password with the warehouse.</li>
+</ol>
 
 <h2>Code</h2>
-<div class="note">Public copies: the public-calendar key is removed. The original scripts with the key are kept only in <code>~/Documents/odoo-customizations/wareneingaenge/</code>. A database installed from these copies gets no key; set one in Settings → Technical → System Parameters → <code>iq.delivery_calendar_key</code> and run the script again so the menu link is updated.</div>
-<table>
-  <tr><th>File</th><th>What it is</th></tr>
-  <tr><td><a href="code/install_wareneingang.py">install_wareneingang.py</a></td><td>The complete app in one script (final version, used for production on 2026-11-06). Run once in an inactive Scheduled Action (Model: Contact) → Run Manually.</td></tr>
-  <tr><td><a href="code/PRODUCTION_ROLLOUT.md">PRODUCTION_ROLLOUT.md</a></td><td>Steps, checks and rollback.</td></tr>
-  <tr><td><a href="code/staging-fixes/fix_2026-11-05_order_and_calendar.py">fix_2026-11-05_order_and_calendar.py</a></td><td>Staging: newest cards on top, Upcoming deliveries opens in calendar.</td></tr>
-  <tr><td><a href="code/staging-fixes/fix_2026-11-05_noPO_sourcefile_oldPOs.py">fix_2026-11-05_noPO_sourcefile_oldPOs.py</a></td><td>Staging: Excel attached to cards, "No PO yet" badge and banner, cards for all old POs.</td></tr>
-  <tr><td><a href="code/staging-fixes/fix_2026-11-05_ALL.py">fix_2026-11-05_ALL.py</a></td><td>Staging: the two fixes above in one run.</td></tr>
-  <tr><td><a href="code/staging-fixes/fix_2026-11-05_rejected_report.py">fix_2026-11-05_rejected_report.py</a></td><td>Staging: Report rejected delivery.</td></tr>
-  <tr><td><a href="code/staging-fixes/fix_2026-11-05_public_calendar.py">fix_2026-11-05_public_calendar.py</a></td><td>Staging: public delivery calendar (website server action).</td></tr>
-</table>
-<p>The staging fixes are history only; everything in them is inside <code>install_wareneingang.py</code>.</p>
-<p><strong>Emergency stop:</strong> Settings → Technical → Automation Rules → archive the 4 rules starting with "IQ".</p>
+<p>Keys and passwords are removed from these copies.</p>
+<ul>
+  <li><a href="code/install_wareneingang.py">install_wareneingang.py</a> – full app in one script</li>
+  <li><a href="code/PRODUCTION_ROLLOUT.md">PRODUCTION_ROLLOUT.md</a></li>
+  <li><a href="code/staging-fixes/fix_2026-11-06_calendar_v3_pdf_import.py">fix_2026-11-06_calendar_v3_pdf_import.py</a> – new calendar page, menu rename, PDF import</li>
+  <li><a href="code/staging-fixes/fix_2026-11-06_calendar_password.py">fix_2026-11-06_calendar_password.py</a> · <a href="code/staging-fixes/fix_2026-11-06_calendar_absences.py">fix_2026-11-06_calendar_absences.py</a></li>
+</ul>
 
 <h2>Open points</h2>
 <ul>
-  <li>PDF reading for delivery overviews: undecided (fixed rules per supplier, attach only, or AI).</li>
-  <li>Public page: Berlin time in "Updated", kit receipts as sets instead of parts.</li>
+  <li>PDF import is tuned to the Holfelder layout; other suppliers' PDFs fall back to the open PO quantity – check with the first PDF of each supplier.</li>
+  <li>Holfelder 2026-344819: 499 grey jackets delivered, 500 open on P00053 – check when counting.</li>
+  <li>Use a stronger page password (at least 8 characters).</li>
+  <li>Calendar page: Berlin time in "Updated", kit receipts as sets instead of parts.</li>
   <li>Card name without duplicated supplier; hide the "No PO yet" banner on rejected cards.</li>
   <li>"New" badge for recently confirmed POs (needs one non-stored field – approval pending).</li>
   <li>Reason field in the rejection form needs Quality access rights for warehouse users.</li>

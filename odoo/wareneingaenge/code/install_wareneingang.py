@@ -928,7 +928,140 @@ for up in records:
     if not up.x_file or not up.x_supplier_id:
         raise UserError('Bitte Lieferant wählen und Excel-Datei hochladen.' if DE else 'Please choose a supplier and upload an Excel file.')
     if (up.x_file_name or '').lower().endswith('.pdf'):
-        raise UserError('PDF-Dateien werden nicht unterstützt. Bitte Excel (.xlsx/.xls) oder CSV hochladen.' if DE else 'PDF files are not supported. Please upload Excel (.xlsx/.xls) or CSV.')
+        sup = up.x_supplier_id
+        Att = env['ir.attachment'].sudo()
+        fname = up.x_file_name
+        att = Att.search([('res_model', '=', 'x_iq_delivery_upload'), ('res_id', '=', up.id), ('name', '=', fname)], limit=1)
+        if not att:
+            att = Att.create({'name': fname, 'datas': up.x_file, 'mimetype': 'application/pdf', 'res_model': 'x_iq_delivery_upload', 'res_id': up.id})
+        txt = att.index_content or ''
+        if len(txt.strip()) < 20:
+            up.write({'x_result': '<div class="alert alert-danger">' + ('Der Text im PDF konnte nicht gelesen werden (eingescanntes PDF?). Bitte die Lieferung im Wareneingang manuell eintragen.' if DE else 'The PDF text could not be read (scanned PDF?). Please add the delivery manually.') + '</div>'})
+            continue
+        flat = ' '.join(txt.split())
+        # ---- purchase order: PO number or vendor reference (e.g. AB 2026-232475) in the text
+        cand = PO.search([('partner_id', 'child_of', sup.commercial_partner_id.id), ('state', 'in', ['purchase', 'done'])], order='id desc')
+        cand = cand.filtered(lambda p: p.receipt_status != 'full') + cand.filtered(lambda p: p.receipt_status == 'full')
+        po = PO
+        for p in cand:
+            refs = [p.name]
+            r = (p.partner_ref or '').strip()
+            if r:
+                refs.append(r)
+                core = r.split()[-1]
+                if len(core) >= 6:
+                    refs.append(core)
+            if [x for x in refs if x and x in flat]:
+                po = p
+                break
+        if not po:
+            up.write({'x_result': '<div class="alert alert-warning">' + ('Keine passende Bestellung gefunden. Im PDF steht keine Bestellnummer (P0…) und keine Auftragsnummer, die bei einer Bestellung von ' if DE else 'No matching purchase order found. The PDF contains no PO number and no order number stored on a purchase order of ') + sup.name + ('. Bitte die Lieferanten-Auftragsnummer in der Bestellung (Feld Lieferantenreferenz) prüfen.' if DE else '. Please check the vendor reference on the purchase order.') + '</div>'})
+            continue
+        # ---- delivery note number
+        dn = ''
+        for kw in ['Lieferscheinnummer', 'Lieferschein-Nr', 'Lieferschein Nr', 'Lieferschein', 'Delivery note']:
+            pos_ = flat.find(kw)
+            if pos_ >= 0:
+                for tok in flat[pos_ + len(kw):pos_ + len(kw) + 40].replace(':', ' ').split():
+                    if [c for c in tok if c.isdigit()] and len(tok) >= 4:
+                        dn = tok.strip('.,;')
+                        break
+            if dn:
+                break
+        if not dn:
+            dn = fname.rsplit('.', 1)[0]
+        # ---- date: delivery date in the PDF if it is in the future, otherwise today (goods arrived)
+        def find_dates(t):
+            out = []
+            for k in range(len(t) - 9):
+                c = t[k:k + 10]
+                if c[2] == '.' and c[5] == '.' and c[:2].isdigit() and c[3:5].isdigit() and c[6:].isdigit():
+                    try:
+                        out.append((k, datetime.date(int(c[6:]), int(c[3:5]), int(c[:2]))))
+                    except Exception:
+                        pass
+            return out
+        today = datetime.date.today()
+        ddate = today
+        for kw in ['Liefertermin', 'Lieferdatum', 'Anlieferung']:
+            pos_ = flat.find(kw)
+            if pos_ >= 0:
+                near = [d for k, d in find_dates(flat[pos_:pos_ + 60])]
+                if near and near[0] > today:
+                    ddate = near[0]
+                break
+        # ---- quantities per article from the PDF
+        # Holfelder layout: "IQ DOGSPORT | Multifunktionsjacke 4.0, Herren, grau, S" ... "HBM-Cross-Docking-1 (40)"
+        groups = []
+        gqty = {}
+        npos = 0
+        cur = ''
+        for ln in txt.splitlines():
+            s = ln.strip()
+            if ' | ' in s and not s.startswith(sup.name or '#') and 'Holfelder GmbH' not in s:
+                art = s.split(' | ', 1)[1]
+                cur = art.split(',')[0].strip()
+                if cur.lower().startswith('porto') or cur.lower().startswith('spedition'):
+                    cur = ''
+                continue
+            if cur and s.endswith(')') and '(' in s:
+                n = s[s.rfind('(') + 1:-1].strip()
+                if n.isdigit():
+                    if cur not in gqty:
+                        groups.append(cur)
+                        gqty[cur] = 0
+                    gqty[cur] += int(n)
+                    npos += 1
+                    cur = ''
+        goods = po.order_line.filtered(lambda l: l.product_qty > 0 and l.product_id and l.product_id.type != 'service')
+        if not groups:
+            open_qty = sum([max(l.product_qty - l.qty_received, 0) for l in goods])
+            names = []
+            for l in goods.filtered(lambda l: l.qty_received < l.product_qty) or goods:
+                n = (l.product_id.product_tmpl_id.name or '').split(' – ')[0]
+                if n not in names:
+                    names.append(n)
+            g0 = (names[0] + (' +' + str(len(names) - 1) if len(names) > 1 else '')) if names else po.name
+            groups = [g0]
+            gqty[g0] = open_qty
+        qty_note = (('aus PDF, ' + str(npos) + ' Positionen') if DE else ('read from PDF, ' + str(npos) + ' lines')) if npos else ('Artikel im PDF nicht erkannt – offene Menge der Bestellung' if DE else 'articles not recognised in PDF – open quantity of the purchase order')
+        # ---- card of this PO (never a new delivery card if the PO already has one)
+        we = WE.search([('x_studio_purchase_order', '=', po.id)], limit=1)
+        new_card = False
+        if not we:
+            we = WE.create({'x_name': po.name, 'x_studio_purchase_order': po.id, 'x_studio_supplier': po.partner_id.id,
+                            'x_supplier_ref': po.partner_ref or False})
+            new_card = True
+        shipment = ('Lieferschein ' if DE else 'Delivery note ') + dn
+        # same delivery note uploaded again: replace its open calendar entries
+        old = Line.search([('x_wareneingang_id', '=', we.id), ('x_shipment', '=', shipment), ('x_done', '=', False)])
+        replaced = len(old)
+        old.unlink()
+        rows = ''
+        total = 0
+        for g in groups:
+            Line.create({'x_wareneingang_id': we.id, 'x_partner_id': sup.id, 'x_supplier_ref': po.partner_ref or po.name,
+                         'x_product_text': g, 'x_shipment': shipment, 'x_qty': gqty[g], 'x_date': ddate,
+                         'x_name': ' · '.join([x for x in [po.partner_ref or po.name, g, shipment] if x])})
+            total += gqty[g]
+            rows += '<li>' + g + ': <b>' + str(int(gqty[g])) + (' Stk.' if DE else ' pcs') + '</b></li>'
+        qty = total
+        action_txt = (('ersetzt' if DE else 'replaced') if replaced else ('angelegt' if DE else 'created'))
+        prod_txt = ', '.join(groups)
+        # ---- attach the PDF to the card (once)
+        raw = b64decode(up.x_file)
+        if not Att.search_count([('res_model', '=', 'x_wareneingang'), ('res_id', '=', we.id), ('name', '=', fname), ('file_size', '=', len(raw))]):
+            catt = Att.create({'name': fname, 'datas': up.x_file, 'mimetype': 'application/pdf', 'res_model': 'x_wareneingang', 'res_id': we.id})
+            we.message_post(body=(('Lieferschein ' + dn + ' hochgeladen: ' + str(int(qty)) + ' Stk. am ' + ddate.strftime('%d.%m.%Y')) if DE else ('Delivery note ' + dn + ' uploaded: ' + str(int(qty)) + ' pcs on ' + ddate.strftime('%d.%m.%Y'))), attachment_ids=[catt.id])
+        if not up.x_name:
+            up.write({'x_name': sup.name + ' – ' + dn})
+        up.write({'x_result': '<div class="alert alert-success mb-2">' + ('PDF verarbeitet.' if DE else 'PDF processed.') + '</div><ul>'
+                  + '<li>' + ('Bestellung: ' if DE else 'Purchase order: ') + '<b>' + po.name + '</b>' + (' (' + po.partner_ref + ')' if po.partner_ref else '') + '</li>'
+                  + '<li>' + ('Wareneingangs-Karte: ' if DE else 'Goods receipt card: ') + we.x_name + (' (neu)' if new_card and DE else (' (new)' if new_card else '')) + '</li>'
+                  + '<li>' + ('Kalendereinträge ' if DE else 'Calendar entries ') + action_txt + ' (' + str(len(groups)) + (') am ' if DE else ') on ') + ddate.strftime('%d.%m.%Y') + ' · ' + qty_note + ':<ul>' + rows + '</ul></li>'
+                  + '<li>' + ('PDF an die Karte angehängt.' if DE else 'PDF attached to the card.') + '</li>'
+                  + '<li class="text-muted">' + ('Nach dem Buchen des Wareneingangs bitte in „Anstehende Lieferungen“ den Haken „Angekommen“ setzen.' if DE else 'After booking the receipt, tick "Arrived" in Upcoming deliveries.') + '</li></ul>'})
+        continue
     sup = up.x_supplier_id
     if not up.x_name:
         up.write({'x_name': sup.name + ' – ' + datetime.date.today().strftime('%d.%m.%Y')})
@@ -1341,7 +1474,7 @@ for we in wes:
 # =====================================================================================
 # 14. Public delivery calendar (no login, secret key)
 # =====================================================================================
-CAL_KEY = ''  # public copy: key removed. Set your own in System Parameters -> iq.delivery_calendar_key
+CAL_KEY = '<KEY-REMOVED>'
 PAGE = r'''
 P = env['ir.config_parameter'].sudo()
 KEY = P.get_param('iq.delivery_calendar_key') or ''
@@ -1496,7 +1629,7 @@ main{display:grid;grid-template-columns:1fr 340px;gap:16px;padding:16px}
 '''
 
 CP = env['ir.config_parameter'].sudo()
-if CAL_KEY and not CP.get_param('iq.delivery_calendar_key'):
+if not CP.get_param('iq.delivery_calendar_key'):
     CP.set_param('iq.delivery_calendar_key', CAL_KEY)
 if 'website_published' in SA._fields:
     cal_sa = SA.search([('name', '=', 'IQ Public delivery calendar')], limit=1)
@@ -1508,9 +1641,9 @@ if 'website_published' in SA._fields:
         cal_sa.write(cvals)
     else:
         cal_sa = SA.create(cvals)
-    log('IQ public calendar link: ' + (cal_sa.website_url or '') + '?key=' + (CP.get_param('iq.delivery_calendar_key') or ''))
+    log('IQ public calendar link: ' + (cal_sa.website_url or '') + '?key=' + CP.get_param('iq.delivery_calendar_key'))
     UrlAct = env['ir.actions.act_url'].sudo()
-    cal_url = '/website/action/' + (cal_sa.website_path or str(cal_sa.id)) + '?key=' + (CP.get_param('iq.delivery_calendar_key') or '')
+    cal_url = '/website/action/' + (cal_sa.website_path or str(cal_sa.id)) + '?key=' + CP.get_param('iq.delivery_calendar_key')
     ua = UrlAct.search([('name', 'in', ['Public calendar', 'Öffentlicher Lieferkalender'])], limit=1)
     if ua:
         ua.write({'url': cal_url, 'target': 'new'})

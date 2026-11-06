@@ -254,3 +254,21 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     title: "Return note for an order shipped abroad (GLS)",
     summary: "Package insert on letterhead: the return service is not available for returns from abroad; customers write to mail@iq-dogsport.de and we arrange the return." }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-06", area: "Odoo", status: "Live",
+    title: "Goods Receipts app installed in production",
+    summary: "Install script run once in production after a backup. Cards for all purchase orders, status from receipts, files, rejection form, upcoming deliveries.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-06", area: "Odoo", status: "Live",
+    title: "Warehouse & team calendar – password, absences, new layout",
+    summary: "Calendar page for staff without Odoo login: one password for deliveries and absences, approved absences of the whole month (no leave type), IQ logo, summary tiles, phone list view. Menu renamed to Warehouse & team calendar; key and password changed.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-06", area: "Odoo", status: "Live",
+    title: "PDF delivery notes in Import delivery overview",
+    summary: "Supplier delivery note PDF is linked to the existing purchase order card (no new card or delivery) and added to the calendar per article. Tested with Holfelder 2026-344819 on P00053: 499 jackets + 704 zipper-puller sets.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-06", area: "Odoo / Shopify", status: "Done",
+    title: "P00053 receipt booked and Shopify stock fixed",
+    summary: "Damen black + grey booked without the defective pieces from the QC report; rest on backorder. Holfelder invoice checked against the receipt. Black jacket stock did not sync – fixed with a manual stock export (reported to Emipro)." }
+]);

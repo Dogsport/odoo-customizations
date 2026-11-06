@@ -4,7 +4,7 @@
 # Run: Scheduled Action (Model: Contact, Active = off) -> Save -> Run Manually.
 # Change the key later: Settings -> Technical -> System Parameters -> iq.delivery_calendar_key
 
-KEY = ''  # public copy: key removed
+KEY = '<KEY-REMOVED>'
 PATH = 'iq-delivery-calendar'
 
 PAGE = r'''
