@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goods Receipts App – Odoo</title>
+<style>
+  :root { --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --line:#d1d9e0; --accent:#0969da; --box:#f6f8fa; --warn:#fff8c5; --warn-line:#d4a72c; --ok:#dafbe1; --ok-line:#1a7f37; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d; --accent:#4493f8; --box:#151b23; --warn:#272115; --warn-line:#9e6a03; --ok:#12261e; --ok-line:#2ea043; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  h2 { font-size: 1.3rem; margin: 36px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+  .meta { color: var(--muted); font-size: .92rem; margin-bottom: 20px; }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .95rem; display: block; overflow-x: auto; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--box); }
+  pre { background: var(--box); border: 1px solid var(--line); border-radius: 6px; padding: 12px; overflow-x: auto; white-space: pre-wrap; font-size: .9rem; }
+  code { background: var(--box); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  .note { background: var(--warn); border-left: 4px solid var(--warn-line); padding: 10px 14px; border-radius: 4px; margin: 14px 0; }
+  .ok { background: var(--ok); border-left: 4px solid var(--ok-line); padding: 10px 14px; border-radius: 4px; margin: 14px 0; }
+  .status { display:inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--warn-line); background: var(--warn); font-size: .85rem; font-weight: 600; }
+  ul, ol { padding-left: 22px; }
+</style>
+</head>
+<body>
+<main>
+<p><a href="../../index.html">← Back to overview</a></p>
+<h1>Goods Receipts App (Wareneingänge)</h1>
+<div class="meta">Odoo 19 · Purchase / Inventory / Quality · Built 2026-11-04 – 2026-11-05 · Owner: Hamza Mohsin · <span class="status">Done in staging – production pending</span></div>
+
+<p>One card per supplier delivery. Each card pulls the numbers, receipts, quality checks and all files live from the purchase order, so nothing is typed twice. Deliveries without a purchase order and rejected deliveries are added by Excel import, by hand, or with the rejection form. A public read-only calendar shows the warehouse what is coming when.</p>
+
+<h2>Background</h2>
+<ul>
+  <li><strong>Requested by:</strong> Patricia Knabl (quick dashboard of delivery dates) and the TC22 quality topic (documenting defective incoming goods).</li>
+  <li><strong>Goal:</strong> office, Patricia and Florian see each delivery in one place: ordered / booked / open / defective, files from PO, receipts and QC, plus rejected deliveries with proof.</li>
+  <li><strong>Rule:</strong> reuse PO, receipt and Quality data. No prices in warehouse views.</li>
+  <li><strong>Asana:</strong> <em>add task link</em></li>
+</ul>
+
+<h2>Status</h2>
+<table>
+  <tr><th>Date</th><th>Step</th></tr>
+  <tr><td>2026-11-04</td><td>Production backup taken. Staging rebuilt. App created and built in staging (cards, form, automations, Excel import, Upcoming deliveries).</td></tr>
+  <tr><td>2026-11-05</td><td>Tested status logic (receipt booking, QC fail, inventory adjustment). Added: newest/last-changed sorting, calendar first, cards for all old POs, "No PO yet" badge and banner, source Excel attached to cards, Report rejected delivery, public delivery calendar + menu. Consolidated everything into one install script.</td></tr>
+  <tr><td>Next</td><td>Dry run of the install script on a fresh staging copy → production run → team guide.</td></tr>
+</table>
+
+<h2>What the app contains</h2>
+<table>
+  <tr><th>Menu</th><th>What it does</th></tr>
+  <tr><td>Goods Receipt</td><td>Kanban by status: Expected · Partly booked · Done · Rejected. Sorted by last change. Badges: Overdue, This week, defective, No PO yet. Progress bar, open pieces, kit parts, file count.</td></tr>
+  <tr><td>Card form</td><td>Tiles (Ordered, Booked, Open, Defective, Files), size × colour table with clickable bookings, tabs: Delivery schedule, Files (upload + preview), Defects, Notes and rejection, Order lines, Receipts, Quality. Chatter.</td></tr>
+  <tr><td>Upcoming deliveries</td><td>Planned delivery lines, opens in calendar; list grouped by month with totals. Overdue lines red.</td></tr>
+  <tr><td>Public calendar</td><td>Opens the public read-only calendar page in a new tab (no login, secret key, no prices). Auto-refresh every 10 minutes.</td></tr>
+  <tr><td>Import delivery overview</td><td>Supplier Excel/CSV → planned lines and cards. Links to POs by vendor reference. Attaches the Excel to each card. Changes are noted in the chatter. PDFs are not read.</td></tr>
+  <tr><td>Report rejected delivery</td><td>Supplier or PO, reason (Quality root causes), note, files → card moved to (or created in) Rejected with the files attached.</td></tr>
+  <tr><td>Configuration → Stages</td><td>Status names and order.</td></tr>
+</table>
+
+<h2>How the status moves</h2>
+<table>
+  <tr><th>Event</th><th>Effect on the card</th></tr>
+  <tr><td>PO confirmed</td><td>Card created in Expected (or an existing no-PO card with the same supplier order no. is linked).</td></tr>
+  <tr><td>Receipt from the PO validated</td><td>All goods lines fully received → Done; some received → Partly booked; nothing → Expected.</td></tr>
+  <tr><td>Card in Rejected</td><td>Never moved automatically.</td></tr>
+  <tr><td>Inventory adjustment</td><td>No effect (not linked to the PO).</td></tr>
+  <tr><td>Quality check fail</td><td>No status change; counts as Defective (failed quantity) and lowers Open.</td></tr>
+  <tr><td>Receipt with "No backorder" and less than ordered</td><td>Stays Partly booked (PO still expects the rest).</td></tr>
+</table>
+<p>Kits: the PO counts complete sets only; the card shows "Parts X / Y" from the component moves.</p>
+
+<h2>Technical</h2>
+<table>
+  <tr><th>Item</th><th>Technical name</th></tr>
+  <tr><td>Card</td><td><code>x_wareneingang</code> (stages <code>x_wareneingang_stage</code>)</td></tr>
+  <tr><td>Delivery schedule line</td><td><code>x_wareneingang_line</code></td></tr>
+  <tr><td>Excel upload</td><td><code>x_iq_delivery_upload</code> + server action "IQ Lieferübersicht verarbeiten"</td></tr>
+  <tr><td>Rejection report</td><td><code>x_iq_rejection_report</code> + server action "IQ Abgelehnte Lieferung melden"</td></tr>
+  <tr><td>Public page</td><td>Website server action "IQ Public delivery calendar", path <code>iq-delivery-calendar</code>, key in system parameter <code>iq.delivery_calendar_key</code></td></tr>
+  <tr><td>Automations</td><td>IQ Wareneingang: anlegen bei Bestellbestätigung · IQ Wareneingang: Status bei Buchung · IQ Wareneingang: Lieferanten-Bestellnr. von Bestellung · IQ Lieferung manuell: Karte zuordnen</td></tr>
+  <tr><td>Views</td><td>"IQ Wareneingang Kanban / Form / List / Search / Calendar", "IQ Delivery Line …", "IQ Delivery Upload …", "IQ Rejection Report …"</td></tr>
+</table>
+<p>Most numbers are non-stored computed fields (read live from PO, receipts, quality checks). Only <code>x_next_date</code> is stored (for sorting, filters and the calendar).</p>
+
+<h2>Rollout to production</h2>
+<div class="note">The app lives in the database, not in git. A push or merge to main does not carry it over. It is installed by running one script once.</div>
+<ol>
+  <li>Production backup in Odoo.sh.</li>
+  <li>Dry run on a fresh staging copy of production.</li>
+  <li>Developer mode → Settings → Technical → Scheduled Actions → New (Model: Contact, Active: off) → paste the whole <code>install_wareneingang.py</code> → Save → Run Manually once.</li>
+  <li>Reload. Check Settings → Technical → Logging, search "IQ" (card count and public calendar link).</li>
+  <li>Upload the current delivery overview Excel once (staging test data is not carried over).</li>
+  <li>Test: card on PO confirmation, status on receipt, files, rejection form, public link in a private window, DE/EN.</li>
+</ol>
+<p>The script is safe to run again (no deletions). It overwrites manual Studio edits to the "IQ …" views. The install script and the public calendar key are kept in <code>~/Documents/odoo-customizations/</code>, not in this public repo.</p>
+
+<h2>Open points</h2>
+<ul>
+  <li>PDF reading for delivery overviews: undecided (fixed rules per supplier, attach only, or AI).</li>
+  <li>Public page: Berlin time in "Updated", kit receipts as sets instead of parts.</li>
+  <li>Card name without duplicated supplier; hide the "No PO yet" banner on rejected cards.</li>
+  <li>"New" badge for recently confirmed POs (needs one non-stored field – approval pending).</li>
+  <li>Reason field in the rejection form needs Quality access rights for warehouse users.</li>
+  <li>P00072 card shows next delivery Nov 30 while the PO says Nov 5 – to check.</li>
+</ul>
+</main>
+</body>
+</html>
