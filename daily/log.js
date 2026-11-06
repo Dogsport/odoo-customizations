@@ -244,3 +244,13 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Install script reviewed for side effects, production backup taken, script run once. App live with cards for all POs, icon set in Studio. Docs page with code section published.",
     link: "odoo/wareneingaenge/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-06", area: "Shopify / Brevo", status: "Ready to send",
+    title: "MagDock voucher – eligibility check and voucher email",
+    summary: "72 offer buyers found in the order export (47 MFJ 4.0, 24 winter coat). Code MAGDOCK-INSIDER tested: only works for tagged customers. Brevo list MagDock Insider 2026 (50 recipients) plus personal Outlook email for 14 non-subscribers. Email in newsletter design ready, waiting for Patricia's OK.",
+    link: "shopify/magdock-voucher-2026/" },
+  { date: "2026-11-06", area: "Customer service", status: "Done",
+    title: "Return note for an order shipped abroad (GLS)",
+    summary: "Package insert on letterhead: the return service is not available for returns from abroad; customers write to mail@iq-dogsport.de and we arrange the return." }
+]);

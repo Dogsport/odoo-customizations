@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MagDock Voucher 2026 – Shopify &amp; Brevo</title>
+<style>
+  :root { --bg:#ffffff; --fg:#1f2328; --muted:#59636e; --line:#d1d9e0; --accent:#0969da; --box:#f6f8fa; --warn:#fff8c5; --warn-line:#d4a72c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d; --accent:#4493f8; --box:#151b23; --warn:#272115; --warn-line:#9e6a03; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  h2 { font-size: 1.3rem; margin: 36px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .meta { color: var(--muted); font-size: .92rem; margin-bottom: 20px; }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .95rem; display: block; overflow-x: auto; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--box); }
+  code { background: var(--box); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+  .note { background: var(--warn); border-left: 4px solid var(--warn-line); padding: 10px 14px; border-radius: 4px; margin: 14px 0; }
+  .status { display:inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--warn-line); background: var(--warn); font-size: .85rem; font-weight: 600; }
+  ul, ol { padding-left: 22px; }
+</style>
+</head>
+<body>
+<main>
+<p><a href="../../index.html">← Back to overview</a></p>
+<h1>MagDock Voucher 2026</h1>
+<div class="meta">Shopify · Shopify Flow · Brevo · Outlook · 2026-11-06 · Owner: Hamza Mohsin · <span class="status">Ready to send – waiting for Patricia's OK</span></div>
+
+<p>Buyers of the Winter Insider offer (Winterparka Unisex, Zip-off-Wintermantel Damen) and the MFJ 4.0 Damen Insider offer were promised a free IQ MagDock treat pouch with their next order. The MagDock is now in stock. This page documents how the voucher is protected, who is eligible, and how the voucher email is sent.</p>
+<p>No customer names or email addresses are stored on this page. The working lists stay local.</p>
+
+<h2>What was promised</h2>
+<table>
+  <tr><th>Offer</th><th>Order window</th><th>Code delivered at purchase?</th></tr>
+  <tr><td>Winter Insider (Winterparka Unisex, Zip-off-Wintermantel Damen)</td><td>16.10.–18.10.2026, 23:59</td><td>Yes – order confirmation shows a "Dein Insider-Geschenk" box with the code (Liquid, added 16.10.2026, handles <code>iq-winter-parka-unisex</code>, <code>iq-zipp-off-wintermantel-damen</code>, date limit 18.10.)</td></tr>
+  <tr><td>MFJ 4.0 Damen Insider</td><td>until 02.11.2026, 23:59</td><td>No – the order confirmation box was not extended to the MFJ handle, so these buyers only get the code by email now</td></tr>
+</table>
+
+<h2>Setup</h2>
+<table>
+  <tr><th>Part</th><th>Configuration</th></tr>
+  <tr><td>Shopify Flow "Tag magdock insider customers…"</td><td>Trigger: order created · condition: product handle · action: customer tags <code>magdock-insider</code> (+ <code>magdock-mfj40</code> for MFJ). Now inactive.</td></tr>
+  <tr><td>Shopify Flow "MagDock: remove tag on refunded winter item"</td><td>Trigger: refund created · removes <code>magdock-insider</code> for Winterparka / Wintermantel refunds. <strong>Gap:</strong> MFJ 4.0 handle <code>mfj-4-0-damen-wasserdichte-winterjacke-hundesport</code> still to be added.</td></tr>
+  <tr><td>Discount <code>MAGDOCK-INSIDER</code></td><td>Amount off product €35.90 on "IQ Futtertasche MagDock" · eligibility: customer segment "MagDock Insider" (tag) · once per order · one use per customer · not combinable · Online Store · 16.10.2026–31.03.2027.</td></tr>
+  <tr><td>Restriction test</td><td>Incognito checkout: code is accepted before an email is entered; after entering a non-eligible email Shopify removes it (total back to €35.90 + €5.90 shipping). Works as intended.</td></tr>
+</table>
+
+<h2>Who is eligible (from the order export 16.10.–06.11.2026)</h2>
+<table>
+  <tr><th>Group</th><th>Count</th><th>Action</th></tr>
+  <tr><td>MFJ 4.0 Damen buyers</td><td>47</td><td>Send the code (never received it)</td></tr>
+  <tr><td>Winter coat / parka buyers</td><td>24</td><td>Reminder: MagDock now available (code was in the order confirmation)</td></tr>
+  <tr><td>Already redeemed</td><td>2</td><td>No email</td></tr>
+  <tr><td>Fully refunded</td><td>1</td><td>No voucher</td></tr>
+  <tr><td>Partial refund – check if the jacket was returned</td><td>4</td><td>Check before sending</td></tr>
+  <tr><td>Dealers with the tag</td><td>2</td><td>Decision: Patricia</td></tr>
+  <tr><td>Ordered after the deadline but tagged</td><td>1</td><td>Decision: Patricia</td></tr>
+</table>
+<div class="note">The first customer export only contained the first 50 customers of the segment ("Current page"). The order export showed 72 campaign buyers. The MFJ product was also renamed to "IQ Multifunktionsjacke 4.0 Damen", so both titles had to be matched.</div>
+
+<h2>Consent and sending</h2>
+<ul>
+  <li>The tag is set by <strong>purchase</strong>, not by newsletter subscription. Shopify consent and Brevo consent are separate.</li>
+  <li>Buyers were compared with the recipients of both Insider newsletters (Brevo exports) and Shopify marketing consent.</li>
+  <li><strong>Brevo:</strong> list "MagDock Insider 2026" (#31) with 64 contacts → 50 recipients; 14 are blocklisted in Brevo and are skipped automatically.</li>
+  <li><strong>Outlook:</strong> the 14 non-subscribers get a short personal email (BCC) with voucher information only, no other advertising.</li>
+  <li>Before sending: remove the 2 redeemed customers and the late order from the list; Patricia decides on dealers, late order and shipping (€5.90 if only the MagDock is ordered).</li>
+</ul>
+
+<h2>Email</h2>
+<table>
+  <tr><th>Item</th><th>Value</th></tr>
+  <tr><td>Subject</td><td>Deine MagDock ist da – Dein Gutscheincode 🎁</td></tr>
+  <tr><td>Preview text</td><td>Dein Insider-Geschenk: IQ MagDock gratis mit Code MAGDOCK-INSIDER · Your free MagDock is here</td></tr>
+  <tr><td>Design</td><td>Same layout as the Insider / dealer newsletters (640px, DE first, English version below, VML buttons for Outlook)</td></tr>
+  <tr><td>Button DE</td><td><code>/discount/MAGDOCK-INSIDER?redirect=/products/iq-futtertasche-magdock</code> (code applied automatically)</td></tr>
+  <tr><td>Button EN</td><td><code>/discount/MAGDOCK-INSIDER?redirect=/en/products/iq-magdock-treat-pouch</code></td></tr>
+  <tr><td>Tracking</td><td><code>utm_campaign=2026-11_MagDock-Gutschein_DE_EN</code></td></tr>
+  <tr><td>Templates</td><td><a href="code/magdock_voucher_email_brevo.html">Brevo HTML</a> · <a href="code/magdock_voucher_email_outlook.txt">Outlook text</a></td></tr>
+</table>
+
+<h2>Open points</h2>
+<ol>
+  <li>Patricia: OK for the split (Brevo / Outlook), dealers, late order, shipping.</li>
+  <li>Check that the 22 buyers missing from the first export have the <code>magdock-insider</code> tag (otherwise the code does not work for them).</li>
+  <li>Add the MFJ 4.0 handle to the refund flow.</li>
+  <li>Check the 4 partial refunds.</li>
+  <li>Test email on phone and Outlook, then send.</li>
+</ol>
+
+<h2>For the next offer</h2>
+<ul>
+  <li>Add the voucher note to the order confirmation for every offer product from day one.</li>
+  <li>Add every offer product to the refund flow at the same time as the tag flow.</li>
+  <li>Always export customers with "All customers" and check the segment total.</li>
+</ul>
+</main>
+</body>
+</html>
