@@ -1472,36 +1472,120 @@ for we in wes:
 
 
 # =====================================================================================
-# 14. Public delivery calendar (no login, secret key)
+# 14. Warehouse & team calendar page (no Odoo login: link key + page password)
 # =====================================================================================
-CAL_KEY = '<KEY-REMOVED>'
+CAL_KEY = '<KEY-REMOVED>'        # only used if the parameter is empty
+CAL_PASSWORD = '<PASSWORD-REMOVED>'         # only used if the parameter is empty
 PAGE = r'''
 P = env['ir.config_parameter'].sudo()
 KEY = P.get_param('iq.delivery_calendar_key') or ''
+PW = P.get_param('iq.delivery_calendar_password') or ''
 params = request.params if request else {}
-if not KEY or params.get('key') != KEY:
+de = params.get('lang', 'de') != 'en'
+LOGO = 'https://iq-dogsport.de/cdn/shop/files/iq-dogogsport-logo-sw-White.png?v=1761656363&width=240'
+h = 2166136261
+for ch in (PW + '|' + KEY):
+    h = ((h ^ ord(ch)) * 16777619) % 4294967296
+h2 = 2166136261
+for ch in (KEY + '#' + PW):
+    h2 = ((h2 ^ ord(ch)) * 16777619) % 4294967296
+TOKEN = '%08x%08x' % (h, h2)
+authed = bool(PW) and request.httprequest.cookies.get('iq_cal') == TOKEN
+base = '?key=' + KEY + ('' if de else '&lang=en')
+TITLE = 'Lager- &amp; Teamkalender' if de else 'Warehouse &amp; team calendar'
+CSS = """
+:root{--bg:#f4f4f2;--card:#fff;--fg:#151515;--mut:#6b7280;--line:#e5e5e2;--red:#a51d1b;--soft:#fdecea}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:inherit}
+.top{background:#151515;color:#fff;border-bottom:4px solid var(--red)}
+.top .in{max-width:1400px;margin:0 auto;padding:14px 18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:14px}.brand img{height:38px;width:auto;display:block}
+.brand h1{font:800 20px/1.1 Arial,sans-serif;margin:0;letter-spacing:.2px}.brand p{margin:2px 0 0;color:#bdbdbd;font-size:12.5px}
+nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+nav a{padding:7px 12px;border:1px solid #3a3a3a;border-radius:6px;text-decoration:none;color:#fff;background:#222}
+nav a:hover{border-color:#fff}nav b{font-size:16px;margin:0 6px;min-width:140px;text-align:center}
+wrap,.wrap{display:block;max-width:1400px;margin:0 auto;padding:16px 18px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.kpi small{display:block;color:var(--mut);font:700 11px Arial;letter-spacing:1.2px;text-transform:uppercase}
+.kpi b{display:block;font:800 22px/1.2 Arial;margin-top:4px}.kpi span{color:var(--mut);font-size:12.5px}
+.kpi.red{border-color:#f3b4b0;background:var(--soft)}.kpi.red b{color:var(--red)}
+main{display:grid;grid-template-columns:1fr 330px;gap:16px}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) repeat(2,minmax(0,.55fr));background:var(--line);gap:1px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.dh{background:#ecece9;padding:7px;text-align:center;font:700 11px Arial;letter-spacing:1px;text-transform:uppercase;color:var(--mut)}
+.day{background:var(--card);min-height:112px;padding:5px}.day.we{background:#fafaf8}.day.out{background:#f7f7f5}.day.out .dn{color:#c4c4c0}
+.dn{font:700 12px Arial;margin-bottom:4px;display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center}
+.today{box-shadow:inset 0 0 0 2px var(--red)}.today .dn{background:var(--red);color:#fff;border-radius:50%}
+.ev{border-left:4px solid;background:#f4f4f2;border-radius:4px;padding:4px 6px;margin-bottom:4px;font-size:12px}
+.ev b{font-size:13px}.ev span{display:block;color:var(--mut);font-size:11px}.ev.od{background:var(--soft)}
+.ab{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#374151;margin-bottom:3px}
+.av{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;color:#fff;font:700 9px Arial;flex:none}
+aside{display:flex;flex-direction:column;gap:12px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.box h3{margin:0 0 8px;font:800 12px Arial;letter-spacing:1.2px;text-transform:uppercase}
+.box.red{border-color:#f3b4b0;background:var(--soft)}.box.red h3{color:var(--red)}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}
+.row span{min-width:0}.row small{display:block;color:var(--mut)}.row b{white-space:nowrap}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.row.total{border-top:2px solid var(--fg);font-weight:700}.mut{color:var(--mut)}.now{font-weight:700}
+.tag{display:inline-block;font:700 10px Arial;letter-spacing:.8px;text-transform:uppercase;background:var(--red);color:#fff;border-radius:3px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+.agenda{display:none}
+footer{max-width:1400px;margin:0 auto;padding:0 18px 20px;color:var(--mut);font-size:12px;display:flex;justify-content:space-between}
+@media(max-width:980px){main{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.grid{display:none}.agenda{display:block}.brand img{height:30px}.brand h1{font-size:17px}nav b{min-width:0}}
+.agenda .d{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.agenda .d h4{margin:0 0 6px;font:800 13px Arial}.agenda .d.today{box-shadow:inset 0 0 0 2px var(--red)}
+"""
+
+def page_head(t):
+    return ('<!doctype html><html lang="' + ('de' if de else 'en') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+            '<meta name="robots" content="noindex"><title>' + t + ' – IQ Dogsport</title><style>' + CSS + '</style>')
+
+if not KEY or params.get('key') != KEY or not PW:
     response = request.make_response('Not found', headers=[('Content-Type', 'text/plain; charset=utf-8')], status=404)
+elif params.get('logout'):
+    response = request.make_response('', headers=[('Location', base)], status=303)
+    response.delete_cookie('iq_cal')
+elif request.httprequest.method == 'POST' and params.get('pw') == PW:
+    response = request.make_response('', headers=[('Location', base + ('&m=' + params.get('m') if params.get('m') else ''))], status=303)
+    response.set_cookie('iq_cal', TOKEN, max_age=2592000, httponly=True, secure=True, samesite='Lax')
+elif not authed:
+    err = request.httprequest.method == 'POST'
+    lp = (page_head(TITLE) + '<style>.lg{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}'
+          '.lg form{background:#fff;border:1px solid var(--line);border-radius:10px;width:340px;max-width:100%;overflow:hidden}'
+          '.lg .hd{background:#151515;border-bottom:4px solid var(--red);padding:18px;text-align:center}.lg .hd img{height:44px}'
+          '.lg .bd{padding:22px}.lg h2{margin:0 0 4px;font:800 18px Arial}.lg p{margin:0 0 14px;color:var(--mut)}'
+          '.lg input{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:6px;font-size:15px;margin-bottom:10px}'
+          '.lg button{width:100%;padding:11px;border:0;border-radius:6px;background:var(--red);color:#fff;font:700 15px Arial;cursor:pointer}'
+          '.lg .e{color:var(--red);margin:10px 0 0;font-weight:700}</style></head><body><div class="lg"><form method="post" action="">'
+          '<div class="hd"><img src="' + LOGO + '" alt="IQ Dogsport"></div><div class="bd"><h2>' + TITLE + '</h2>'
+          '<p>' + ('Nur für das IQ Dogsport Team. Bitte Passwort eingeben.' if de else 'IQ Dogsport team only. Please enter the password.') + '</p>'
+          '<input type="hidden" name="csrf_token" value="' + request.csrf_token() + '"><input type="hidden" name="key" value="' + KEY + '">'
+          + ('' if de else '<input type="hidden" name="lang" value="en">')
+          + ('<input type="hidden" name="m" value="' + params.get('m') + '">' if params.get('m') else '')
+          + '<input type="password" name="pw" placeholder="' + ('Passwort' if de else 'Password') + '" autofocus autocomplete="current-password">'
+          + '<button>' + ('Anmelden' if de else 'Sign in') + '</button>'
+          + ('<p class="e">' + ('Falsches Passwort.' if de else 'Wrong password.') + '</p>' if err else '') + '</div></form></div></body></html>')
+    response = request.make_response(lp, headers=[('Content-Type', 'text/html; charset=utf-8'), ('X-Robots-Tag', 'noindex'), ('Cache-Control', 'no-store')])
 else:
-    de = params.get('lang', 'de') != 'en'
     L = {
-        'title': 'Anstehende Lieferungen' if de else 'Upcoming deliveries',
-        'sub': 'Was kommt wann ins Lager' if de else 'What arrives in the warehouse, and when',
-        'today': 'Heute' if de else 'Today',
-        'month_list': 'Lieferungen in diesem Monat' if de else 'Deliveries this month',
-        'by_sup': 'Stück pro Lieferant' if de else 'Pieces per supplier',
-        'total': 'Gesamt' if de else 'Total',
-        'deliv': 'Lieferungen' if de else 'deliveries',
-        'deliv1': 'Lieferung' if de else 'delivery',
-        'pcs': 'Stk.' if de else 'pcs.',
-        'overdue': 'Überfällig (noch nicht angekommen)' if de else 'Overdue (not arrived yet)',
-        'none': 'Keine Lieferungen in diesem Monat.' if de else 'No deliveries this month.',
-        'po': 'Bestellung' if de else 'PO',
-        'plan': 'Geplant' if de else 'Planned',
-        'upd': 'Stand' if de else 'Updated',
+        'sub': 'Lieferungen ins Lager und Abwesenheiten im Team' if de else 'Deliveries to the warehouse and team absences',
+        'today': 'Heute' if de else 'Today', 'total': 'Gesamt' if de else 'Total',
+        'deliv': 'Lieferungen' if de else 'deliveries', 'deliv1': 'Lieferung' if de else 'delivery', 'pcs': 'Stk.' if de else 'pcs.',
+        'k_today': 'Heute erwartet' if de else 'Expected today', 'k_month': 'Diesen Monat' if de else 'This month',
+        'k_od': 'Überfällig' if de else 'Overdue', 'k_abs': 'Heute abwesend' if de else 'Absent today',
+        'nobody': 'niemand' if de else 'nobody', 'none_today': 'keine' if de else 'none',
+        'overdue': 'Überfällig – noch nicht angekommen' if de else 'Overdue – not arrived yet',
+        'month_list': 'Lieferungen im ' if de else 'Deliveries in ', 'by_sup': 'Stück pro Lieferant' if de else 'Pieces per supplier',
+        'abs': 'Abwesend im ' if de else 'Absent in ', 'noabs': 'Niemand abwesend.' if de else 'Nobody absent.',
+        'nodel': 'Keine Lieferungen.' if de else 'No deliveries.', 'po': 'Bestellung' if de else 'PO', 'plan': 'Geplant' if de else 'Planned',
+        'away': 'abwesend' if de else 'absent', 'upd': 'Stand' if de else 'Updated', 'logout': 'Abmelden' if de else 'Sign out',
+        'now': 'jetzt' if de else 'now',
     }
     MONTHS = (['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'] if de else
               ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'])
     DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] if de else ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    LDAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'] if de else ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     esc = lambda s: (s or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
     num = lambda q: '{:,.0f}'.format(q or 0).replace(',', '.' if de else ',')
     today = datetime.date.today()
@@ -1518,7 +1602,6 @@ else:
     gstart = first - datetime.timedelta(days=first.weekday())
     gend = last + datetime.timedelta(days=6 - last.weekday())
 
-    # ---------- collect events
     ev = []
     Line = env['x_wareneingang_line'].sudo()
     WE = env['x_wareneingang'].sudo()
@@ -1542,8 +1625,8 @@ else:
             prod += ' +' + str(len(names) - 1)
         ev.append({'d': p.scheduled_date.date() if p.scheduled_date else today, 'sup': p.partner_id.commercial_partner_id.name or '',
                    'prod': prod, 'ship': '', 'qty': sum(moves.mapped('product_uom_qty')), 'ref': p.purchase_id.name, 'kind': 'po'})
-
     ev = sorted(ev, key=lambda e: e['d'])
+
     COLORS = ['#2563eb', '#db2777', '#059669', '#d97706', '#7c3aed', '#0891b2', '#dc2626', '#65a30d']
     sups = []
     for e in ev:
@@ -1551,41 +1634,100 @@ else:
             sups.append(e['sup'])
     col = lambda s: COLORS[sups.index(s) % len(COLORS)] if s in sups else '#6b7280'
 
+    absn = []
+    people = []
+    for lv in env['hr.leave'].sudo().search([('state', '=', 'validate'), ('request_date_from', '<=', max(gend, today)), ('request_date_to', '>=', min(gstart, today))], order='request_date_from asc'):
+        parts = (lv.employee_id.name or '').split()
+        nm = parts[0] + (' ' + parts[-1][0] + '.' if len(parts) > 1 else '') if parts else ''
+        ini = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else '')).upper() if parts else '?'
+        if nm not in people:
+            people.append(nm)
+        absn.append({'n': nm, 'i': ini, 'a': lv.request_date_from, 'b': lv.request_date_to or lv.request_date_from})
+    PCOL = ['#475569', '#7c3aed', '#0f766e', '#b45309', '#be185d', '#1d4ed8', '#4d7c0f', '#9f1239']
+    pcol = lambda n: PCOL[people.index(n) % len(PCOL)] if n in people else '#475569'
+    av = lambda a: '<i class="av" style="background:' + pcol(a['n']) + '">' + esc(a['i']) + '</i>'
+
     def link(d):
         return '?key=' + KEY + '&amp;m=' + d.strftime('%Y-%m') + ('' if de else '&amp;lang=en')
 
-    # ---------- calendar grid
+    def evhtml(e, d):
+        od = ' od' if d < today else ''
+        return ('<div class="ev' + od + '" style="border-left-color:' + col(e['sup']) + '" title="' + esc(e['sup'] + ' · ' + e['prod']) + '">'
+                + '<b>' + num(e['qty']) + '</b> ' + esc(e['prod']) + '<span>' + esc(e['sup']) + (' · ' + esc(e['ship']) if e['ship'] else '')
+                + (' · ' + esc(e['ref']) if e['ref'] else '') + '</span></div>')
+
+    def abhtml(d):
+        out = ''
+        if d.weekday() < 5:
+            for a in absn:
+                if a['a'] <= d <= a['b']:
+                    out += '<div class="ab">' + av(a) + esc(a['n']) + '</div>'
+        return out
+
+    # KPIs
+    tday = [x for x in ev if x['d'] == today]
+    mev = [x for x in ev if first <= x['d'] <= last]
+    odl = [x for x in ev if x['d'] < today]
+    absnow = [a for a in absn if a['a'] <= today <= a['b'] and today.weekday() < 5]
+    k = ['<div class="kpis">',
+         '<div class="kpi"><small>' + L['k_today'] + '</small><b>' + (num(sum(x['qty'] for x in tday)) + ' ' + L['pcs'] if tday else L['none_today']) + '</b><span>' + str(len(tday)) + ' ' + (L['deliv1'] if len(tday) == 1 else L['deliv']) + '</span></div>',
+         '<div class="kpi"><small>' + L['k_month'] + ' · ' + MONTHS[m - 1] + '</small><b>' + num(sum(x['qty'] for x in mev)) + ' ' + L['pcs'] + '</b><span>' + str(len(mev)) + ' ' + (L['deliv1'] if len(mev) == 1 else L['deliv']) + '</span></div>',
+         '<div class="kpi' + (' red' if odl else '') + '"><small>' + L['k_od'] + '</small><b>' + str(len(odl)) + '</b><span>' + num(sum(x['qty'] for x in odl)) + ' ' + L['pcs'] + '</span></div>',
+         '<div class="kpi"><small>' + L['k_abs'] + '</small><b>' + str(len(absnow)) + '</b><span>' + (', '.join([esc(a['n']) for a in absnow]) or L['nobody']) + '</span></div>',
+         '</div>']
+
+    # grid
     g = ['<div class="grid">']
     for dn in DAYS:
         g.append('<div class="dh">' + dn + '</div>')
     d = gstart
     while d <= gend:
-        cls = 'day' + (' out' if d.month != m else '') + (' today' if d == today else '')
-        g.append('<div class="' + cls + '"><div class="dn">' + str(d.day) + '</div>')
+        cls = 'day' + (' we' if d.weekday() >= 5 else '') + (' out' if d.month != m else '') + (' today' if d == today else '')
+        g.append('<div class="' + cls + '"><div class="dn">' + str(d.day) + '</div>' + abhtml(d))
         for e in [x for x in ev if x['d'] == d]:
-            od = ' od' if d < today else ''
-            g.append('<div class="ev' + od + '" style="border-left-color:' + col(e['sup']) + '" title="' + esc(e['sup'] + ' · ' + e['prod']) + '">'
-                     + '<b>' + num(e['qty']) + '</b> ' + esc(e['prod']) + '<span>' + esc(e['sup']) + (' · ' + esc(e['ship']) if e['ship'] else '')
-                     + (' · ' + esc(e['ref']) if e['ref'] else '') + '</span></div>')
+            g.append(evhtml(e, d))
         g.append('</div>')
         d = d + datetime.timedelta(days=1)
     g.append('</div>')
 
-    # ---------- side panel
-    mev = [x for x in ev if first <= x['d'] <= last]
+    # agenda (phones)
+    ag = ['<div class="agenda">']
+    d = first
+    anyday = False
+    while d <= last:
+        evs = [x for x in ev if x['d'] == d]
+        abs_ = abhtml(d)
+        if evs or abs_ or d == today:
+            anyday = True
+            ag.append('<div class="d' + (' today' if d == today else '') + '"><h4>' + LDAYS[d.weekday()] + ', ' + d.strftime('%d.%m.') + (' <span class="tag">' + L['today'] + '</span>' if d == today else '') + '</h4>'
+                      + abs_ + ''.join([evhtml(e, d) for e in evs]) + ('' if (evs or abs_) else '<span class="mut">' + L['nodel'] + '</span>') + '</div>')
+        d = d + datetime.timedelta(days=1)
+    if not anyday:
+        ag.append('<p class="mut">' + L['nodel'] + '</p>')
+    ag.append('</div>')
+
+    # side
     s = ['<aside>']
-    odl = [x for x in ev if x['d'] < today]
+    cur = [a for a in absn if a['a'] <= last and a['b'] >= first]
+    s.append('<div class="box"><h3>' + L['abs'] + MONTHS[m - 1] + '</h3>')
+    if not cur:
+        s.append('<p class="mut" style="margin:0">' + L['noabs'] + '</p>')
+    for a in cur:
+        isnow = a['a'] <= today <= a['b']
+        s.append('<div class="row' + (' now' if isnow else '') + '"><span>' + av(a) + ' ' + esc(a['n']) + (' <span class="tag">' + L['now'] + '</span>' if isnow else '') + '</span><b>'
+                 + a['a'].strftime('%d.%m.') + (' &ndash; ' + a['b'].strftime('%d.%m.') if a['b'] != a['a'] else '') + '</b></div>')
+    s.append('</div>')
     if odl:
         s.append('<div class="box red"><h3>' + L['overdue'] + '</h3>')
         for e in odl:
-            s.append('<div class="row"><span>' + e['d'].strftime('%d.%m.') + ' ' + esc(e['prod']) + '<small>' + esc(e['sup']) + '</small></span><b>' + num(e['qty']) + '</b></div>')
+            s.append('<div class="row"><span>' + e['d'].strftime('%d.%m.') + ' ' + esc(e['prod']) + '<small>' + esc(e['sup']) + (' · ' + esc(e['ref']) if e['ref'] else '') + '</small></span><b>' + num(e['qty']) + '</b></div>')
         s.append('</div>')
-    s.append('<div class="box"><h3>' + L['month_list'] + '</h3>')
+    s.append('<div class="box"><h3>' + L['month_list'] + MONTHS[m - 1] + '</h3>')
     if not mev:
-        s.append('<p class="muted">' + L['none'] + '</p>')
+        s.append('<p class="mut" style="margin:0">' + L['nodel'] + '</p>')
     for e in mev:
         tag = L['po'] if e['kind'] == 'po' else L['plan']
-        s.append('<div class="row"><span><i style="background:' + col(e['sup']) + '"></i>' + e['d'].strftime('%d.%m.') + ' ' + esc(e['prod'])
+        s.append('<div class="row"><span><i class="dot" style="background:' + col(e['sup']) + '"></i>' + e['d'].strftime('%d.%m.') + ' ' + esc(e['prod'])
                  + '<small>' + esc(e['sup']) + (' · ' + esc(e['ship']) if e['ship'] else '') + ' · ' + tag + (' ' + esc(e['ref']) if e['ref'] else '') + '</small></span><b>' + num(e['qty']) + '</b></div>')
     s.append('</div>')
     if mev:
@@ -1595,42 +1737,26 @@ else:
             tot[e['sup']] = tot.get(e['sup'], 0) + e['qty']
             cnt[e['sup']] = cnt.get(e['sup'], 0) + 1
         s.append('<div class="box"><h3>' + L['by_sup'] + '</h3>')
-        for k in sorted(tot, key=lambda k: -tot[k]):
-            s.append('<div class="row"><span><i style="background:' + col(k) + '"></i>' + esc(k) + '<small>' + str(cnt[k]) + ' ' + (L['deliv1'] if cnt[k] == 1 else L['deliv']) + '</small></span><b>' + num(tot[k]) + '</b></div>')
-        s.append('<div class="row total"><span>' + L['total'] + '<small>' + str(len(mev)) + ' ' + L['deliv'] + '</small></span><b>' + num(sum(tot.values())) + ' ' + L['pcs'] + '</b></div></div>')
+        for kk in sorted(tot, key=lambda kk: -tot[kk]):
+            s.append('<div class="row"><span><i class="dot" style="background:' + col(kk) + '"></i>' + esc(kk) + '<small>' + str(cnt[kk]) + ' ' + (L['deliv1'] if cnt[kk] == 1 else L['deliv']) + '</small></span><b>' + num(tot[kk]) + '</b></div>')
+        s.append('<div class="row total"><span>' + L['total'] + '</span><b>' + num(sum(tot.values())) + ' ' + L['pcs'] + '</b></div></div>')
     s.append('</aside>')
 
     langlink = ('?key=' + KEY + '&amp;m=' + first.strftime('%Y-%m') + '&amp;lang=en') if de else ('?key=' + KEY + '&amp;m=' + first.strftime('%Y-%m'))
-    html = """<!doctype html><html lang=""" + '"' + ('de' if de else 'en') + '"' + """><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="refresh" content="600">
-<title>""" + L['title'] + """ – IQ Dogsport</title><style>
-:root{--bg:#f6f7f9;--card:#fff;--fg:#1f2328;--mut:#6b7280;--line:#e5e7eb;--acc:#714b67;--red:#dc2626}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--line)}
-h1{font-size:20px;margin:0}header p{margin:2px 0 0;color:var(--mut)}nav{display:flex;gap:6px;align-items:center}
-nav a{padding:6px 12px;border:1px solid var(--line);border-radius:6px;text-decoration:none;color:var(--fg);background:#fff}nav b{font-size:17px;margin:0 8px;min-width:150px;text-align:center}
-main{display:grid;grid-template-columns:1fr 340px;gap:16px;padding:16px}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);background:var(--line);gap:1px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.dh{background:#f0f1f3;padding:6px;text-align:center;font-weight:600;font-size:12px;color:var(--mut)}
-.day{background:var(--card);min-height:110px;padding:4px}.day.out{background:#fafafa}.day.out .dn{color:#c0c4cc}
-.dn{font-weight:600;font-size:12px;margin-bottom:3px}.today .dn{background:var(--red);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
-.ev{border-left:4px solid;background:#f3f4f6;border-radius:4px;padding:3px 5px;margin-bottom:3px;font-size:12px}.ev span{display:block;color:var(--mut);font-size:11px}
-.ev.od{background:#fee2e2}aside{display:flex;flex-direction:column;gap:12px}
-.box{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}.box h3{margin:0 0 8px;font-size:14px}.box.red{border-color:#fca5a5;background:#fef2f2}.box.red h3{color:var(--red)}
-.row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}
-.row span{min-width:0}.row small{display:block;color:var(--mut)}.row b{white-space:nowrap}.row i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
-.row.total{border-top:2px solid var(--fg);font-weight:700}.muted{color:var(--mut)}footer{color:var(--mut);font-size:12px;padding:0 18px 16px}
-@media(max-width:900px){main{grid-template-columns:1fr}.day{min-height:70px}.ev span{display:none}}
-</style></head><body><header><div><h1>""" + L['title'] + """</h1><p>IQ Dogsport · """ + L['sub'] + """</p></div>
-<nav><a href=""" + '"' + link(prv) + '"' + """>&larr;</a><b>""" + MONTHS[m - 1] + ' ' + str(y) + """</b><a href=""" + '"' + link(nxt) + '"' + """>&rarr;</a>
-<a href=""" + '"' + link(today) + '"' + """>""" + L['today'] + """</a><a href=""" + '"' + langlink + '"' + """>""" + ('EN' if de else 'DE') + """</a></nav></header>
-<main>""" + ''.join(g) + ''.join(s) + """</main><footer>""" + L['upd'] + ': ' + datetime.datetime.now().strftime('%d.%m.%Y %H:%M') + """ UTC</footer></body></html>"""
-    response = request.make_response(html, headers=[('Content-Type', 'text/html; charset=utf-8'), ('X-Robots-Tag', 'noindex')])
+    html = (page_head(TITLE) + '<meta http-equiv="refresh" content="600"></head><body>'
+            + '<div class="top"><div class="in"><div class="brand"><img src="' + LOGO + '" alt="IQ Dogsport"><div><h1>' + TITLE + '</h1><p>' + L['sub'] + '</p></div></div>'
+            + '<nav><a href="' + link(prv) + '">&larr;</a><b>' + MONTHS[m - 1] + ' ' + str(y) + '</b><a href="' + link(nxt) + '">&rarr;</a>'
+            + '<a href="' + link(today) + '">' + L['today'] + '</a><a href="' + langlink + '">' + ('EN' if de else 'DE') + '</a></nav></div></div>'
+            + '<div class="wrap">' + ''.join(k) + '<main><div>' + ''.join(g) + ''.join(ag) + '</div>' + ''.join(s) + '</main></div>'
+            + '<footer><span>' + L['upd'] + ': ' + datetime.datetime.now().strftime('%d.%m.%Y %H:%M') + ' UTC</span><a href="?key=' + KEY + '&amp;logout=1">' + L['logout'] + '</a></footer></body></html>')
+    response = request.make_response(html, headers=[('Content-Type', 'text/html; charset=utf-8'), ('X-Robots-Tag', 'noindex'), ('Cache-Control', 'no-store')])
 '''
 
 CP = env['ir.config_parameter'].sudo()
 if not CP.get_param('iq.delivery_calendar_key'):
     CP.set_param('iq.delivery_calendar_key', CAL_KEY)
+if not CP.get_param('iq.delivery_calendar_password'):
+    CP.set_param('iq.delivery_calendar_password', CAL_PASSWORD)
 if 'website_published' in SA._fields:
     cal_sa = SA.search([('name', '=', 'IQ Public delivery calendar')], limit=1)
     gfield = 'group_ids' if 'group_ids' in SA._fields else 'groups_id'
@@ -1644,20 +1770,20 @@ if 'website_published' in SA._fields:
     log('IQ public calendar link: ' + (cal_sa.website_url or '') + '?key=' + CP.get_param('iq.delivery_calendar_key'))
     UrlAct = env['ir.actions.act_url'].sudo()
     cal_url = '/website/action/' + (cal_sa.website_path or str(cal_sa.id)) + '?key=' + CP.get_param('iq.delivery_calendar_key')
-    ua = UrlAct.search([('name', 'in', ['Public calendar', 'Öffentlicher Lieferkalender'])], limit=1)
+    ua = UrlAct.search([('name', 'in', ['Warehouse & team calendar', 'Lager- & Teamkalender', 'Public calendar', 'Öffentlicher Lieferkalender'])], limit=1)
     if ua:
         ua.write({'url': cal_url, 'target': 'new'})
     else:
-        ua = UrlAct.create({'name': 'Public calendar', 'url': cal_url, 'target': 'new'})
-    ua.update_field_translations('name', {'en_US': 'Public calendar', 'de_DE': 'Öffentlicher Lieferkalender'})
+        ua = UrlAct.create({'name': 'Warehouse & team calendar', 'url': cal_url, 'target': 'new'})
+    ua.update_field_translations('name', {'en_US': 'Warehouse & team calendar', 'de_DE': 'Lager- & Teamkalender'})
     uref = 'ir.actions.act_url,' + str(ua.id)
     um = Menu.with_context(active_test=False).search([('action', '=', uref)], limit=1)
-    uvals = {'name': 'Public calendar', 'parent_id': root.id, 'action': uref, 'sequence': 12, 'active': True}
+    uvals = {'name': 'Warehouse & team calendar', 'parent_id': root.id, 'action': uref, 'sequence': 12, 'active': True}
     if um:
         um.write(uvals)
     else:
         um = Menu.create(uvals)
-    um.update_field_translations('name', {'en_US': 'Public calendar', 'de_DE': 'Öffentlicher Lieferkalender'})
+    um.update_field_translations('name', {'en_US': 'Warehouse & team calendar', 'de_DE': 'Lager- & Teamkalender'})
 else:
     log('IQ public calendar skipped: Website app not installed')
 
