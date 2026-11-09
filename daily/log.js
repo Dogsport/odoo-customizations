@@ -272,3 +272,31 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     title: "P00053 receipt booked and Shopify stock fixed",
     summary: "Damen black + grey booked without the defective pieces from the QC report; rest on backorder. Holfelder invoice checked against the receipt. Black jacket stock did not sync – fixed with a manual stock export (reported to Emipro)." }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-09", area: "Odoo", status: "Live",
+    title: "Calendar: My hours & vacation (employee PIN)",
+    summary: "Employees log in on the warehouse calendar with their attendance PIN and see their overtime balance, how it is made up, vacation left and all their requests with status. Open requests are shown in orange on the shared calendar.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-09", area: "Odoo", status: "Live",
+    title: "Calendar: Team overview for managers",
+    summary: "Shared manager PIN opens one page with open requests to approve, overtime and vacation per employee, sick days and absences for the next 30 days. Every number links to the Odoo record.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-09", area: "Odoo", status: "Done",
+    title: "Maintenance guide for the Goods Receipts app",
+    summary: "Guide with where each part lives in Odoo, the safe way to change it, troubleshooting and the full code. Master install script brought in line with live." }
+]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-09", area: "Odoo", status: "Live",
+    title: "Calendar: My hours & vacation (employee PIN)",
+    summary: "Employees log in on the warehouse calendar with their attendance PIN and see their overtime balance, how it is made up, vacation left and all their requests with status. Open requests are shown in orange on the shared calendar.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-09", area: "Odoo", status: "Live",
+    title: "Calendar: Team overview for managers",
+    summary: "Shared manager PIN opens one page with open requests to approve, overtime and vacation per employee, sick days and absences for the next 30 days. Every number links to the Odoo record.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-09", area: "Odoo", status: "Done",
+    title: "Maintenance guide for the Goods Receipts app",
+    summary: "Guide with where each part lives in Odoo, the safe way to change it, troubleshooting and the full code. Master install script brought in line with live." }
+]);
