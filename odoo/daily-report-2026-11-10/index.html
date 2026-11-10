@@ -1,0 +1,266 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daily report 10.11.2026</title><style>
+:root{--bg:#fff;--fg:#1f2937;--muted:#6b7280;--line:#e5e7eb;--accent:#714B67;--code:#f6f8fa}
+@media (prefers-color-scheme:dark){:root{--bg:#111827;--fg:#e5e7eb;--muted:#9ca3af;--line:#374151;--accent:#c79bbd;--code:#1f2937}}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.55;max-width:920px;margin:24px auto;padding:0 16px}
+h1{color:var(--accent);font-size:1.6rem}h2{color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:4px;margin-top:32px}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--accent);color:#fff}code,pre{background:var(--code);border-radius:4px}code{padding:1px 4px;font-size:.9em}pre{padding:12px;overflow-x:auto;font-size:.85em}
+blockquote{border-left:4px solid var(--accent);margin:0;padding:4px 12px;color:var(--muted)}a{color:var(--accent)}</style></head><body><p><a href="../../index.html">← Odoo customizations</a></p><h1>Daily report – 10.11.2026</h1>
+<p><strong>Prepared by:</strong> Hamza Mohsin · <strong>Status:</strong> 2 topics done, 2 waiting for a decision</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Topic</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>MFJ 4.0 Unisex grey received and booked (P00053, WH1/IN/00086)</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Quality reports for Holfelder (Unisex new, Women finalised)</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Defective jackets: not received in Odoo, Holfelder collects them</td>
+<td>⏳ Waiting for Holfelder (2× Unisex S, 1× L)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Two credit notes for one refund (#IQD-96451) – root cause found</td>
+<td>⏳ Decision Patricia</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Posted invoices may not be changed + lock date 31.10.2026</td>
+<td>⏳ Decision Patricia (Option 1/2) + her OK for the lock date</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>1. MFJ 4.0 Unisex grey – received and booked</h2>
+<p>Holfelder delivery note <strong>2026-344819</strong> (05.11.2026), item SP1007176 ("Herren" at Holfelder = <strong>MFJ 4.0 Unisex grau</strong> in Odoo, <code>IQD-EKL-MFJ4.GR.*</code>).</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>S</th>
+<th>M</th>
+<th>L</th>
+<th>XL</th>
+<th>2XL</th>
+<th>3XL</th>
+<th>4XL</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ordered (P00053)</td>
+<td>40</td>
+<td>100</td>
+<td>135</td>
+<td>125</td>
+<td>50</td>
+<td>30</td>
+<td>20</td>
+<td>500</td>
+</tr>
+<tr>
+<td>Delivery note = counted</td>
+<td>40</td>
+<td>100</td>
+<td>134</td>
+<td>125</td>
+<td>50</td>
+<td>30</td>
+<td>20</td>
+<td><strong>499</strong></td>
+</tr>
+<tr>
+<td>Checked (QC)</td>
+<td>5</td>
+<td>7</td>
+<td>8</td>
+<td>6</td>
+<td>4</td>
+<td>3</td>
+<td>2</td>
+<td><strong>35</strong></td>
+</tr>
+<tr>
+<td>Defective</td>
+<td>2</td>
+<td>–</td>
+<td>–</td>
+<td>–</td>
+<td>–</td>
+<td>–</td>
+<td>–</td>
+<td><strong>2</strong></td>
+</tr>
+<tr>
+<td><strong>Booked into stock (WH1/IN/00086)</strong></td>
+<td><strong>38</strong></td>
+<td><strong>100</strong></td>
+<td><strong>134</strong></td>
+<td><strong>125</strong></td>
+<td><strong>50</strong></td>
+<td><strong>30</strong></td>
+<td><strong>20</strong></td>
+<td><strong>497</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Checked in Odoo: Unisex jacket <strong>On hand 497</strong> ✅.</li>
+<li>Quality checks on WH1/IN/00086: <strong>Quantity Tested</strong> = number checked per size, then <strong>Pass</strong>.</li>
+<li>New backorder <strong>WH1/IN/00089</strong> = only the 10 defective jackets (2× Unisex S + 8× Women).</li>
+<li>Also received: <strong>704 zipper puller sets</strong> (not part of the jacket QC).</li>
+</ul>
+<p><strong>How the booking was done</strong>
+1. WH1/IN/00086 → S line Quantity <strong>38</strong> (not 40), all other sizes as delivered, Women lines 0.
+2. Quality checks: Quantity Tested, then <strong>Pass</strong> for all sizes.
+3. <strong>Validate → Create Backorder.</strong></p>
+<p><strong>Learned about the Quality "Fail" button</strong> (control point "QC Wareneingang", type quantity):
+- Fail opens a window <strong>Quantity Failed</strong> (pre-filled with the whole line) + <strong>Failure Location</strong> (<code>Wareneingang-Beanstandung</code>).
+- Failed pieces are still <strong>received</strong> – only into the complaint location. They count as received on the PO and as stock value.
+- So Fail is <strong>not</strong> used for jackets the supplier takes back or removes from the invoice (see 3).</p>
+<p><strong>Seen in Shopify (no action yet)</strong>
+- The Unisex product is still <strong>Draft</strong> in Shopify (Odoo: "Unpublished"): 497 in stock, but not for sale yet.
+- The Women product has <strong>16 variants</strong> – correct: grey 8 sizes + black 8 sizes (merged product).</p>
+<h2>2. Quality reports for Holfelder</h2>
+<p>All in IQ brand, English and German, stored in <a href="../p00053-holfelder-mfj4-receipt-2026-10-31/files/">P00053 files</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Report</th>
+<th>Delivery note</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MFJ 4.0 Women (DE/EN)</td>
+<td>2026-344396</td>
+<td>1,000 received, 112 checked, <strong>8 not acceptable for sale</strong> (grey M 1, XL 2; black XS, M, L, 3XL, 4XL 1 each); photos of each defect next to its tag; 7 photos of workmanship issues that are going into sale</td>
+</tr>
+<tr>
+<td>MFJ 4.0 Unisex grey (DE/EN)</td>
+<td>2026-344819</td>
+<td>499 received, 35 checked, <strong>2 not acceptable for sale</strong> (S: left sleeve seams; S: small hole at the pocket flap corner), photos</td>
+</tr>
+</tbody>
+</table>
+<p>Changes to the Women report on 06.11.: only real defect photos, no photo used twice, black jackets with the new printed tags, black L added (lower pockets have no lining pocket bags).</p>
+<h2>3. Defective jackets – not received in Odoo</h2>
+<p><strong>Holfelder's answer:</strong> the 8 Women jackets were <strong>removed from the delivery</strong>, with a new order confirmation and invoice for the quantity actually delivered. Holfelder collects the complained jackets (UPS or in person) after our Unisex QC, all together, and may repair some.</p>
+<p><strong>Decision:</strong> jackets the supplier takes back and does not invoice are <strong>not received</strong> in Odoo.</p>
+<table>
+<thead>
+<tr>
+<th>Way</th>
+<th>Effect</th>
+<th>Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fail → Wareneingang-Beanstandung / Defektlager</td>
+<td>counted as received on P00053 and as stock value → does not match the corrected invoice</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>Remove the lines on the backorder</strong> (no receipt)</td>
+<td>P00053 shows them as not received = matches Holfelder's invoice; stock value stays correct</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Steps (WH1/IN/00089)</strong>
+1. Do <strong>not</strong> change the destination to Defektlager.
+2. Remove the 8 Women lines (bin icon) → Save.
+3. Unisex S (2): leave open until Holfelder answers (replacement → receive normally; credit note → remove the line).
+4. Document the rejection in the Goods Receipts app (<strong>Report rejected delivery</strong>) with the QC reports and photos.
+5. The 10 jackets stay set aside in the warehouse for collection.</p>
+<p><strong>Sent / to send to Holfelder:</strong> the Unisex QC report + 1× L delivered less (134 of 135) → please also take these out of the invoice.</p>
+<h2>4. Two credit notes for one refund – order #IQD-96451</h2>
+<p><strong>What we found</strong> (production, read-only checks in the Odoo shell):</p>
+<table>
+<thead>
+<tr>
+<th>Credit note</th>
+<th>Created</th>
+<th>By</th>
+<th>Reference</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RRE/2026/00955</td>
+<td>04.11. 08:58</td>
+<td>office user, by hand (support ticket 867)</td>
+<td>"Kundendienstticket Nr. 867"</td>
+<td>posted, in payment (PSP1/2026/02059, 129.90 €)</td>
+</tr>
+<tr>
+<td>RRE/2026/00990</td>
+<td>09.11. 13:47</td>
+<td><strong>scheduled action 102 "Import Shopify Payout Report"</strong> (runs as user Hamza Mohsin)</td>
+<td>"Partially Refunded from shopify"</td>
+<td>posted, not paid</td>
+</tr>
+</tbody>
+</table>
+<p>Shopify timeline: on 04.11. 09:04 the item was refunded <strong>in Shopify</strong> (108.90 € to Klarna + 21.00 € to the gift card = 129.90 €), six minutes after the manual credit note in Odoo. The Shopify webhook for that refund <strong>failed</strong> (queue line 84984, ODQ017431). On 09.11. the payout import found the refund in the payout, found <strong>no credit note linked to this Shopify refund</strong>, and created one. Connector log 37455: <em>"refund amount does not match"</em> (129.90 € credit note vs 108.90 € payout line; the 21.00 € went to the gift card).</p>
+<p><strong>Root cause:</strong> the refund was recorded twice – in Shopify <strong>and</strong> by hand in Odoo. The connector links credit notes to the <strong>Shopify refund ID</strong>; a manual credit note has no such link, so it cannot know they are the same.</p>
+<p><strong>Proposal (decision Patricia, November not yet reported):</strong>
+- Keep one credit note, cancel the other – if RRE/2026/00990 was not sent to the customer, cancel it with a chatter note.
+- Reconcile the payout line −108.90 € (statement line 16345, not reconciled) and the 21.00 € gift card part; the 129.90 € payment does not match the money movement.
+- <strong>Team rule:</strong> refund in <strong>Shopify only</strong> – the connector creates the Odoo credit note itself.
+- Optional: scheduled actions 102 and 117 run as user Hamza Mohsin, so everything they create shows that name.</p>
+<p><strong>Read-only checks used</strong></p>
+<pre><code class="language-python">[print(x.name, x.create_date, x.create_uid.name, x.state, x.payment_state, x.ref) for x in env['account.move'].search([('name', 'in', ['RRE/2026/00955', 'RRE/2026/00990'])])]
+[print(l.id, l.create_date, l.create_uid.name, l.write_date, l.write_uid.name, l.state, getattr(l.shopify_order_data_queue_id, 'created_by', '?'), l.shopify_order_data_queue_id.name) for l in env['shopify.order.data.queue.line.ept'].search([('name', 'ilike', '96451')])]
+[print(c.id, c.name, '|', c.user_id.name, '|', c.lastcall, '| active:', c.active) for c in env['ir.cron'].search([('name', 'ilike', 'shopify')])]
+[print(l.id, l.create_date, l.create_uid.name, (l.message or '')[:200]) for l in env['common.log.lines.ept'].search([('create_date', '&gt;=', '2026-11-09 12:40:00'), ('create_date', '&lt;=', '2026-11-09 12:55:00')])]
+[print(p.name, p.date, p.amount, p.journal_id.name, p.state) for p in env['account.move'].search([('name', '=', 'RRE/2026/00955')]).matched_payment_ids]
+[print(l.id, l.date, l.amount, l.journal_id.name, l.is_reconciled, l.payment_ref) for l in env['account.bank.statement.line'].search([('payment_ref', 'ilike', '96451')])]
+</code></pre>
+<p>(Times in the database are UTC; Berlin = +1 h.)</p>
+<p><strong>Check for other orders with the same problem</strong> (read-only):</p>
+<pre><code class="language-python">d = {}; [d.setdefault(m.reversed_entry_id.name or m.invoice_origin, []).append((m.name, str(m.create_date)[:16], m.create_uid.name, m.amount_total, m.payment_state)) for m in env['account.move'].search([('move_type', '=', 'out_refund'), ('state', '=', 'posted'), ('create_date', '&gt;=', '2026-10-01')])]; [print(k, v) for k, v in d.items() if len(v) &gt; 1]
+</code></pre>
+<h2>5. Posted invoices may not be changed + lock date</h2>
+<p><strong>Why</strong> (from Patricia, after the tax advisor meeting on 06.11.): posted entries must be unalterable – § 146 (4) AO / § 239 (3) HGB ("no eraser"), GoBD (lock posted entries, corrections only as new entries), §§ 14, 14c UStG and § 31 (5) UStDV (a sent invoice is a tax document; corrections only by credit note + new invoice). Example: a posted invoice was reset and re-posted after it had been reported (109.75 → 113.54 €), so Odoo no longer matched the tax office and the customer showed 3.79 € open.</p>
+<p><strong>What Patricia wants</strong>
+1. Only Anastasiia, Patricia and Hamza may <strong>post, reset to draft or cancel</strong> invoices.
+2. <strong>Lock Everything = 31.10.2026</strong> (Accounting → Accounting → Lock Dates). <strong>Never set the Hard Lock date</strong> – it cannot be undone. Exceptions only briefly "for me", with a reason.
+3. Set the lock date only after Patricia confirms the opening stock bookings are done.
+4. After every monthly package to the tax office, move the lock date to the end of that month.</p>
+<p><strong>Status</strong>
+- Done in production earlier: one office user changed from "Shopify Manager" to "Shopify User" (no more accounting administrator rights); the Office user has no accounting rights.
+- Automation rule built and tested in <strong>staging</strong>: only the 3 allowed users can post/reset/cancel; others get a message to write a chatter note. Shopify connector invoices are not affected. In staging this currently means office users can only <strong>save drafts</strong> (= Option 2).
+- <strong>Waiting for Patricia:</strong> Option 1 (office can post, but never reset/cancel) or Option 2 (office drafts only) · Florian's rights · terminal/API user · OK for the lock date.
+- Nothing changed in production for this today.</p>
+<hr />
+<h2>Open</h2>
+<ul>
+<li>[ ] WH1/IN/00089: remove the 8 Women lines; Unisex S (2) open until Holfelder answers</li>
+<li>[ ] Email Holfelder: Unisex QC report + 1× L missing → adjust invoice; collection of all 10 jackets</li>
+<li>[ ] Unisex QC report: confirm checked S = 4 or 5 (report says 35 in total)</li>
+<li>[ ] Goods Receipts app: Report rejected delivery for the 8 Women + 2 Unisex S</li>
+<li>[ ] Unisex product: publish in Shopify when it should go on sale</li>
+<li>[ ] #IQD-96451: Patricia decides which credit note stays; reconcile 108.90 € payout + 21.00 € gift card – before November is locked</li>
+<li>[ ] Tell the office team: refunds only in Shopify</li>
+<li>[ ] Posted-invoice restriction: Patricia's choice Option 1/2 → production + test with the office</li>
+<li>[ ] Lock Everything 31.10.2026 after Patricia's OK (no Hard Lock)</li>
+</ul>
+</body></html>

@@ -302,15 +302,20 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
 ]);
 
 window.IQ_LOG = (window.IQ_LOG || []).concat([
-  { date: "2026-11-09", area: "Odoo", status: "Live",
-    title: "Calendar: My hours & vacation (employee PIN)",
-    summary: "Employees log in on the warehouse calendar with their attendance PIN and see their overtime balance, how it is made up, vacation left and all their requests with status. Open requests are shown in orange on the shared calendar.",
-    link: "odoo/wareneingaenge/" },
-  { date: "2026-11-09", area: "Odoo", status: "Live",
-    title: "Calendar: Team overview for managers",
-    summary: "Shared manager PIN opens one page with open requests to approve, overtime and vacation per employee, sick days and absences for the next 30 days. Every number links to the Odoo record.",
-    link: "odoo/wareneingaenge/" },
-  { date: "2026-11-09", area: "Odoo", status: "Done",
-    title: "Maintenance guide for the Goods Receipts app",
-    summary: "Guide with where each part lives in Odoo, the safe way to change it, troubleshooting and the full code. Master install script brought in line with live." }
+  { date: "2026-11-10", area: "Odoo", status: "Done",
+    title: "MFJ 4.0 Unisex grey booked (P00053, WH1/IN/00086)",
+    summary: "499 delivered (L 134 of 135), 35 checked, 2 defective (S). 497 booked into stock. Backorder WH1/IN/00089 holds the 10 defective jackets; they are not received in Odoo because Holfelder removes them from the invoice and collects them.",
+    link: "odoo/daily-report-2026-11-10/" },
+  { date: "2026-11-10", area: "Odoo", status: "Done",
+    title: "Quality reports for Holfelder (Women + Unisex, DE/EN)",
+    summary: "IQ-brand reports with quantities, defects and photos: Women 8 not acceptable for sale, Unisex 2. Stored with P00053.",
+    link: "odoo/p00053-holfelder-mfj4-receipt-2026-10-31/" },
+  { date: "2026-11-10", area: "Odoo", status: "Open",
+    title: "Two credit notes for one refund (#IQD-96451)",
+    summary: "Refund done in Shopify and by hand in Odoo. The payout import (scheduled action 102) created a second credit note on 09.11. Decision for Patricia; team rule: refund in Shopify only.",
+    link: "odoo/daily-report-2026-11-10/" },
+  { date: "2026-11-10", area: "Odoo", status: "Open",
+    title: "Posted invoices locked + lock date 31.10.2026",
+    summary: "Legal background (GoBD, § 146 AO, § 14c UStG) and status: restriction tested in staging, waiting for Patricia's Option 1/2 and her OK for Lock Everything 31.10.2026 (no Hard Lock).",
+    link: "odoo/daily-report-2026-11-10/" }
 ]);

@@ -94,6 +94,17 @@ Black: after QC book **353 minus defective** the same way (reduce demand of the 
 > The 8 defective grey jackets are **still open in backorder WH1/IN/00081** (checked on the WH1/IN/00081 delivery slip, 03.11.). On P00053 the grey lines show 491 of 499 received.
 > Decide with Patricia/Florian: replacements from Holfelder (receive them on these backorder lines) or credit note (then set these lines to 0 and validate without backorder for them).
 
+## Unisex grey received 10.11.2026 (WH1/IN/00086) + defective jackets
+
+Delivery note 2026-344819: 499 Unisex grey (L 134 instead of 135). QC: 35 checked, 2 defective (S).
+**Booked 497** (S 38, M 100, L 134, XL 125, 2XL 50, 3XL 30, 4XL 20). Backorder **WH1/IN/00089** = the 10 defective jackets (2 Unisex S + 8 Women).
+
+Holfelder removed the 8 Women jackets from the delivery (new order confirmation + invoice) and collects all complained jackets together.
+Defective jackets are therefore **not received** in Odoo: remove the lines on WH1/IN/00089 (no Fail into Defektlager, which would count them as received and as stock value).
+
+Quality reports (DE/EN): [Women](files/IQ_Quality_Report_MFJ4_Women_Holfelder_DN2026-344396.pdf) · [Damen](files/IQ_Qualitaetsbericht_MFJ4_Damen_Holfelder_LS2026-344396.pdf) · [Unisex](files/IQ_Quality_Report_MFJ4_Unisex_grey_Holfelder_DN2026-344819.pdf) · [Unisex DE](files/IQ_Qualitaetsbericht_MFJ4_Unisex_grau_Holfelder_LS2026-344819.pdf).
+Full day: [daily report 10.11.2026](../daily-report-2026-11-10/).
+
 ## Open – Monday with Florian
 - ~~Book grey rest after QC~~ ✅ 03.11. (345 booked, 8 defective not booked)
 - Black Damen: book after QC (353 minus defective)
