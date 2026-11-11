@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sent invoices: Reset to Draft only for admins – IQ Dogsport</title>
+<style>
+  :root { --red:#b3261e; --ink:#1a1a1a; --muted:#555; --bg:#f3f2ef; --card:#fff; --line:#e3e1dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.55; }
+  header { background:#161616; color:#fff; padding:40px 0 34px; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+  .kicker { color:#f08c8c; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  header h1 { margin:8px 0 6px; font-size:30px; }
+  header p { margin:0; color:#ddd; }
+  .back { display:inline-block; margin:24px 0 0; color:var(--red); text-decoration:none; font-weight:600; }
+  main { padding:8px 0 60px; }
+  h2 { font-size:21px; margin:40px 0 14px; padding-top:10px; border-top:3px solid var(--red); display:inline-block; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  .meta { font-size:14px; color:var(--muted); margin-top:16px; }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin:14px 0; }
+  .box.note { border-left:4px solid var(--red); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); margin:12px 0; font-size:14px; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#faf9f7; font-weight:600; }
+  code { font-family:SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; background:#efedea; padding:1px 5px; border-radius:3px; }
+  pre { background:#1e1e1e; color:#eaeaea; padding:14px 16px; border-radius:6px; overflow-x:auto; font-size:13px; line-height:1.5; }
+  pre code { background:none; padding:0; color:inherit; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--red); }
+  ul, ol { padding-left:22px; }
+  li { margin:4px 0; }
+  .ok { color:#1b7a3a; font-weight:600; }
+  .wait { color:#a15c00; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="kicker">IQ Dogsport GmbH · Internal documentation</div>
+    <h1>Sent invoices: “Reset to Draft” only for admins</h1>
+    <p>User rights, group, view and automation rule so that invoices sent to the customer can no longer be changed.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <a class="back" href="../">← Odoo customizations</a>
+  <div class="meta">Prepared by: Hamza Mohsin · Done: 10.11.2026 · <span class="tag">Live in production</span> · Asana: <a href="https://app.asana.com/0/0/1220208895306733/f">Posted invoices: rights and lock date</a></div>
+</div>
+
+<main class="wrap">
+
+  <h2>1. Why</h2>
+  <p>An office user reset five posted customer invoices that had already gone to the tax office (RE/2026/03477, 03817, 04640, 04679, 00566). Example: RE/2026/04679 went from 109.75 € to 113.54 €, so Odoo no longer matched the tax office and the customer showed 3.79 € open. The tax advisor said on 06.11. that changing posted invoices must not be possible.</p>
+  <div class="box note">
+    <strong>Root cause:</strong> the user did not have Accounting Administrator directly. The group <strong>Shopify / Manager</strong> (from the Emipro connector) automatically includes Sales Administrator, <strong>Accounting Administrator</strong>, Inventory Administrator and Shopify User.
+  </div>
+
+  <h3>Decision (agreed with Florian, 10.11.2026)</h3>
+  <table>
+    <tr><th>Invoice status</th><th>Who can use “Reset to Draft”</th></tr>
+    <tr><td>Posted, <strong>not yet sent</strong> to the customer</td><td>Everyone with invoicing rights</td></tr>
+    <tr><td>Posted and <strong>sent</strong> to the customer</td><td>Only <strong>Florian and Patricia</strong></td></tr>
+  </table>
+  <p>Posting new invoices and credit notes is <strong>not</strong> restricted. This replaces the Option 1 / Option 2 question from the daily report of 10.11.</p>
+
+  <h2>2. What was changed, and where</h2>
+
+  <h3>2.1 User rights (production)</h3>
+  <table>
+    <tr><th>User</th><th>Where</th><th>Before</th><th>After</th></tr>
+    <tr><td>Elena Kistritz</td><td>Settings → Users → Access Rights</td><td>Shopify: Manager (→ Accounting: Administrator, implied)</td><td>Shopify: <strong>User</strong> → Accounting: <strong>Invoicing</strong></td></tr>
+    <tr><td>Office (office@iq-dogsport.de)</td><td>Settings → Groups → Accounting / Administrator → Users</td><td>Member of Accounting / Administrator</td><td>Removed → Accounting: <strong>No</strong> (login only used for picking/packing)</td></tr>
+  </table>
+  <p>The Shopify / Manager group itself was <strong>not</strong> changed (it comes from the connector and affects all 5 members). Office can still edit normal customer addresses; editing contacts of internal users is blocked for non-admins (standard Odoo).</p>
+
+  <h3>2.2 Group “Invoice Posting Allowed”</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Settings → Users &amp; Companies → Groups</td></tr>
+    <tr><td>Privilege</td><td>empty</td></tr>
+    <tr><td>Members</td><td>Dr. Florian Knabl, Patricia Knabl</td></tr>
+    <tr><td>Group ID</td><td>Production <strong>151</strong> · Staging <strong>152</strong></td></tr>
+  </table>
+  <p>To give someone else the right to reset sent invoices, add the user to this group.</p>
+
+  <h3>2.3 External identifier</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Settings → Technical → External Identifiers</td></tr>
+    <tr><td>Full name</td><td><code>custom.group_invoice_posting</code> (Module <code>custom</code>, Identifier <code>group_invoice_posting</code>)</td></tr>
+    <tr><td>Model / Record ID</td><td><code>res.groups</code> / 151 (production), 152 (staging)</td></tr>
+    <tr><td>Non Updatable</td><td>ticked</td></tr>
+  </table>
+  <div class="box note">The view and the automation rule find the group by this name. If the group is ever deleted and recreated, update the Record ID here.</div>
+
+  <h3>2.4 Inherited form view (button visibility)</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Settings → Technical → User Interface → Views</td></tr>
+    <tr><td>View Name</td><td><code>account.move.form.reset.draft.sent</code></td></tr>
+    <tr><td>Type / Model</td><td>Form / Journal Entry (<code>account.move</code>)</td></tr>
+    <tr><td>Inherited View</td><td><code>account.move.form</code> (External ID <code>account.view_move_form</code>)</td></tr>
+    <tr><td>Mode / Sequence</td><td>Extension View / 16</td></tr>
+  </table>
+<pre><code>&lt;data&gt;
+    &lt;!-- normal button: only when the invoice is NOT sent yet --&gt;
+    &lt;xpath expr="//button[@name='button_draft']" position="attributes"&gt;
+        &lt;attribute name="invisible"&gt;not show_reset_to_draft_button or is_move_sent&lt;/attribute&gt;
+    &lt;/xpath&gt;
+    &lt;!-- admin button: only when the invoice IS sent, only for the group --&gt;
+    &lt;xpath expr="//button[@name='button_draft']" position="after"&gt;
+        &lt;button name="button_draft" string="Reset to Draft" type="object"
+                groups="custom.group_invoice_posting"
+                invisible="not show_reset_to_draft_button or not is_move_sent"/&gt;
+    &lt;/xpath&gt;
+    &lt;xpath expr="//sheet" position="inside"&gt;
+        &lt;field name="is_move_sent" invisible="1"/&gt;
+    &lt;/xpath&gt;
+&lt;/data&gt;</code></pre>
+  <p><strong>Why two buttons:</strong> Odoo can hide a button either by user group (<code>groups</code>) or by record data (<code>invisible</code>), but not both combined on one button. Both call the same method (<code>button_draft</code>), and a user never sees both at once.</p>
+
+  <h3>2.5 Automation rule (the real lock)</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Settings → Technical → Automation → Automation Rules</td></tr>
+    <tr><td>Name</td><td>Block post/reset/cancel invoices for unauthorized users</td></tr>
+    <tr><td>Model / Trigger</td><td>Journal Entry / On create and edit</td></tr>
+    <tr><td>When updating</td><td>Status (only)</td></tr>
+    <tr><td>Before Update Domain</td><td>empty</td></tr>
+    <tr><td>Apply on</td><td><code>[("move_type", "in", ["out_invoice", "out_refund", "in_invoice", "in_refund"])]</code></td></tr>
+    <tr><td>Action</td><td>Execute Code</td></tr>
+  </table>
+<pre><code>allowed = (
+    env.uid == 1                      # OdooBot / automatic jobs
+    or env.user.share                 # public user (Shopify webhooks)
+    or env.user.has_group('custom.group_invoice_posting')
+)
+if not allowed:
+    for rec in records:
+        if rec.posted_before and rec.is_move_sent and rec.state in ('draft', 'cancel'):
+            raise UserError(
+                "This invoice was already sent to the customer. "
+                "Only Admins can reset it to draft. "
+                "Please create a credit note or write a note in the chatter."
+            )</code></pre>
+  <p>This blocks resetting or cancelling a <strong>sent</strong> invoice for everyone outside the group, even without the button (e.g. import or API).</p>
+
+  <h3>2.6 Studio (staging only, reverted)</h3>
+  <p>During testing, the standard “Reset to Draft” button was changed in Studio and then reverted. Final state: Allow = Accounting / Invoicing, Forbid = empty. <strong>Nothing was changed in Studio in production.</strong></p>
+
+  <h2>3. How “sent” is detected</h2>
+  <p>The standard field <code>is_move_sent</code> (“Sent”) is set when an invoice goes out from Odoo: the <strong>Send</strong> button or the automatic invoice email. Checked on Shopify invoice RE/2026/05530: <code>is_move_sent = true</code>.</p>
+  <div class="box note"><strong>Limitation:</strong> if a PDF is only printed or downloaded and given to the customer outside Odoo, Odoo does not know it was sent, so the normal “Reset to Draft” button stays visible.</div>
+
+  <h2>4. Tests</h2>
+  <p><strong>Staging, before the change</strong> (office user with Invoicing rights): create ✅ · post ✅ · reset to draft ✅ · cancel ✅. This showed that rights alone were not enough.</p>
+  <table>
+    <tr><th>User</th><th>Invoice</th><th>Result (production)</th></tr>
+    <tr><td>Hamza</td><td>RE/2026/05730 (sent by email)</td><td class="ok">No “Reset to Draft” ✅</td></tr>
+    <tr><td>Florian</td><td>RE/2026/05730 (sent)</td><td class="ok">“Reset to Draft” visible ✅</td></tr>
+    <tr><td>Hamza / office</td><td>Posted, not sent</td><td class="ok">“Reset to Draft” visible ✅</td></tr>
+  </table>
+
+  <h2>5. How to undo</h2>
+  <ol>
+    <li><strong>View:</strong> Settings → Technical → Views → <code>account.move.form.reset.draft.sent</code> → untick Active.</li>
+    <li><strong>Rule:</strong> Automation Rules → “Block post/reset/cancel…” → archive.</li>
+    <li><strong>Elena:</strong> Shopify back to Manager (gives Accounting Administrator again).</li>
+    <li><strong>Office:</strong> add back to Accounting / Administrator.</li>
+  </ol>
+  <p>Keep the group and the external identifier unless both the view and the rule are removed.</p>
+
+  <h2>6. Still open</h2>
+  <ul>
+    <li><span class="wait">⏳</span> <strong>Lock Everything 31.10.2026</strong> (Accounting → Lock Dates) after Patricia confirms the opening stock bookings are done. Never set the Hard Lock date.</li>
+    <li><span class="wait">⏳</span> Which user is the <strong>terminal/API user</strong> (lock date exception)?</li>
+    <li><span class="wait">⏳</span> Group members: Patricia's task named Anastasiia, Patricia and Hamza; Florian decided Florian and Patricia.</li>
+    <li><span class="wait">⏳</span> Florian still has full Accounting Administrator rights; Office still has “Bank: Validate bank account”.</li>
+  </ul>
+
+</main>
+</body>
+</html>
