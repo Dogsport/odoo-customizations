@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sent invoices: Reset to Draft only for admins – IQ Dogsport</title>
 <style>
-  :root { --red:#b3261e; --ink:#1a1a1a; --muted:#555; --bg:#f3f2ef; --card:#fff; --line:#e3e1dc; }
+  :root { --red:#a6230f; --ink:#1a1a1a; --muted:#555; --bg:#f3f2ef; --card:#fff; --line:#e3e1dc; }
   * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.55; }
   header { background:#161616; color:#fff; padding:40px 0 34px; }
@@ -59,7 +59,7 @@
   <table>
     <tr><th>Invoice status</th><th>Who can use “Reset to Draft”</th></tr>
     <tr><td>Posted, <strong>not yet sent</strong> to the customer</td><td>Everyone with invoicing rights</td></tr>
-    <tr><td>Posted and <strong>sent</strong> to the customer</td><td>Only <strong>Florian and Patricia</strong></td></tr>
+    <tr><td>Posted and <strong>sent</strong> to the customer</td><td>Only the admins <strong>Patricia and Florian</strong></td></tr>
   </table>
   <p>Posting new invoices and credit notes is <strong>not</strong> restricted. This replaces the Option 1 / Option 2 question from the daily report of 10.11.</p>
 
@@ -174,8 +174,7 @@ if not allowed:
   <ul>
     <li><span class="wait">⏳</span> <strong>Lock Everything 31.10.2026</strong> (Accounting → Lock Dates) after Patricia confirms the opening stock bookings are done. Never set the Hard Lock date.</li>
     <li><span class="wait">⏳</span> Which user is the <strong>terminal/API user</strong> (lock date exception)?</li>
-    <li><span class="wait">⏳</span> Group members: Patricia's task named Anastasiia, Patricia and Hamza; Florian decided Florian and Patricia.</li>
-    <li><span class="wait">⏳</span> Florian still has full Accounting Administrator rights; Office still has “Bank: Validate bank account”.</li>
+    <li><span class="wait">⏳</span> Office still has “Bank: Validate bank account” (can mark supplier IBANs as trusted).</li>
   </ul>
 
 </main>

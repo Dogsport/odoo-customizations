@@ -319,3 +319,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Legal background (GoBD, § 146 AO, § 14c UStG) and status: restriction tested in staging, waiting for Patricia's Option 1/2 and her OK for Lock Everything 31.10.2026 (no Hard Lock).",
     link: "odoo/daily-report-2026-11-10/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-10", area: "Odoo", status: "Live",
+    title: "Sent invoices: Reset to Draft only for admins",
+    summary: "Elena: Shopify Manager → User (Accounting Invoicing), Office without accounting rights. Once an invoice is posted and sent to the customer, only Patricia and Florian can reset or cancel it (group Invoice Posting Allowed, extension view, automation rule). Tested in production on RE/2026/05730 and RE/2026/05722. Lock date 31.10.2026 still pending.",
+    link: "odoo/invoice-reset-lock/" }
+]);
