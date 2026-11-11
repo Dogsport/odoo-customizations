@@ -32,7 +32,7 @@
 <main>
 <p><a href="../../index.html">← Back to overview</a></p>
 <h1>Goods Receipts App (Wareneingänge)</h1>
-<div class="meta">Odoo 19 · Purchase / Inventory / Quality · Built 2026-11-04 – 2026-11-09 · Owner: Hamza Mohsin · <span class="status" style="border-color:var(--ok-line);background:var(--ok)">Live in production since 2026-11-06</span></div>
+<div class="meta">Odoo 19 · Purchase / Inventory / Quality · Built 2026-11-04 – 2026-11-11 · Owner: Hamza Mohsin · <span class="status" style="border-color:var(--ok-line);background:var(--ok)">Live in production since 2026-11-06</span></div>
 
 <p>One card per supplier delivery. Each card pulls the numbers, receipts, quality checks and all files live from the purchase order, so nothing is typed twice. Deliveries without a purchase order and rejected deliveries are added by Excel import, by hand, or with the rejection form. A password-protected calendar page shows the warehouse what is coming when and who is away. Supplier delivery notes (PDF) can be uploaded and are added to the calendar on the existing purchase order card.</p>
 
@@ -51,6 +51,8 @@
   <tr><td>2026-11-05</td><td>Tested status logic (receipt booking, QC fail, inventory adjustment). Added: newest/last-changed sorting, calendar first, cards for all old POs, "No PO yet" badge and banner, source Excel attached to cards, Report rejected delivery, public delivery calendar + menu. Consolidated everything into one install script.</td></tr>
   <tr><td>2026-11-06</td><td>Installed in production (backup first). Calendar page: staff absences, one page password, IQ logo, new layout for phone and desktop, menu renamed to "Warehouse &amp; team calendar". Import delivery overview now reads PDF delivery notes (tested with Holfelder Lieferschein 2026-344819 → P00053). Calendar key and password changed; menu link updated.</td></tr>
   <tr><td>2026-11-09</td><td>Calendar page: open (not yet approved) vacation requests shown in orange. New "Meine Stunden &amp; Urlaub": employees log in with their attendance PIN and see overtime balance (earned / deducted / per month), vacation left and all their requests with status. New Team overview for managers (shared manager PIN): open requests to approve, overtime and vacation per employee, sick days, absences next 30 days; every number links to the Odoo record. Maintenance guide with full code written.</td></tr>
+  <tr><td>2026-11-10</td><td>Calendar page: delivered receipts stay on the calendar (green ✓, delivered pieces, one entry per purchase order and day); search box (order, supplier, product, delivery note); My hours shows only the overtime balance tile. New automation "IQ Wareneingang: gelieferte Ware in Kalender": every validated purchase receipt adds an arrived line in Upcoming deliveries, sets the card's Arrived date and closes planned lines when the order is fully received; filled once for all receipts since 01.01.2026. Upcoming deliveries opens without the "Not arrived" filter.</td></tr>
+  <tr><td>2026-11-11</td><td>Vacation numbers taken directly from Odoo (same as the employee's "Time Off x/y Days" button). Team overview: vacation and taken open the employee's detail page. "Zu genehmigen" lists all pending approvals: leave requests, allocation requests and overtime to approve.</td></tr>
   <tr><td>Next</td><td>Team guide; open points below.</td></tr>
 </table>
 
@@ -86,7 +88,7 @@
   <tr><td>Excel upload</td><td><code>x_iq_delivery_upload</code> + server action "IQ Lieferübersicht verarbeiten"</td></tr>
   <tr><td>Rejection report</td><td><code>x_iq_rejection_report</code> + server action "IQ Abgelehnte Lieferung melden"</td></tr>
   <tr><td>Calendar page</td><td>Website server action "IQ Public delivery calendar", path <code>iq-delivery-calendar</code>. System parameters: <code>iq.delivery_calendar_key</code> (link key), <code>iq.delivery_calendar_password</code> (page password), <code>iq.delivery_calendar_manager_pin</code> (manager PIN, 8+ characters). Employee PIN = attendance PIN on the employee. Menu: URL action "Warehouse &amp; team calendar".</td></tr>
-  <tr><td>Automations</td><td>IQ Wareneingang: anlegen bei Bestellbestätigung · IQ Wareneingang: Status bei Buchung · IQ Wareneingang: Lieferanten-Bestellnr. von Bestellung · IQ Lieferung manuell: Karte zuordnen</td></tr>
+  <tr><td>Automations</td><td>IQ Wareneingang: gelieferte Ware in Kalender · IQ Wareneingang: anlegen bei Bestellbestätigung · IQ Wareneingang: Status bei Buchung · IQ Wareneingang: Lieferanten-Bestellnr. von Bestellung · IQ Lieferung manuell: Karte zuordnen</td></tr>
   <tr><td>Views</td><td>"IQ Wareneingang Kanban / Form / List / Search / Calendar", "IQ Delivery Line …", "IQ Delivery Upload …", "IQ Rejection Report …"</td></tr>
 </table>
 <p>Most numbers are non-stored computed fields (read live from PO, receipts, quality checks). Only <code>x_next_date</code> is stored (for sorting, filters and the calendar).</p>
@@ -122,8 +124,8 @@
 <h2>My hours &amp; vacation / Team overview (since 2026-11-09)</h2>
 <table>
   <tr><th>Who</th><th>Login</th><th>Sees</th></tr>
-  <tr><td>Employee</td><td>Name + own attendance PIN</td><td>Own overtime balance, earned, deducted (minus hours, time off in lieu, manual corrections), per month; vacation entitlement / taken / planned / requested / left (allocations valid today, same rule as Odoo); all own requests this year with status.</td></tr>
-  <tr><td>Manager (Florian, Patricia, Hamza)</td><td>"Führungskraft / Manager" + manager PIN</td><td>Team overview: requests to approve, per employee overtime balance, vacation left, sick days, current / next absence (leave type shown); click a name for the employee page; ↗ opens the Odoo record.</td></tr>
+  <tr><td>Employee</td><td>Name + own attendance PIN</td><td>Own overtime balance, earned, deducted (minus hours, time off in lieu, manual corrections), per month; vacation entitlement / taken + planned / requested / left (numbers taken directly from Odoo, same as the "Time Off x/y Days" button); all own requests this year with status.</td></tr>
+  <tr><td>Manager (Florian, Patricia, Hamza)</td><td>"Führungskraft / Manager" + manager PIN</td><td>Team overview: all pending approvals (leave, allocation requests, overtime), per employee overtime balance, vacation left, sick days, current / next absence (leave type shown); click a name for the employee page; ↗ opens the Odoo record.</td></tr>
 </table>
 <p>Security: page password first, then PIN; session 10 minutes; 5 wrong PINs lock that login for 15 minutes (counter in system parameters <code>iq.cal_pinfail.*</code>). Shared calendar never shows the leave type.</p>
 <div class="note">Odoo rejects code with closures (a lambda or inner function using a variable of the function around it: "forbidden opcode(s) in 'lambda'"). Check new page code for this before running it.</div>

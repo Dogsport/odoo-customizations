@@ -1195,7 +1195,7 @@ we_act = action('Goods Receipts', 'Wareneingänge', MODEL, 'kanban,list,form,cal
                 {'search_view_id': we_search.id, 'view_id': we_kanban.id})
 line_act = action('Upcoming deliveries', 'Anstehende Lieferungen', 'x_wareneingang_line', 'calendar,list,form',
                   {'search_view_id': line_search.id, 'view_id': line_cal.id,
-                   'context': "{'search_default_upcoming': 1, 'search_default_g_month': 1}"})
+                   'context': "{'search_default_g_month': 1}"})
 up_act = action('Import delivery overview', 'Lieferübersicht importieren', 'x_iq_delivery_upload', 'list,form', {'view_id': up_list.id})
 st_act = action('Stages', 'Status', 'x_wareneingang_stage', 'list', {'view_id': stage_list.id})
 
@@ -1402,6 +1402,65 @@ if not env.context.get('import_file'):
         we.message_post(body='Lieferung manuell hinzugefügt / delivery added manually: ' + (l.x_product_text or '') + ' · ' + str(int(l.x_qty or 0)) + ' · ' + (l.x_date.strftime('%d.%m.%Y') if l.x_date else ''))
 ''')
 
+# delivered goods -> one arrived line per purchase order and day in Upcoming deliveries (10.11.2026)
+DELIVERED_CODE = r'''
+Line = env['x_wareneingang_line'].sudo()
+WE = env['x_wareneingang'].sudo()
+Move = env['stock.move'].sudo()
+DE = (env.lang or 'de_DE').startswith('de')
+TAG = 'Geliefert'
+for p in records:
+    if p.state != 'done' or not p.purchase_id or p.picking_type_code != 'incoming' or not p.date_done:
+        continue
+    po = p.purchase_id
+    # products + delivered pieces (kit parts counted as sets)
+    names = []
+    qty = 0.0
+    kit = {}
+    for mv in p.move_ids:
+        if mv.state != 'done':
+            continue
+        pl = mv.purchase_line_id
+        tmpl = pl.product_id.product_tmpl_id if pl else mv.product_id.product_tmpl_id
+        n = (tmpl.name or '').split(' – ')[0]
+        if n and n not in names:
+            names.append(n)
+        if pl and mv.product_id != pl.product_id:
+            kit[pl.id] = kit.get(pl.id, 0.0) + (mv.quantity or 0.0)
+        else:
+            qty += mv.quantity or 0.0
+    for plid in kit:
+        pl = env['purchase.order.line'].sudo().browse(plid)
+        total = sum(Move.search([('purchase_line_id', '=', plid), ('state', '!=', 'cancel')]).mapped('product_uom_qty'))
+        qty += round(kit[plid] / total * pl.product_qty) if total and pl.product_qty else 0
+    if not qty:
+        continue
+    we = WE.search([('x_studio_purchase_order', '=', po.id)], limit=1)
+    if not we:
+        we = WE.create({'x_name': po.name, 'x_studio_purchase_order': po.id, 'x_studio_supplier': po.partner_id.id,
+                        'x_supplier_ref': po.partner_ref or False})
+    d = p.date_done.date()
+    prod = (names[0] + (' +' + str(len(names) - 1) if len(names) > 1 else '')) if names else po.name
+    line = Line.search([('x_wareneingang_id', '=', we.id), ('x_date', '=', d), ('x_shipment', '=like', TAG + '%')], limit=1)
+    if line:
+        if p.name in (line.x_shipment or ''):
+            continue
+        newq = (line.x_qty or 0) + qty
+        ship = (line.x_shipment or '').rstrip(')') + ', ' + p.name + ')'
+        line.write({'x_qty': newq, 'x_shipment': ship,
+                    'x_name': '✓ ' + str(int(newq)) + ' · ' + (line.x_product_text or prod) + ' · ' + po.name})
+    else:
+        Line.create({'x_wareneingang_id': we.id, 'x_partner_id': po.partner_id.id, 'x_supplier_ref': po.partner_ref or po.name,
+                     'x_product_text': prod, 'x_shipment': TAG + ' (' + p.name + ')', 'x_qty': qty, 'x_date': d, 'x_done': True,
+                     'x_name': '✓ ' + str(int(qty)) + ' · ' + prod + ' · ' + po.name})
+    if not we.x_studio_arrival_date:
+        we.write({'x_studio_arrival_date': d})
+    if po.receipt_status == 'full':
+        Line.search([('x_wareneingang_id', '=', we.id), ('x_done', '=', False)]).write({'x_done': True})
+'''
+automation('IQ Wareneingang: gelieferte Ware in Kalender', 'stock.picking', 'on_create_or_write', DELIVERED_CODE,
+           trigger_fields=['state'], domain="[('state', '=', 'done'), ('purchase_id', '!=', False), ('picking_type_code', '=', 'incoming')]")
+
 # =====================================================================================
 # 11. Labels EN / DE
 # =====================================================================================
@@ -1517,7 +1576,9 @@ main{display:grid;grid-template-columns:1fr 330px;gap:16px}
 .dn{font:700 12px Arial;margin-bottom:4px;display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center}
 .today{box-shadow:inset 0 0 0 2px var(--red)}.today .dn{background:var(--red);color:#fff;border-radius:50%}
 .ev{border-left:4px solid;background:#f4f4f2;border-radius:4px;padding:4px 6px;margin-bottom:4px;font-size:12px}
-.ev b{font-size:13px}.ev span{display:block;color:var(--mut);font-size:11px}.ev.od{background:var(--soft)}
+.ev b{font-size:13px}.ev span{display:block;color:var(--mut);font-size:11px}.ev.od{background:var(--soft)}.ev.dlv{background:#ecfdf3;border-left-color:#16a34a!important}.ev.dlv b:before{content:'✓ ';color:#16a34a}
+.tag.dn{background:#16a34a}.srch{display:flex;gap:8px;margin:0 0 14px}.srch input{flex:1;min-width:0;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:15px;background:#fff}.srch button,.srch a.x{padding:10px 14px;border:0;border-radius:6px;background:#151515;color:#fff;font:700 14px Arial;text-decoration:none;cursor:pointer}.srch a.x{background:#e5e7eb;color:#111}
+.res table{width:100%;border-collapse:collapse;font-size:13.5px}.res td,.res th{padding:7px 5px;border-top:1px solid var(--line);text-align:left}.res th{font:700 11px Arial;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);border-top:0}.res td.r{text-align:right;white-space:nowrap}.res .s{display:inline-block;font:700 11px Arial;border-radius:4px;padding:3px 8px;white-space:nowrap}.s-dn{background:#dcfce7;color:#166534}.s-ex{background:#dbeafe;color:#1e40af}.s-od{background:#fee2e2;color:#991b1b}.res{margin-bottom:14px;overflow-x:auto}
 .ab{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#374151;margin-bottom:3px}
 .ab.pend{background:#fff4e5;border:1px dashed #f59e0b;border-radius:4px;padding:1px 4px;color:#92400e}.ab.pend .av{opacity:.75}
 .tag.pend{background:#f59e0b}.row.pend{color:#92400e}.lgd{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);margin:8px 0 0}.lgd i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
@@ -1652,6 +1713,9 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
         'ent': 'Anspruch' if de else 'Entitlement', 'taken': 'Genommen' if de else 'Taken',
         'planned': 'Geplant' if de else 'Planned', 'req': 'Beantragt' if de else 'Requested', 'left': 'Übrig' if de else 'Left',
         'novac': 'Kein Urlaubsanspruch hinterlegt.' if de else 'No vacation entitlement on file.',
+        'usedv': 'Genommen + geplant' if de else 'Taken + planned', 'ofpl': 'davon geplant' if de else 'of which planned',
+        'allocreq': 'Urlaubsanspruch (Zuteilung)' if de else 'Vacation entitlement (allocation)',
+        'otreq': 'Überstunden zu genehmigen' if de else 'Overtime to approve', 'days_n': 'Tage' if de else 'days',
         'allreq': 'Alle Anträge' if de else 'All requests', 'when': 'Zeitraum' if de else 'Dates', 'type': 'Art' if de else 'Type',
         'amount': 'Umfang' if de else 'Amount', 'noreq': 'Keine Anträge in diesem Jahr.' if de else 'No requests this year.',
         'open_s': 'offen' if de else 'open',
@@ -1667,7 +1731,7 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
     }
     MONTHS_S = (['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'] if de else
                 ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
-    MECSS = ('<style>.me-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}'
+    MECSS = ('<style>.me-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.me-k.two{grid-template-columns:repeat(2,minmax(0,1fr))}'
              '.me-g{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.col{display:flex;flex-direction:column;gap:14px}'
              '.box table{width:100%;border-collapse:collapse;font-size:13.5px}.box td,.box th{padding:7px 5px;border-top:1px solid var(--line);text-align:left;vertical-align:middle}'
              '.box th{font:700 11px Arial;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);border-top:0}'
@@ -1753,28 +1817,37 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
         used = earned - bal
         return {'lines': lines, 'earned': earned, 'bal': bal, 'used': used, 'items': items, 'other': used - sum([u['v'] for u in items])}
 
+    EF = Emp.fields_get(['allocation_display', 'allocation_remaining_display'])
+
+    def fnum(s):
+        try:
+            return float(str(s or '0').replace(',', '.').split()[0])
+        except Exception:
+            return 0.0
+
     def vac_data(emp):
-        out = []
         allocs = Alloc.search([('employee_id', '=', emp.id), ('state', '=', 'validate')])
-        for t in allocs.mapped('holiday_status_id'):
-            if t.id in otypes.ids or is_sick(t):
-                continue
-            al = Alloc.browse([a.id for a in allocs if a.holiday_status_id.id == t.id and a.date_from and a.date_from <= today and (not a.date_to or a.date_to >= today)])
-            if not al:
-                continue
-            start = min(al.mapped('date_from'))
-            ends = [a.date_to for a in al if a.date_to]
-            end = max(ends) if ends and len(ends) == len(al) else False
-            ldom = [('employee_id', '=', emp.id), ('holiday_status_id', '=', t.id), ('state', 'in', ['confirm', 'validate1', 'validate']), ('request_date_from', '>=', start)]
-            if end:
-                ldom.append(('request_date_from', '<=', end))
-            lvs = Leave.search(ldom)
+        al = Alloc.browse([a.id for a in allocs if a.date_from and a.date_from <= today and (not a.date_to or a.date_to >= today)
+                           and a.holiday_status_id.id not in otypes.ids and not is_sick(a.holiday_status_id)])
+        if not al:
+            return []
+        tids = al.mapped('holiday_status_id').ids
+        start = min(al.mapped('date_from'))
+        ends = [a.date_to for a in al if a.date_to]
+        end = max(ends) if ends and len(ends) == len(al) else False
+        ldom = [('employee_id', '=', emp.id), ('holiday_status_id', 'in', tids), ('state', 'in', ['confirm', 'validate1', 'validate']), ('request_date_from', '>=', start)]
+        if end:
+            ldom.append(('request_date_from', '<=', end))
+        lvs = Leave.search(ldom)
+        pl = sum([l.number_of_days for l in lvs if l.state == 'validate' and l.request_date_from > today])
+        rq = sum([l.number_of_days for l in lvs if l.state != 'validate'])
+        if 'allocation_display' in EF and 'allocation_remaining_display' in EF:
+            ent = fnum(emp.allocation_display)
+            left = fnum(emp.allocation_remaining_display)
+        else:
             ent = sum(al.mapped('number_of_days'))
-            tk = sum([l.number_of_days for l in lvs if l.state == 'validate' and l.request_date_from <= today])
-            pl = sum([l.number_of_days for l in lvs if l.state == 'validate' and l.request_date_from > today])
-            rq = sum([l.number_of_days for l in lvs if l.state != 'validate'])
-            out.append({'t': t, 'ent': ent, 'tk': tk, 'pl': pl, 'rq': rq, 'left': ent - tk - pl - rq, 'end': end, 'al': al})
-        return out
+            left = ent - sum([l.number_of_days for l in lvs])
+        return [{'t': al[0].holiday_status_id, 'ent': ent, 'left': left, 'used': ent - left, 'pl': pl, 'rq': rq, 'end': end, 'al': al}]
 
     def req_data(emp):
         return sorted(Leave.search([('employee_id', '=', emp.id), ('state', 'in', ['confirm', 'validate1', 'validate', 'refuse']),
@@ -1802,10 +1875,8 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
         vleft = sum([v['left'] for v in vd])
         vend = ([v['end'] for v in vd if v['end']] or [False])[0]
         valid_txt = (T['valid'] + ' ' + vend.strftime('%d.%m.%Y')) if vend else ''
-        kp = ('<div class="me-k">'
+        kp = ('<div class="me-k two">'
               + '<div class="kpi' + (' red' if od['bal'] < 0 else '') + '"><small>' + T['ot_rem'] + '</small><b>' + L_('hr.employee', emp.id, hm(od['bal'], True) + ' ' + T['h'], mgr) + '</b><span>' + today.strftime('%d.%m.%Y') + '</span></div>'
-              + '<div class="kpi"><small>' + T['ot_earn'] + '</small><b>' + hm(od['earned']) + ' ' + T['h'] + '</b><span>&nbsp;</span></div>'
-              + '<div class="kpi"><small>' + T['ot_used'] + '</small><b>' + hm(od['used']) + ' ' + T['h'] + '</b><span>&nbsp;</span></div>'
               + '<div class="kpi' + (' op' if n_open else '') + '"><small>' + T['vac_rem'] + '</small><b>' + dnum(vleft) + ' ' + (T['day'] if vleft == 1 else T['days']) + '</b><span>'
               + (('<span class="opn">' + str(n_open) + ' ' + T['open_s'] + '</span> · ') if n_open else '') + valid_txt + '</span></div></div>')
         rr = ''
@@ -1815,7 +1886,7 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
                 lab = lab + ' · ' + (T['planned'] if r.request_date_from > today else T['taken'])
             rr += ('<tr class="rq-' + cls + '"><td>' + L_('hr.leave', r.id, dates(r), mgr) + '</td><td>' + esc(r.holiday_status_id.name) + '</td><td class="r">' + amount(r)
                    + '</td><td class="r"><span class="st st-' + cls + '">' + lab + '</span></td></tr>')
-        reqbox = ('<div class="box"><h3>' + T['allreq'] + ' ' + str(today.year) + '</h3>'
+        reqbox = ('<div class="box" id="req"><h3>' + T['allreq'] + ' ' + str(today.year) + '</h3>'
                   + ('<div class="note-op">' + T['open_note'].replace('%d', str(n_open)) + '</div>' if n_open else '')
                   + ('<table class="rqt"><tr><th>' + T['when'] + '</th><th>' + T['type'] + '</th><th class="r">' + T['amount'] + '</th><th class="r">Status</th></tr>' + rr + '</table>' if rr else '<p class="mut" style="margin:0">' + T['noreq'] + '</p>')
                   + '<div class="lgd"><span><i style="background:#16a34a"></i>' + ST['validate'][1] + '</span><span><i style="background:#f59e0b"></i>' + ('Offen' if de else 'Open') + '</span><span><i style="background:#dc2626"></i>' + ST['refuse'][1] + '</span></div></div>')
@@ -1841,12 +1912,12 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
         usebox = '<div class="box"><h3>' + T['uselist'] + '</h3>' + ('<table>' + ul + '</table>' if ul else '<p class="mut" style="margin:0">' + T['nouse'] + '</p>') + '</div>'
         vac_html = ''
         for v in vd:
-            alink = L_('hr.leave.allocation', v['al'][0].id, dnum(v['ent']), mgr) if len(v['al']) == 1 else dnum(v['ent'])
+            alink = dnum(v['ent'])
             vac_html += ('<div class="box"><h3>' + esc(v['t'].name) + (' · ' + T['valid'] + ' ' + v['end'].strftime('%d.%m.%Y') if v['end'] else '') + '</h3><table>'
                          + '<tr><td>' + T['ent'] + '</td><td class="r">' + alink + '</td></tr>'
-                         + '<tr><td>' + T['taken'] + '</td><td class="r">' + dnum(v['tk']) + '</td></tr>'
-                         + '<tr><td>' + T['planned'] + '</td><td class="r">' + dnum(v['pl']) + '</td></tr>'
-                         + ('<tr><td>' + T['req'] + '</td><td class="r">' + dnum(v['rq']) + '</td></tr>' if v['rq'] else '')
+                         + '<tr><td>' + T['usedv'] + '</td><td class="r">' + dnum(v['used']) + '</td></tr>'
+                         + ('<tr><td class="mut">' + T['ofpl'] + '</td><td class="r mut">' + dnum(v['pl']) + '</td></tr>' if v['pl'] else '')
+                         + ('<tr><td>' + T['req'] + '</td><td class="r"><span class="st st-op">' + dnum(v['rq']) + '</span></td></tr>' if v['rq'] else '')
                          + '<tr class="sum"><td>' + T['left'] + '</td><td class="r">' + dnum(v['left']) + ' ' + (T['day'] if v['left'] == 1 else T['days']) + '</td></tr></table></div>')
         if not vac_html:
             vac_html = '<div class="box"><h3>' + T['vac'] + '</h3><p class="mut" style="margin:0">' + T['novac'] + '</p></div>'
@@ -1880,8 +1951,7 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
                 n_neg += 1
             vleft = sum([v['left'] for v in vd])
             vent = sum([v['ent'] for v in vd])
-            vtk = sum([v['tk'] for v in vd])
-            alloc1 = [v['al'][0] for v in vd if len(v['al']) == 1]
+            vtk = sum([v['used'] for v in vd])
             dnm = '?view=me&amp;key=' + KEY + '&amp;emp=' + str(e.id) + ('' if de else '&amp;lang=en')
             if cur:
                 absc = '<span class="st ' + ('st-sick' if is_sick(cur[0].holiday_status_id) else 'st-ok') + '">' + olink('hr.leave', cur[0].id, esc(cur[0].holiday_status_id.name) + ' ' + T['today']) + '</span>'
@@ -1891,20 +1961,53 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
                 absc = '<span class="mut">–</span>'
             rows.append((0 if opn else 1, e.name, '<tr' + (' class="warn"' if opn else '') + '><td><a class="nm" href="' + dnm + '">' + esc(e.name) + '</a></td>'
                          + '<td class="r ' + ('neg' if od['bal'] < 0 else '') + '">' + olink('hr.employee', e.id, hm(od['bal'], True)) + '</td>'
-                         + '<td class="r">' + (olink('hr.leave.allocation', alloc1[0].id, dnum(vleft) + ' / ' + dnum(vent)) if alloc1 else (dnum(vleft) + ' / ' + dnum(vent) if vd else '<span class="mut">–</span>')) + '</td>'
-                         + '<td class="r">' + (dnum(vtk) if vd else '–') + '</td>'
+                         + '<td class="r">' + (('<a class="ol" href="' + dnm + '#req">' + dnum(vleft) + ' / ' + dnum(vent) + '</a>') if vd else '<span class="mut">–</span>') + '</td>'
+                         + '<td class="r">' + (('<a class="ol" href="' + dnm + '#req">' + dnum(vtk) + '</a>') if vd else '–') + '</td>'
                          + '<td class="r">' + (''.join([olink('hr.leave', r.id, '<span class="st st-op">' + r.request_date_from.strftime('%d.%m.') + '</span>') + ' ' for r in opn]) if opn else '<span class="mut">–</span>') + '</td>'
                          + '<td class="r">' + (dnum(sick) if sick else '<span class="mut">0</span>') + '</td>'
                          + '<td>' + absc + '</td></tr>'))
         rows = sorted(rows, key=lambda x: (x[0], x[1]))
         kp = ('<div class="me-k">'
               + '<div class="kpi"><small>' + T['k_emp'] + '</small><b>' + str(len(allemp)) + '</b><span>&nbsp;</span></div>'
-              + '<div class="kpi' + (' op' if todo else '') + '"><small>' + T['k_open'] + '</small><b>' + str(len(todo)) + '</b><span>' + T['todo'] + '</span></div>'
+              + '<div class="kpi%%OPCLS%%"><small>' + T['k_open'] + '</small><b>%%NTODO%%</b><span>' + T['todo'] + '</span></div>'
               + '<div class="kpi"><small>' + T['k_absent'] + '</small><b>' + str(n_abs) + '</b><span>&nbsp;</span></div>'
               + '<div class="kpi' + (' red' if n_neg else '') + '"><small>' + T['k_neg'] + '</small><b>' + str(n_neg) + '</b><span>' + T['ot_rem'] + '</span></div></div>')
         td = ''.join(['<tr class="rq-op"><td>' + esc(r.employee_id.name) + '</td><td>' + olink('hr.leave', r.id, dates(r)) + '</td><td>' + esc(r.holiday_status_id.name)
                       + '</td><td class="r">' + amount(r) + '</td><td class="r"><span class="st st-op">' + ST[r.state][1] + '</span></td></tr>' for r in sorted(todo, key=lambda r: r.request_date_from)])
-        todobox = ('<div class="box"><h3>' + T['todo'] + '</h3>' + ('<table class="rqt"><tr><th>' + T['employee'] + '</th><th>' + T['when'] + '</th><th>' + T['type'] + '</th><th class="r">' + T['amount'] + '</th><th class="r">Status</th></tr>' + td + '</table>' if td else '<p class="mut" style="margin:0">' + T['nothing'] + '</p>') + '</div>')
+        seen = [r.id for r in todo]
+        for r in Leave.search([('state', 'in', ['confirm', 'validate1'])], order='request_date_from asc'):
+            if r.id in seen:
+                continue
+            todo.append(r)
+            td += ('<tr class="rq-op"><td>' + esc(r.employee_id.name) + '</td><td>' + olink('hr.leave', r.id, dates(r)) + '</td><td>' + esc(r.holiday_status_id.name)
+                   + '</td><td class="r">' + amount(r) + '</td><td class="r"><span class="st st-op">' + ST[r.state][1] + '</span></td></tr>')
+        n_alloc = 0
+        for a in Alloc.search([('state', 'in', ['confirm', 'validate1'])]):
+            n_alloc += 1
+            td += ('<tr class="rq-op"><td>' + esc(a.employee_id.name or '') + '</td><td>' + olink('hr.leave.allocation', a.id, ((a.date_from.strftime('%d.%m.%Y') if a.date_from else '') + (' – ' + a.date_to.strftime('%d.%m.%Y') if a.date_to else '')) or '↗')
+                   + '</td><td>' + T['allocreq'] + ' · ' + esc(a.holiday_status_id.name) + '</td><td class="r">+' + dnum(a.number_of_days) + ' ' + T['days_n'] + '</td><td class="r"><span class="st st-op">' + ST['confirm'][1] + '</span></td></tr>')
+        n_ot = 0
+        OTM2 = 'hr.attendance.overtime.line' if 'hr.attendance.overtime.line' in env else ''
+        if OTM2 and 'status' in env[OTM2].sudo().fields_get(['status']):
+            otl = env[OTM2].sudo().search([('status', '=', 'to_approve')])
+            ofg = env[OTM2].sudo().fields_get(['duration', 'manual_duration'])
+            OTF = 'duration' if 'duration' in ofg else ('manual_duration' if 'manual_duration' in ofg else '')
+            per = {}
+            for o in otl:
+                k2 = o.employee_id.id
+                if k2 not in per:
+                    per[k2] = [o.employee_id, 0.0, 0, o.date, o.date]
+                per[k2][1] += (o[OTF] if OTF else 0.0) or 0.0
+                per[k2][2] += 1
+                per[k2][3] = min(per[k2][3], o.date) if o.date and per[k2][3] else (per[k2][3] or o.date)
+                per[k2][4] = max(per[k2][4], o.date) if o.date and per[k2][4] else (per[k2][4] or o.date)
+            for k2 in per:
+                e2, hrs2, cnt2, d1, d2 = per[k2]
+                n_ot += 1
+                td += ('<tr class="rq-op"><td>' + esc(e2.name) + '</td><td>' + olink('hr.employee', e2.id, ((d1.strftime('%d.%m.%Y') if d1 else '') + (' – ' + d2.strftime('%d.%m.%Y') if d2 and d2 != d1 else '')))
+                       + '</td><td>' + T['otreq'] + ' (' + str(cnt2) + ')</td><td class="r">' + hm(hrs2, True) + ' ' + T['h'] + '</td><td class="r"><span class="st st-op">' + ST['confirm'][1] + '</span></td></tr>')
+        n_todo = len(todo) + n_alloc + n_ot
+        todobox = ('<div class="box"><h3>' + T['todo'] + ' (' + str(n_todo) + ')</h3>' + ('<table class="rqt"><tr><th>' + T['employee'] + '</th><th>' + T['when'] + '</th><th>' + T['type'] + '</th><th class="r">' + T['amount'] + '</th><th class="r">Status</th></tr>' + td + '</table>' if td else '<p class="mut" style="margin:0">' + T['nothing'] + '</p>') + '</div>')
         teambox = ('<div class="box team" style="margin-top:14px"><h3>' + T['team'] + '</h3><table><tr><th>' + T['employee'] + '</th><th class="r">' + T['ot_rem'] + '</th><th class="r">' + T['vac_rem'] + ' / ' + T['ent'] + '</th><th class="r">' + T['taken']
                    + '</th><th class="r">' + T['k_open'] + '</th><th class="r">' + T['sick'] + ' ' + str(today.year) + '</th><th>' + T['absnow'] + '</th></tr>' + ''.join([x[2] for x in rows]) + '</table>'
                    + '<p class="hint">' + T['hint'] + '</p></div>')
@@ -1914,6 +2017,7 @@ elif params.get('melogout') or (request.httprequest.method == 'POST' and params.
             sb += ('<tr' + (' class="rq-op"' if cls == 'op' else '') + '><td>' + esc(r.employee_id.name) + '</td><td>' + olink('hr.leave', r.id, dates(r)) + '</td><td><span class="st st-' + cls + '">' + esc(r.holiday_status_id.name)
                    + (' · ' + T['open_s'] if cls == 'op' else '') + '</span></td><td class="r">' + amount(r) + '</td></tr>')
         soonbox = '<div class="box" style="margin-top:14px"><h3>' + T['next30'] + '</h3>' + ('<table class="rqt">' + sb + '</table>' if sb else '<p class="mut" style="margin:0">' + T['noabs'] + '</p>') + '</div>'
+        kp = kp.replace('%%OPCLS%%', ' op' if n_todo else '').replace('%%NTODO%%', str(n_todo))
         return kp + todobox + teambox + soonbox
 
     # ------------------------------------------------------------------ routing
@@ -1977,6 +2081,10 @@ else:
         'nodel': 'Keine Lieferungen.' if de else 'No deliveries.', 'po': 'Bestellung' if de else 'PO', 'plan': 'Geplant' if de else 'Planned',
         'away': 'abwesend' if de else 'absent', 'upd': 'Stand' if de else 'Updated', 'logout': 'Abmelden' if de else 'Sign out',
         'now': 'jetzt' if de else 'now',
+        'done': 'Geliefert' if de else 'Delivered', 'done_s': 'geliefert' if de else 'delivered', 'expected': 'Erwartet' if de else 'Expected',
+        'srch': 'Suche: Bestellung, Lieferant, Produkt, Lieferschein …' if de else 'Search: order, supplier, product, delivery note …',
+        'go': 'Suchen' if de else 'Search', 'clear': '×', 'res': 'Suchergebnis' if de else 'Search result', 'nores': 'Nichts gefunden.' if de else 'Nothing found.',
+        'date': 'Datum' if de else 'Date', 'status': 'Status', 'what': 'Was' if de else 'What', 'qty': 'Stück' if de else 'Pieces', 'show': 'im Kalender' if de else 'in calendar',
         'pend': 'offen' if de else 'open', 'pend_t': 'Beantragt, noch nicht genehmigt' if de else 'Requested, not approved yet',
         'appr': 'Genehmigt' if de else 'Approved',
     }
@@ -2003,27 +2111,96 @@ else:
     ev = []
     Line = env['x_wareneingang_line'].sudo()
     WE = env['x_wareneingang'].sudo()
-    for l in Line.search([('x_done', '=', False), ('x_date', '!=', False)], order='x_date asc'):
-        ev.append({'d': l.x_date, 'sup': l.x_partner_id.commercial_partner_id.name or '', 'prod': l.x_product_text or '',
-                   'ship': l.x_shipment or '', 'qty': l.x_qty or 0, 'ref': l.x_supplier_ref or '', 'kind': 'plan'})
-    picks = env['stock.picking'].sudo().search([('picking_type_code', '=', 'incoming'), ('purchase_id', '!=', False),
-                                                ('state', 'not in', ['done', 'cancel', 'draft'])], order='scheduled_date asc')
-    for p in picks:
-        card = WE.search([('x_studio_purchase_order', '=', p.purchase_id.id)], limit=1)
-        if card and card.x_schedule_ids.filtered(lambda x: not x.x_done):
-            continue
-        moves = p.move_ids.filtered(lambda mv: mv.state != 'cancel')
+    Pick = env['stock.picking'].sudo()
+    Move = env['stock.move'].sudo()
+
+    def pick_info(p, field):
+        # products + pieces of one receipt; kit parts are counted as sets
         names = []
-        for mv in moves:
+        qty = 0.0
+        kit = {}
+        for mv in p.move_ids:
+            if mv.state == 'cancel':
+                continue
             n = (mv.product_id.product_tmpl_id.name or '').split(' – ')[0]
+            pl = mv.purchase_line_id
+            if pl and mv.product_id != pl.product_id:
+                n = (pl.product_id.product_tmpl_id.name or '').split(' – ')[0]
+                kit[pl.id] = kit.get(pl.id, 0.0) + (mv[field] or 0.0)
+            else:
+                qty += mv[field] or 0.0
             if n not in names:
                 names.append(n)
-        prod = names[0] if names else ''
-        if len(names) > 1:
-            prod += ' +' + str(len(names) - 1)
-        ev.append({'d': p.scheduled_date.date() if p.scheduled_date else today, 'sup': p.partner_id.commercial_partner_id.name or '',
-                   'prod': prod, 'ship': '', 'qty': sum(moves.mapped('product_uom_qty')), 'ref': p.purchase_id.name, 'kind': 'po'})
-    ev = sorted(ev, key=lambda e: e['d'])
+        for plid in kit:
+            pl = env['purchase.order.line'].sudo().browse(plid)
+            total = sum(Move.search([('purchase_line_id', '=', plid), ('state', '!=', 'cancel')]).mapped('product_uom_qty'))
+            qty += round(kit[plid] / total * pl.product_qty) if total and pl.product_qty else 0
+        return names, qty
+
+    def add_ev(store, order, key, d, sup, names, qty, ship, ref, kind):
+        if key not in store:
+            store[key] = {'d': d, 'sup': sup, 'names': [], 'ship': [], 'qty': 0.0, 'ref': ref, 'kind': kind}
+            order.append(key)
+        e = store[key]
+        e['qty'] += qty
+        for n in names:
+            if n and n not in e['names']:
+                e['names'].append(n)
+        if ship and ship not in e['ship']:
+            e['ship'].append(ship)
+
+    def finish(store, order):
+        out = []
+        for k in order:
+            e = store[k]
+            e['prod'] = (e['names'][0] + (' +' + str(len(e['names']) - 1) if len(e['names']) > 1 else '')) if e['names'] else ''
+            e['ship'] = ', '.join(e['ship'])
+            out.append(e)
+        return out
+
+    def collect(line_dom, open_dom, done_dom):
+        store = {}
+        order = []
+        # planned lines from delivery overviews / PDFs (one entry per order and day; ignored once the PO is fully received)
+        for l in Line.search(line_dom, order='x_date asc'):
+            po = l.x_wareneingang_id.x_studio_purchase_order
+            if po and po.receipt_status == 'full':
+                continue
+            ref = po.name if po else (l.x_supplier_ref or '')
+            key = ('p', po.id if po else (l.x_wareneingang_id.id or ref), l.x_date)
+            add_ev(store, order, key, l.x_date, l.x_partner_id.commercial_partner_id.name or '', [l.x_product_text or ''], l.x_qty or 0, l.x_shipment or '', ref, 'plan')
+        # open receipts of purchase orders without planned lines (one entry per order and day)
+        for p in Pick.search(open_dom, order='scheduled_date asc'):
+            card = WE.search([('x_studio_purchase_order', '=', p.purchase_id.id)], limit=1)
+            if card and [x for x in card.x_schedule_ids if not x.x_done]:
+                continue
+            d = p.scheduled_date.date() if p.scheduled_date else today
+            names, qty = pick_info(p, 'product_uom_qty')
+            add_ev(store, order, ('o', p.purchase_id.id, d), d, p.partner_id.commercial_partner_id.name or '', names, qty, '', p.purchase_id.name, 'po')
+        # delivered: validated receipts, one entry per order and day, with the delivered pieces
+        for p in Pick.search(done_dom, order='date_done asc'):
+            d = p.date_done.date()
+            names, qty = pick_info(p, 'quantity')
+            add_ev(store, order, ('d', p.purchase_id.id, d), d, p.partner_id.commercial_partner_id.name or '', names, qty, '', p.purchase_id.name, 'done')
+        return sorted(finish(store, order), key=lambda e: e['d'])
+
+    PBASE = [('picking_type_code', '=', 'incoming'), ('purchase_id', '!=', False)]
+    ev = collect([('x_done', '=', False), ('x_date', '!=', False)],
+                 PBASE + [('state', 'not in', ['done', 'cancel', 'draft'])],
+                 PBASE + [('state', '=', 'done'), ('date_done', '>=', datetime.datetime.combine(gstart, datetime.time(0, 0))), ('date_done', '<', datetime.datetime.combine(gend + datetime.timedelta(days=1), datetime.time(0, 0)))])
+
+    # search (PO, supplier, product, order no., delivery note)
+    q = (params.get('q') or '').strip()
+    found = []
+    if len(q) >= 2:
+        lq = ['|', '|', '|', '|', ('x_product_text', 'ilike', q), ('x_supplier_ref', 'ilike', q), ('x_shipment', 'ilike', q),
+              ('x_partner_id.name', 'ilike', q), ('x_wareneingang_id.x_studio_purchase_order.name', 'ilike', q)]
+        pq = ['|', '|', '|', '|', ('purchase_id.name', 'ilike', q), ('purchase_id.partner_ref', 'ilike', q), ('partner_id.name', 'ilike', q),
+              ('move_ids.product_id.name', 'ilike', q), ('origin', 'ilike', q)]
+        found = collect([('x_done', '=', False), ('x_date', '!=', False)] + lq,
+                        PBASE + [('state', 'not in', ['done', 'cancel', 'draft'])] + pq,
+                        PBASE + [('state', '=', 'done')] + pq)
+        found = sorted(found, key=lambda e: e['d'], reverse=True)[:60]
 
     COLORS = ['#2563eb', '#db2777', '#059669', '#d97706', '#7c3aed', '#0891b2', '#dc2626', '#65a30d']
     sups = []
@@ -2049,7 +2226,7 @@ else:
         return '?key=' + KEY + '&amp;m=' + d.strftime('%Y-%m') + ('' if de else '&amp;lang=en')
 
     def evhtml(e, d):
-        od = ' od' if d < today else ''
+        od = ' dlv' if e['kind'] == 'done' else (' od' if d < today else '')
         return ('<div class="ev' + od + '" style="border-left-color:' + col(e['sup']) + '" title="' + esc(e['sup'] + ' · ' + e['prod']) + '">'
                 + '<b>' + num(e['qty']) + '</b> ' + esc(e['prod']) + '<span>' + esc(e['sup']) + (' · ' + esc(e['ship']) if e['ship'] else '')
                 + (' · ' + esc(e['ref']) if e['ref'] else '') + '</span></div>')
@@ -2063,13 +2240,14 @@ else:
         return out
 
     # KPIs
-    tday = [x for x in ev if x['d'] == today]
+    tday = [x for x in ev if x['d'] == today and x['kind'] != 'done']
     mev = [x for x in ev if first <= x['d'] <= last]
-    odl = [x for x in ev if x['d'] < today]
+    mdone = [x for x in mev if x['kind'] == 'done']
+    odl = [x for x in ev if x['d'] < today and x['kind'] != 'done']
     absnow = [a for a in absn if a['a'] <= today <= a['b'] and today.weekday() < 5 and not a['p']]
     k = ['<div class="kpis">',
          '<div class="kpi"><small>' + L['k_today'] + '</small><b>' + (num(sum(x['qty'] for x in tday)) + ' ' + L['pcs'] if tday else L['none_today']) + '</b><span>' + str(len(tday)) + ' ' + (L['deliv1'] if len(tday) == 1 else L['deliv']) + '</span></div>',
-         '<div class="kpi"><small>' + L['k_month'] + ' · ' + MONTHS[m - 1] + '</small><b>' + num(sum(x['qty'] for x in mev)) + ' ' + L['pcs'] + '</b><span>' + str(len(mev)) + ' ' + (L['deliv1'] if len(mev) == 1 else L['deliv']) + '</span></div>',
+         '<div class="kpi"><small>' + L['k_month'] + ' · ' + MONTHS[m - 1] + '</small><b>' + num(sum(x['qty'] for x in mev)) + ' ' + L['pcs'] + '</b><span>' + str(len(mev)) + ' ' + (L['deliv1'] if len(mev) == 1 else L['deliv']) + ((' · <b style="display:inline;font-size:12.5px;color:#16a34a">' + num(sum(x['qty'] for x in mdone)) + ' ' + L['done_s'] + '</b>') if mdone else '') + '</span></div>',
          '<div class="kpi' + (' red' if odl else '') + '"><small>' + L['k_od'] + '</small><b>' + str(len(odl)) + '</b><span>' + num(sum(x['qty'] for x in odl)) + ' ' + L['pcs'] + '</span></div>',
          '<div class="kpi"><small>' + L['k_abs'] + '</small><b>' + str(len(absnow)) + '</b><span>' + (', '.join([esc(a['n']) for a in absnow]) or L['nobody']) + '</span></div>',
          '</div>']
@@ -2126,7 +2304,7 @@ else:
     if not mev:
         s.append('<p class="mut" style="margin:0">' + L['nodel'] + '</p>')
     for e in mev:
-        tag = L['po'] if e['kind'] == 'po' else L['plan']
+        tag = L['done'] if e['kind'] == 'done' else (L['po'] if e['kind'] == 'po' else L['plan'])
         s.append('<div class="row"><span><i class="dot" style="background:' + col(e['sup']) + '"></i>' + e['d'].strftime('%d.%m.') + ' ' + esc(e['prod'])
                  + '<small>' + esc(e['sup']) + (' · ' + esc(e['ship']) if e['ship'] else '') + ' · ' + tag + (' ' + esc(e['ref']) if e['ref'] else '') + '</small></span><b>' + num(e['qty']) + '</b></div>')
     s.append('</div>')
@@ -2142,12 +2320,28 @@ else:
         s.append('<div class="row total"><span>' + L['total'] + '</span><b>' + num(sum(tot.values())) + ' ' + L['pcs'] + '</b></div></div>')
     s.append('</aside>')
 
+    srch_html = ('<form class="srch" method="get" action=""><input type="hidden" name="key" value="' + KEY + '">' + ('' if de else '<input type="hidden" name="lang" value="en">')
+                 + '<input type="search" name="q" value="' + esc(q) + '" placeholder="' + L['srch'] + '"><button>' + L['go'] + '</button>'
+                 + ('<a class="x" href="' + link(first) + '">' + L['clear'] + '</a>' if q else '') + '</form>')
+    if len(q) >= 2:
+        rr = ''
+        for e in found:
+            if e['kind'] == 'done':
+                st = '<span class="s s-dn">✓ ' + L['done'] + '</span>'
+            elif e['d'] < today:
+                st = '<span class="s s-od">' + L['k_od'] + '</span>'
+            else:
+                st = '<span class="s s-ex">' + L['expected'] + '</span>'
+            rr += ('<tr><td>' + e['d'].strftime('%d.%m.%Y') + '</td><td>' + st + '</td><td>' + esc(e['prod']) + '<br><span class="mut" style="font-size:12px">' + esc(e['sup'])
+                   + (' · ' + esc(e['ship']) if e['ship'] else '') + (' · ' + esc(e['ref']) if e['ref'] else '') + '</span></td><td class="r"><b>' + num(e['qty']) + '</b></td>'
+                   + '<td class="r"><a href="' + link(e['d']) + '">' + L['show'] + '</a></td></tr>')
+        srch_html += ('<div class="box res"><h3>' + L['res'] + ': „' + esc(q) + '“</h3>' + ('<table><tr><th>' + L['date'] + '</th><th>' + L['status'] + '</th><th>' + L['what'] + '</th><th class="r">' + L['qty'] + '</th><th></th></tr>' + rr + '</table>' if rr else '<p class="mut" style="margin:0">' + L['nores'] + '</p>') + '</div>')
     langlink = ('?key=' + KEY + '&amp;m=' + first.strftime('%Y-%m') + '&amp;lang=en') if de else ('?key=' + KEY + '&amp;m=' + first.strftime('%Y-%m'))
     html = (page_head(TITLE) + '<meta http-equiv="refresh" content="600"></head><body>'
             + '<div class="top"><div class="in"><div class="brand"><img src="' + LOGO + '" alt="IQ Dogsport"><div><h1>' + TITLE + '</h1><p>' + L['sub'] + '</p></div></div>'
             + '<nav><a href="' + link(prv) + '">&larr;</a><b>' + MONTHS[m - 1] + ' ' + str(y) + '</b><a href="' + link(nxt) + '">&rarr;</a>'
             + '<a href="' + link(today) + '">' + L['today'] + '</a><a href="?key=' + KEY + '&amp;view=me' + ('' if de else '&amp;lang=en') + '" style="background:#a51d1b;border-color:#a51d1b">' + ('Meine Stunden &amp; Urlaub' if de else 'My hours &amp; vacation') + '</a><a href="' + langlink + '">' + ('EN' if de else 'DE') + '</a></nav></div></div>'
-            + '<div class="wrap">' + ''.join(k) + '<main><div>' + ''.join(g) + ''.join(ag) + '</div>' + ''.join(s) + '</main></div>'
+            + '<div class="wrap">' + ''.join(k) + srch_html + '<main><div>' + ''.join(g) + ''.join(ag) + '</div>' + ''.join(s) + '</main></div>'
             + '<footer><span>' + L['upd'] + ': ' + datetime.datetime.now().strftime('%d.%m.%Y %H:%M') + ' UTC</span><a href="?key=' + KEY + '&amp;logout=1">' + L['logout'] + '</a></footer></body></html>')
     response = request.make_response(html, headers=[('Content-Type', 'text/html; charset=utf-8'), ('X-Robots-Tag', 'noindex'), ('Cache-Control', 'no-store')])
 '''

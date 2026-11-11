@@ -326,3 +326,18 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Elena: Shopify Manager → User (Accounting Invoicing), Office without accounting rights. Once an invoice is posted and sent to the customer, only Patricia and Florian can reset or cancel it (group Invoice Posting Allowed, extension view, automation rule). Tested in production on RE/2026/05730 and RE/2026/05722. Lock date 31.10.2026 still pending.",
     link: "odoo/invoice-reset-lock/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-10", area: "Odoo", status: "Live",
+    title: "Calendar: delivered goods + search",
+    summary: "Delivered receipts stay on the warehouse calendar with the delivered pieces (one entry per order and day). Search by order, supplier, product or delivery note. My hours shows only the overtime balance.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-10", area: "Odoo", status: "Live",
+    title: "Upcoming deliveries: arrived goods",
+    summary: "New automation adds an arrived line for every validated purchase receipt, sets the card's arrival date and closes planned lines of fully received orders. Filled once for all receipts since 01.01.2026.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-11", area: "Odoo", status: "Live",
+    title: "Team overview: Odoo vacation numbers + all approvals",
+    summary: "Vacation left/entitlement now taken directly from Odoo (fixes wrong numbers caused by expired allocations). Clicking vacation opens the employee's request list. All pending approvals in one list: leave, allocation requests, overtime.",
+    link: "odoo/wareneingaenge/" }
+]);
