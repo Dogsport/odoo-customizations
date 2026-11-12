@@ -222,6 +222,14 @@ window.IQ_LOG = [
     status: "Staging",
     link: "odoo/carrier-fallback-ticket-deliveries-2026-11-03/"
   },
+  {
+    date: "2026-11-12",
+    area: "Odoo · Returns / DHL",
+    title: "DHL return label for returns without outbound DHL shipment",
+    summary: "WH1/RET/00701 (ticket #00996): no return_id -> button hidden, BrowseInfo check 'no validated outbound DHL shipment'. View: not is_return_picking -> not carrier_id. Server action 1777 v2: return = is_return_picking or Returns operation type; no outbound DHL -> env['dhl.request'].create_return_shipment directly. Tested: label 545935501591.",
+    status: "Live",
+    link: "odoo/dhl-return-label-without-outbound-2026-11-12/"
+  },
 ];
 
 window.IQ_LOG = (window.IQ_LOG || []).concat([

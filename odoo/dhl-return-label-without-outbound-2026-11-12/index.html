@@ -1,0 +1,229 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DHL Return Label Without Outbound</title><style>:root{--ink:#151515;--muted:#5b5b58;--line:#e2e0dc;--bg:#f6f5f3;--accent:#a6230f;--ok:#1d5e2a;--okbg:#e6f2e8;--warnbg:#fff5d6}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:var(--ink);color:#fff;padding:28px 20px} header a{color:#f4aaaa;text-decoration:none;font-size:13px}
+main{max-width:960px;margin:0 auto;padding:20px 16px 60px}
+h1{font:900 30px/1.2 Arial,sans-serif;margin:8px 0 0} h2{font:800 20px Arial,sans-serif;margin-top:34px;border-top:3px solid var(--accent);padding-top:8px;display:inline-block}
+table{border-collapse:collapse;width:100%;background:#fff;display:block;overflow-x:auto;margin:8px 0} th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top} th{background:#efeeeb}
+code{background:#ecebe8;padding:1px 4px;border-radius:3px;font-size:13px;overflow-wrap:anywhere} pre{background:#151515;color:#eee;padding:14px;border-radius:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-word} pre code{background:none;color:inherit;font-size:12px}
+a{color:var(--accent)} .good{background:var(--okbg);border-left:4px solid var(--ok);padding:8px 12px;margin:10px 0} .warn{background:var(--warnbg);border-left:4px solid #b7791f;padding:8px 12px;margin:10px 0}
+.flow{background:#fff;border:1px solid var(--line);padding:12px 16px;font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre-wrap;overflow-x:auto}
+figure{margin:12px 0;background:#fff;border:1px solid var(--line);padding:8px} figure img{max-width:100%;height:auto;display:block} figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px} @media(max-width:700px){.grid{grid-template-columns:1fr}}
+@media print{table{display:table;font-size:11px} header,pre{-webkit-print-color-adjust:exact;print-color-adjust:exact} header a{display:none} tr,pre,figure{break-inside:avoid} h2,h3{break-after:avoid}}</style></head><body>
+<header><div style="max-width:960px;margin:0 auto"><a href="../../">← All documentation</a>
+<h1>DHL return label for returns without outbound DHL shipment (12.11.2026)</h1></div></header>
+<main>
+<p style="font-size:13px"><a href="DHL_Return_Label_Without_Outbound_2026-11-12.pdf">PDF version</a> · <a href="code/">Code</a> · based on <a href="../dhl-return-label-email-2026-10-29/">Return label email 29.10.</a></p>
+<div class="good"><strong>Status 12.11.2026: LIVE in Production.</strong> Tested on WH1/RET/00701 (ticket #00996, Vanessa Liebich): DHL return label 545935501591 created without outbound DHL shipment. Owner: Hamza.</div>
+
+<h2>1. Problem</h2>
+<p>For returns created from a Helpdesk ticket (complaint/warranty) the DHL return label could not be created:</p>
+<ul>
+<li>Button <em>Retourenlabel senden</em> was <strong>not visible</strong>.</li>
+<li>BrowseInfo buttons (<em>Get Receivers</em> / <em>Print Return Label</em>) failed: <em>“You cannot generate a return label because there is no validated outbound DHL shipment (with tracking reference) associated with this return.”</em></li>
+</ul>
+<p>Affected: every return without an outbound DHL delivery in Odoo – returns from tickets, orders shipped with GLS, orders from before the DHL go-live (27.10.2026).</p>
+<figure><a href="img/01-error-no-outbound-dhl.jpg"><img src="img/01-error-no-outbound-dhl.jpg" alt="Production WH1/RET/00701 (ticket #00996) – BrowseInfo error" loading="lazy"></a><figcaption>Production WH1/RET/00701 (ticket #00996) – BrowseInfo error</figcaption></figure>
+
+<h2>2. Cause</h2>
+<table>
+<tr><th>Part</th><th>Why it failed</th></tr>
+<tr><td>Our button view</td><td>Hidden when <code>not is_return_picking</code>. Odoo only sets this for returns made with the <em>Return</em> button (field <code>return_id</code>). Returns from tickets have no <code>return_id</code> (checked: WH1/RET/00701 return_id empty, sale_id 16497).</td></tr>
+<tr><td>Our server action v1</td><td>Same check (<code>not picking.is_return_picking</code>) → “not an open return”.</td></tr>
+<tr><td>BrowseInfo connector</td><td>The check “outbound DHL shipment with tracking” is only in its buttons: <code>stock_picking.py → action_open_return_receiver_wizard</code> and <code>delivery_carrier.py → dhl_parcel_de_get_return_label</code>.</td></tr>
+<tr><td>DHL API call</td><td><code>dhl_request.py:753 create_return_shipment(carrier, picking)</code> does <strong>not</strong> use the outbound shipment – only the return's contact (address, email, phone), <code>dhl_return_receiver_id</code> (default deu), sales order name/total (or return name / 10 €), weight (default 1 kg).</td></tr>
+</table>
+<figure><a href="img/02-return-from-ticket-additional-info.jpg"><img src="img/02-return-from-ticket-additional-info.jpg" alt="Return from ticket: carrier DHL Parcel DE and receiver deu are set (by rule “IQ – Return: DHL carrier for Germany”), but no outbound shipment" loading="lazy"></a><figcaption>Return from ticket: carrier DHL Parcel DE and receiver deu are set (by rule “IQ – Return: DHL carrier for Germany”), but no outbound shipment</figcaption></figure>
+
+<h2>3. Fix (automation only – no module, no new fields, BrowseInfo unchanged)</h2>
+<table>
+<tr><th>Case</th><th>Created by</th><th>Result</th></tr>
+<tr><td>1</td><td>Return button on a DHL delivery</td><td>BrowseInfo creates label – unchanged</td></tr>
+<tr><td>2</td><td>Return button on old / GLS delivery (no DHL tracking)</td><td>our action creates label directly</td></tr>
+<tr><td>3</td><td>Return from Helpdesk ticket (no return_id)</td><td>our action creates label directly</td></tr>
+</table>
+<h3>3a. View “IQ – Send return label button”</h3>
+<p><code>not is_return_picking</code> → <code>not carrier_id</code>. Buttons show on open incoming transfers with a carrier.</p>
+<pre><code>&lt;!--
+Odoo 19 - inherited view (PRODUCTION) - v2, live since 12.11.2026 (v1: 29.10.2026)
+View Name:              IQ – Send return label button
+View Type:              Form
+Model:                  Transfer (stock.picking)
+Inherited View:         stock.picking.form  (External ID stock.view_picking_form, the one WITHOUT parent)
+View inheritance mode:  Extension View
+Access Rights:          empty (all users)
+name = id of the server action &quot;Send return label&quot; (production 1777 - NOT the staging id 1774)
+v2: &quot;not is_return_picking&quot; replaced by &quot;not carrier_id&quot; - returns created from tickets have no return_id,
+    so is_return_picking is False and the button was hidden. The server action checks if it is really a return.
+--&gt;
+&lt;xpath expr=&quot;//header&quot; position=&quot;inside&quot;&gt;
+    &lt;button name=&quot;1777&quot; type=&quot;action&quot; string=&quot;Retourenlabel senden&quot; class=&quot;btn-primary&quot; invisible=&quot;state == &#x27;done&#x27; or picking_type_code != &#x27;incoming&#x27; or not carrier_id or carrier_tracking_ref&quot;/&gt;
+    &lt;button name=&quot;1777&quot; type=&quot;action&quot; string=&quot;Retourenlabel erneut senden&quot; class=&quot;btn-secondary&quot; confirm=&quot;Für diese Retoure wurde bereits ein Label erstellt. Erneut an den Kunden senden?&quot; invisible=&quot;state == &#x27;done&#x27; or picking_type_code != &#x27;incoming&#x27; or not carrier_id or not carrier_tracking_ref&quot;/&gt;
+&lt;/xpath&gt;
+</code></pre>
+<h3>3b. Server action “Send return label” (production 1777)</h3>
+<ul>
+<li>“Return” = <code>is_return_picking</code> <strong>or</strong> operation type is a Returns type (<code>return_picking_type_id</code> of another type) – supplier receipts are still refused.</li>
+<li>Outbound DHL shipment found (same lookup as BrowseInfo) → <code>print_return_label()</code> as before.</li>
+<li>Not found → carrier must be <code>dhl_parcel_de</code>; receiver empty + customer in DE → <code>deu</code>; other countries → clear message (only Germany set up, see Finland / Retoure International).</li>
+<li>Calls <code>env["dhl.request"].create_return_shipment(carrier, picking)</code>, saves PDF like BrowseInfo (<code>LabelReturn-dhl_parcel_de-&lt;tracking&gt;.pdf</code>, description “System generated DHL Return Label”), writes Tracking Reference, chatter note <em>“(IQ: created without outbound DHL shipment)”</em>.</li>
+<li>Email part (template DE/EN, ticket, forms) unchanged.</li>
+</ul>
+<pre><code># Odoo 19 - Server Action (PRODUCTION id 1777, staging id 1774)
+# Name:  Send return label   - v2, live since 12.11.2026 (v1: 29.10.2026)
+# Model: Transfer (stock.picking), Type: Execute Code, &quot;Create Contextual Action&quot; done
+# Used by the buttons &quot;Retourenlabel senden&quot; / &quot;Retourenlabel erneut senden&quot; (view &quot;IQ – Send return label button&quot;).
+#
+# 1. uses the existing LabelReturn PDF, or creates it:
+#    a) return HAS an outbound DHL shipment (tracking ref) -&gt; BrowseInfo connector as before (print_return_label)
+#    b) NO outbound DHL shipment (returns from Helpdesk tickets, old/GLS orders)
+#       -&gt; calls the connector&#x27;s DHL request directly: env[&quot;dhl.request&quot;].create_return_shipment(carrier, picking)
+#          (the &quot;no validated outbound DHL shipment&quot; check is only in the connector&#x27;s buttons, not in this method)
+#          and saves the PDF exactly like the connector (name LabelReturn-..., description, chatter note)
+#    &quot;Return&quot; = created with the Return button (is_return_picking) OR operation type is a Returns type
+# 2. picks template (DE) or (EN) by the customer&#x27;s language
+# 3. opens the email composer on the HELPDESK TICKET if the return belongs to one, otherwise on the return
+# 4. attaches the DHL label + the reclamation form (Retourenschein) from the template
+
+picking = record
+
+def find_label(p):
+    return env[&quot;ir.attachment&quot;].search([
+        (&quot;res_model&quot;, &quot;=&quot;, &quot;stock.picking&quot;), (&quot;res_id&quot;, &quot;=&quot;, p.id),
+        (&quot;mimetype&quot;, &quot;=&quot;, &quot;application/pdf&quot;), (&quot;name&quot;, &quot;ilike&quot;, &quot;LabelReturn&quot;)], order=&quot;id desc&quot;, limit=1)
+
+def dhl_source_picking(p):
+    # same lookup as the BrowseInfo connector uses for its check
+    src = env[&quot;stock.picking&quot;]
+    for move in p.move_ids:
+        if move.origin_returned_move_id and move.origin_returned_move_id.picking_id:
+            src = move.origin_returned_move_id.picking_id
+            break
+    if not src and p.origin:
+        name = p.origin.replace(&quot;Return of&quot;, &quot;&quot;).strip()
+        src = env[&quot;stock.picking&quot;].search([(&quot;name&quot;, &quot;=&quot;, name)], limit=1)
+    return src if (src and src.carrier_tracking_ref) else env[&quot;stock.picking&quot;]
+
+label = find_label(picking)
+if not label:
+    # return = created with the Return button OR operation type is a Returns type (e.g. returns from tickets)
+    is_return_type = picking.is_return_picking or env[&quot;stock.picking.type&quot;].search_count([(&quot;return_picking_type_id&quot;, &quot;=&quot;, picking.picking_type_id.id)])
+    if not is_return_type or picking.picking_type_code != &quot;incoming&quot; or picking.state == &quot;done&quot;:
+        raise UserError(&quot;%s is not an open return - no return label can be created.&quot; % picking.name)
+    carrier = picking.carrier_id
+    if not carrier:
+        raise UserError(&quot;No carrier on %s - please set DHL Parcel DE first.&quot; % picking.name)
+
+    if dhl_source_picking(picking):
+        # a) normal case - unchanged
+        picking.print_return_label()
+    else:
+        # b) no outbound DHL shipment -&gt; create the return label directly
+        if carrier.delivery_type != &quot;dhl_parcel_de&quot;:
+            raise UserError(&quot;%s has no outbound DHL shipment and the carrier is &#x27;%s&#x27;. Please set carrier DHL Parcel DE.&quot; % (picking.name, carrier.name))
+        partner = picking.partner_id
+        if not partner:
+            raise UserError(&quot;No customer (Receive From) on %s.&quot; % picking.name)
+        if not picking.dhl_return_receiver_id:
+            country = partner.country_id or partner.commercial_partner_id.country_id
+            if country and country.code == &quot;DE&quot;:
+                picking.write({&quot;dhl_return_receiver_id&quot;: &quot;deu&quot;})
+            else:
+                raise UserError(&quot;No DHL return receiver for %s (country %s). DHL returns are currently only set up for Germany - please create the label manually.&quot; % (picking.name, country.name if country else &quot;-&quot;))
+        result = env[&quot;dhl.request&quot;].create_return_shipment(carrier, picking)
+        if not result or not result.get(&quot;label_b64&quot;):
+            raise UserError(&quot;DHL did not return a label for %s. Please check the customer address.&quot; % picking.name)
+        tracking_no = result.get(&quot;tracking_number&quot;)
+        att = env[&quot;ir.attachment&quot;].create({
+            &quot;name&quot;: &quot;%s-%s.pdf&quot; % (carrier.get_return_label_prefix(), tracking_no),
+            &quot;type&quot;: &quot;binary&quot;,
+            &quot;datas&quot;: result.get(&quot;label_b64&quot;),
+            &quot;res_model&quot;: &quot;stock.picking&quot;,
+            &quot;res_id&quot;: picking.id,
+            &quot;mimetype&quot;: &quot;application/pdf&quot;,
+            &quot;description&quot;: &quot;System generated DHL Return Label&quot;,
+        })
+        picking.write({&quot;carrier_tracking_ref&quot;: tracking_no})
+        picking.message_post(
+            body=&quot;DHL Return shipping label attached. Tracking Number: %s (IQ: created without outbound DHL shipment)&quot; % tracking_no,
+            attachment_ids=[att.id])
+
+    label = find_label(picking)
+    if not label:
+        raise UserError(&quot;The return label was created, but no &#x27;LabelReturn&#x27; PDF was found on %s. Please check the chatter.&quot; % picking.name)
+
+lang = (picking.partner_id.lang or &quot;&quot;).lower()
+key = &quot;(DE)&quot; if lang.startswith(&quot;de&quot;) else &quot;(EN)&quot;
+template = env[&quot;mail.template&quot;].search([(&quot;model&quot;, &quot;=&quot;, &quot;stock.picking&quot;), (&quot;name&quot;, &quot;ilike&quot;, &quot;Return label for customer &quot; + key)], limit=1)
+if not template:
+    raise UserError(&quot;Email template &#x27;IQ – Return label for customer %s&#x27; not found.&quot; % key)
+tmp = env[&quot;mail.compose.message&quot;].create({
+    &quot;model&quot;: &quot;stock.picking&quot;, &quot;res_ids&quot;: str([picking.id]),
+    &quot;composition_mode&quot;: &quot;comment&quot;, &quot;template_id&quot;: template.id})
+subject, body = tmp.subject, tmp.body
+
+ticket = env[&quot;helpdesk.ticket&quot;]
+# .sudo(): ir.model.fields is readable for administrators only (access error for Elena on 29.10.)
+if env[&quot;ir.model.fields&quot;].sudo().search_count([(&quot;model&quot;, &quot;=&quot;, &quot;helpdesk.ticket&quot;), (&quot;name&quot;, &quot;=&quot;, &quot;picking_ids&quot;)]):
+    ticket = env[&quot;helpdesk.ticket&quot;].search([(&quot;picking_ids&quot;, &quot;in&quot;, picking.ids)], order=&quot;id desc&quot;, limit=1)
+model, res_id = (&quot;helpdesk.ticket&quot;, ticket.id) if ticket else (&quot;stock.picking&quot;, picking.id)
+
+composer = env[&quot;mail.compose.message&quot;].create({
+    &quot;model&quot;: model, &quot;res_ids&quot;: str([res_id]), &quot;composition_mode&quot;: &quot;comment&quot;,
+    &quot;subject&quot;: subject, &quot;body&quot;: body,
+    &quot;partner_ids&quot;: [(6, 0, [picking.partner_id.id])]})
+# template attachments are not copied when the composer is created from code -&gt; copy them
+form_ids = [a.copy({&quot;res_model&quot;: &quot;mail.compose.message&quot;, &quot;res_id&quot;: composer.id}).id for a in template.attachment_ids]
+composer.write({&quot;attachment_ids&quot;: [(4, label.id)] + [(4, i) for i in form_ids]})
+# no tmp.unlink(): server actions may not delete mail.compose.message (access error); Odoo cleans it up
+
+action = {
+    &quot;type&quot;: &quot;ir.actions.act_window&quot;,
+    &quot;name&quot;: &quot;Send return label&quot; + (&quot; – Ticket %s&quot; % ticket.display_name if ticket else &quot;&quot;),
+    &quot;res_model&quot;: &quot;mail.compose.message&quot;, &quot;res_id&quot;: composer.id,
+    &quot;view_mode&quot;: &quot;form&quot;, &quot;views&quot;: [[False, &quot;form&quot;]], &quot;target&quot;: &quot;new&quot;}
+</code></pre>
+<figure><a href="img/03-label-created-without-outbound.jpg"><img src="img/03-label-created-without-outbound.jpg" alt="Result: label 545935501591 attached, button switched to “Retourenlabel erneut senden”" loading="lazy"></a><figcaption>Result: label 545935501591 attached, button switched to “Retourenlabel erneut senden”</figcaption></figure>
+
+<h2>4. Tests (Production, 12.11.2026)</h2>
+<table>
+<tr><th>Test</th><th>Expected</th><th>Result</th></tr>
+<tr><td>WH1/RET/00701 – return from ticket, no outbound DHL</td><td>Label + IQ chatter note + tracking, email opens</td><td>✓ label 545935501591</td></tr>
+<tr><td>Same return → “erneut senden”</td><td>No second label, email with same label</td><td>open</td></tr>
+<tr><td>Return button on a DHL delivery</td><td>BrowseInfo label as before, no IQ note</td><td>open</td></tr>
+<tr><td>Return button on GLS / old delivery</td><td>Label with IQ note</td><td>open</td></tr>
+<tr><td>Return customer outside Germany</td><td>Message “only set up for Germany”</td><td>open</td></tr>
+<tr><td>Same as test 1 as Elena</td><td>No access error</td><td>open</td></tr>
+</table>
+
+<h2>5. Notes &amp; limits</h2>
+<ul>
+<li>Only countries with a DHL return receiver – currently Germany (<code>deu</code>). Finland etc. need DHL Retoure International (procedure 53), requested from DHL sales (Peter Strauch).</li>
+<li>Customer address must be complete (DHL validates; house number fallback “1” in the connector).</li>
+<li>After a BrowseInfo update: check that <code>create_return_shipment</code> still exists (read-only grep below) and retest one ticket return.</li>
+<li>DHL return labels are billed only when scanned – unused labels cost nothing.</li>
+<li>The ⚙ Actions menu entry “Send return label” comes from “Create Contextual Action”; can be removed without affecting the buttons.</li>
+</ul>
+<p><strong>Rollback:</strong> paste v1 back (server action: <code>picking.print_return_label()</code> only, check <code>not picking.is_return_picking</code>; view: <code>not is_return_picking</code> instead of <code>not carrier_id</code>) – see <a href="../dhl-return-label-email-2026-10-29/">29.10 page</a> (code files there are now v2; v1 is in git history).</p>
+
+<h2>6. Read-only checks</h2>
+<pre><code>-- Read only: psql -c &quot;&lt;query&gt;&quot;
+
+-- 1. Is a transfer a &quot;real&quot; return (return_id) or created from a ticket (empty)?
+SELECT sp.name, sp.return_id, sp.carrier_tracking_ref, sp.sale_id, sp.dhl_return_receiver_id FROM stock_picking sp WHERE sp.name = &#x27;WH1/RET/00701&#x27;;
+
+-- 2. Carrier technical name (must be dhl_parcel_de) and Returns operation type link
+SELECT id, name, delivery_type FROM delivery_carrier WHERE name ILIKE &#x27;%DHL%&#x27;;
+SELECT id, name-&gt;&gt;&#x27;en_US&#x27; AS name, return_picking_type_id FROM stock_picking_type WHERE code = &#x27;outgoing&#x27; AND active;
+
+-- 3. Return labels created without outbound DHL shipment (chatter note)
+SELECT m.date, sp.name, left(regexp_replace(m.body,&#x27;&lt;[^&gt;]+&gt;&#x27;,&#x27;&#x27;,&#x27;g&#x27;),140) AS note FROM mail_message m JOIN stock_picking sp ON sp.id = m.res_id AND m.model = &#x27;stock.picking&#x27; WHERE m.body LIKE &#x27;%created without outbound DHL shipment%&#x27; ORDER BY m.date DESC LIMIT 30;
+
+-- Source lookup in the BrowseInfo connector (read only):
+-- cd ~/src/user/bi_delivery_dhl_de_connector &amp;&amp; grep -rn &quot;no validated outbound DHL shipment&quot; .
+--   models/stock_picking.py   action_open_return_receiver_wizard  (button &quot;Get Receivers&quot;)
+--   models/delivery_carrier.py dhl_parcel_de_get_return_label     (Print Return Label)
+--   models/dhl_request.py:753 create_return_shipment(carrier, picking)  -&gt; no check, used by our action
+</code></pre>
+</main></body></html>
