@@ -35,6 +35,11 @@
 <main>
   <h2>Daily log</h2>
   <div class="grid">
+    <a class="card" href="odoo/payment-reminders/">
+      <b>Automatic payment reminders</b>
+      <span>Daily scheduled action: 3 reminder emails (friendly, 1. Mahnung, 2. Mahnung) for unpaid, sent customer invoices. Immediate: day 14/21/28, payment terms: due date/+7/+14. View-and-pay-online button. To-Do for Florian and Patricia after the 3rd reminder.</span>
+      <em>13.11.2026 · Live</em>
+    </a>
     <a class="card" href="odoo/dhl-return-label-without-outbound-2026-11-12/">
       <b>DHL return label for returns without outbound DHL shipment</b>
       <span>Returns from Helpdesk tickets (and old/GLS orders) had no label button and BrowseInfo refused the label. Button now shows on open incoming transfers with carrier; server action calls the DHL return API directly when no outbound DHL shipment exists. Live 12.11.</span>
@@ -111,6 +116,11 @@
 
   <h2>Odoo · Invoicing</h2>
   <div class="grid">
+    <a class="card" href="odoo/payment-reminders/">
+      <b>Automatic payment reminders</b>
+      <span>Daily scheduled action: 3 reminder emails (friendly, 1. Mahnung, 2. Mahnung) for unpaid, sent customer invoices. Immediate: day 14/21/28, payment terms: due date/+7/+14. View-and-pay-online button. To-Do for Florian and Patricia after the 3rd reminder.</span>
+      <em>13.11.2026 · Live</em>
+    </a>
     <a class="card" href="odoo/invoice-reset-lock/">
       <b>Sent invoices: Reset to Draft only for admins</b>
       <span>Root cause: Shopify / Manager implies Accounting Administrator. Fix: Elena → Shopify User, Office without accounting rights, group "Invoice Posting Allowed" (Patricia, Florian), extension view hides the button on sent invoices, automation rule blocks reset/cancel. Tests, code, rollback.</span>

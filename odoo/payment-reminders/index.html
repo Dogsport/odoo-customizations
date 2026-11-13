@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automatic payment reminders – IQ Dogsport</title>
+<style>
+  :root { --red:#b3261e; --ink:#1a1a1a; --muted:#555; --bg:#f3f2ef; --card:#fff; --line:#e3e1dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.55; }
+  header { background:#161616; color:#fff; padding:40px 0 34px; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+  .kicker { color:#f08c8c; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  header h1 { margin:8px 0 6px; font-size:30px; }
+  header p { margin:0; color:#ddd; }
+  .back { display:inline-block; margin:24px 0 0; color:var(--red); text-decoration:none; font-weight:600; }
+  main { padding:8px 0 60px; }
+  h2 { font-size:21px; margin:40px 0 14px; padding-top:10px; border-top:3px solid var(--red); display:inline-block; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  .meta { font-size:14px; color:var(--muted); margin-top:16px; }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin:14px 0; }
+  .box.note { border-left:4px solid var(--red); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); margin:12px 0; font-size:14px; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#faf9f7; font-weight:600; }
+  code { font-family:SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; background:#efedea; padding:1px 5px; border-radius:3px; }
+  pre { background:#1e1e1e; color:#eaeaea; padding:14px 16px; border-radius:6px; overflow-x:auto; font-size:13px; line-height:1.5; }
+  pre code { background:none; padding:0; color:inherit; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--red); }
+  ul, ol { padding-left:22px; }
+  li { margin:4px 0; }
+  .ok { color:#1b7a3a; font-weight:600; }
+  .wait { color:#a15c00; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="kicker">IQ Dogsport GmbH · Internal documentation</div>
+    <h1>Automatic payment reminders</h1>
+    <p>Daily scheduled action that sends up to three reminder emails for unpaid, sent customer invoices and notifies Florian and Patricia.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <a class="back" href="../../">← Odoo customizations</a>
+  <div class="meta">Prepared by: Hamza Mohsin · Done: 13.11.2026 · <span class="tag">Live in production</span> · Requested by Florian · <a href="IQ_Payment_Reminders_Overview.pdf">Overview PDF for Florian (9 pages)</a></div>
+</div>
+
+<main class="wrap">
+
+  <h2>1. Why</h2>
+  <p>Florian asked for automatic reminders for unpaid customer invoices: three emails, 7 days apart, and a notification to Florian and Patricia if the invoice is still unpaid. Before this, no reminders were sent automatically.</p>
+  <div class="box note"><strong>Why not Odoo's standard Follow-up Levels:</strong> they count only from the due date with one list for all customers. Florian's plan needs two schedules (Immediate: +14/+21/+28 after invoice date; payment terms: due date/+7/+14). They also remind invoices that were never sent to the customer. The two existing levels (15 and 30 days) had <em>Automatic</em> off and stay off.</div>
+
+  <h2>2. Schedule</h2>
+  <img src="timeline.png" alt="Reminder timeline" style="width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;">
+  <table>
+    <tr><th>Invoice</th><th>Reminder 1 (friendly)</th><th>Reminder 2 (1. Mahnung)</th><th>Reminder 3 (2. Mahnung) + To-Do</th></tr>
+    <tr><td>Immediate payment</td><td>invoice date +14</td><td>+21</td><td>+28</td></tr>
+    <tr><td>With payment term (15, 45 … days)</td><td>due date</td><td>due date +7</td><td>due date +14</td></tr>
+  </table>
+
+  <h2>3. How the daily check works</h2>
+  <img src="flow.png" alt="Daily check" style="width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;">
+  <table>
+    <tr><th>Rule</th><th>Detail</th></tr>
+    <tr><td>Only customer invoices</td><td><code>move_type = out_invoice</code>, status Posted. Credit notes are ignored.</td></tr>
+    <tr><td>Only unpaid</td><td><code>payment_state</code> not_paid or partial. Paid and "In Payment" are skipped.</td></tr>
+    <tr><td>Only sent invoices</td><td><code>is_move_sent = True</code>. Invoices never sent (e.g. payment-link orders like #IQD-99691) get nothing.</td></tr>
+    <tr><td>Start date</td><td>Only invoices with invoice date ≥ <code>START</code> (go-live). Older open invoices are handled manually.</td></tr>
+    <tr><td>Each step once</td><td>After sending, chatter note <code>IQ-REMINDER-1/2/3</code>. The job checks for it before sending.</td></tr>
+    <tr><td>Language</td><td>Template language = customer language (German / English).</td></tr>
+  </table>
+
+  <h2>4. What was created (production, 13.11.2026)</h2>
+  <h3>4.1 Email templates</h3>
+  <p>Settings → Technical → Email → Templates · Applies to: Journal Entry · Send From <code>{{ object.company_id.email_formatted }}</code> · Language <code>{{ object.partner_id.lang }}</code> · Dynamic Reports: Invoice PDF · Auto Delete off. Staging IDs 78 / 79 / 80.</p>
+  <table>
+    <tr><th>Name (must not be renamed)</th><th>Subject DE</th><th>Subject EN</th></tr>
+    <tr><td>IQ Reminder 1 – friendly</td><td>Zahlungserinnerung – Rechnung {{ object.name }}</td><td>Payment reminder – Invoice {{ object.name }}</td></tr>
+    <tr><td>IQ Reminder 2 – 1st payment reminder</td><td>1. Mahnung – Rechnung {{ object.name }}</td><td>1st payment reminder – Invoice {{ object.name }}</td></tr>
+    <tr><td>IQ Reminder 3 – 2nd payment reminder</td><td>2. Mahnung – Rechnung {{ object.name }}</td><td>2nd payment reminder – Invoice {{ object.name }}</td></tr>
+  </table>
+  <p>Each email contains: invoice number, date, open amount (<code>amount_residual</code>), a button <strong>“Rechnung ansehen und online bezahlen”</strong> (customer portal link <code>object.get_base_url() + object.get_portal_url()</code>, no login, online payment registers automatically), IBAN DE90 7215 0000 0053 3477 46 and reference. Reminder 3 is neutral (no fees).</p>
+
+  <h3>4.2 Scheduled action</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Settings → Technical → Automation → Scheduled Actions</td></tr>
+    <tr><td>Name</td><td>IQ – Daily payment reminders</td></tr>
+    <tr><td>Model</td><td>Journal Entry</td></tr>
+    <tr><td>Interval</td><td>every 1 day (recommended time: 14:00, after bank reconciliation)</td></tr>
+    <tr><td>Action</td><td>Execute Code</td></tr>
+  </table>
+<pre><code>START = datetime.date(2026, 11, 13)          # go-live date: only invoices from this day on
+TEST_PARTNER = False                         # staging test: &quot;Test Kallinger&quot;
+today = datetime.date.today()
+T = env[&#x27;mail.template&#x27;]
+tpl = {
+    1: T.search([(&#x27;name&#x27;, &#x27;=&#x27;, &#x27;IQ Reminder 1 – friendly&#x27;)], limit=1),
+    2: T.search([(&#x27;name&#x27;, &#x27;=&#x27;, &#x27;IQ Reminder 2 – 1st payment reminder&#x27;)], limit=1),
+    3: T.search([(&#x27;name&#x27;, &#x27;=&#x27;, &#x27;IQ Reminder 3 – 2nd payment reminder&#x27;)], limit=1),
+}
+managers = env[&#x27;res.users&#x27;].search([&#x27;|&#x27;, (&#x27;name&#x27;, &#x27;ilike&#x27;, &#x27;Florian Knabl&#x27;), (&#x27;name&#x27;, &#x27;ilike&#x27;, &#x27;Patricia Knabl&#x27;)])
+
+domain = [
+    (&#x27;move_type&#x27;, &#x27;=&#x27;, &#x27;out_invoice&#x27;),
+    (&#x27;state&#x27;, &#x27;=&#x27;, &#x27;posted&#x27;),
+    (&#x27;payment_state&#x27;, &#x27;in&#x27;, [&#x27;not_paid&#x27;, &#x27;partial&#x27;]),   # skips paid + &quot;in payment&quot;
+    (&#x27;is_move_sent&#x27;, &#x27;=&#x27;, True),                        # skips invoices never sent
+]
+if TEST_PARTNER:
+    domain.append((&#x27;partner_id.name&#x27;, &#x27;ilike&#x27;, TEST_PARTNER))
+else:
+    domain.append((&#x27;invoice_date&#x27;, &#x27;&gt;=&#x27;, START))
+
+for inv in env[&#x27;account.move&#x27;].search(domain):
+    # Immediate (due date = invoice date) -&gt; start 14 days later; otherwise start on due date
+    base = inv.invoice_date_due
+    if inv.invoice_date_due &lt;= inv.invoice_date:
+        base = inv.invoice_date + datetime.timedelta(days=14)
+    days = (today - base).days
+    if days &lt; 0:
+        continue
+    step = 3 if days &gt;= 14 else (2 if days &gt;= 7 else 1)
+    marker = &quot;IQ-REMINDER-%s&quot; % step
+    already = env[&#x27;mail.message&#x27;].search_count([
+        (&#x27;model&#x27;, &#x27;=&#x27;, &#x27;account.move&#x27;), (&#x27;res_id&#x27;, &#x27;=&#x27;, inv.id), (&#x27;body&#x27;, &#x27;ilike&#x27;, marker)])
+    if already or not tpl[step]:
+        continue
+    tpl[step].send_mail(inv.id)
+    inv.message_post(body=&quot;%s: payment reminder %s sent&quot; % (marker, step))
+    if step == 3:
+        for u in managers:
+            inv.activity_schedule(&#x27;mail.mail_activity_data_todo&#x27;, user_id=u.id,
+                                  summary=&quot;Invoice unpaid after 3 reminders&quot;)</code></pre>
+  <p>Production: <code>TEST_PARTNER = False</code>, <code>START</code> = go-live date. Staging: <code>TEST_PARTNER = "Test Kallinger"</code>.</p>
+
+  <h2>5. Tests (staging, 13.11.2026)</h2>
+  <p>Staging has no outgoing mail server ("Database neutralized"), so no email left the system. Test customer: Test Kallinger (own email).</p>
+  <table>
+    <tr><th>Invoice</th><th>Date</th><th>Sent</th><th>Result</th></tr>
+    <tr><td>RE/2026/05541</td><td>13.11.</td><td>yes</td><td class="ok">No reminder (not due) ✅</td></tr>
+    <tr><td>RE/2026/05542</td><td>24.10.</td><td>yes</td><td class="ok">Reminder 1 + PDF ✅</td></tr>
+    <tr><td>RE/2026/05543</td><td>21.10.</td><td>yes</td><td class="ok">Reminder 2 “1. Mahnung” ✅</td></tr>
+    <tr><td>RE/2026/05544</td><td>14.10.</td><td>yes</td><td class="ok">Reminder 3 “2. Mahnung” + To-Do Florian &amp; Patricia ✅</td></tr>
+    <tr><td>RE/2026/05545</td><td>13.11.</td><td>no</td><td class="ok">No reminder ✅</td></tr>
+    <tr><td>05542–05544 before sending</td><td></td><td>no</td><td class="ok">Run at 10:12: nothing sent ✅</td></tr>
+  </table>
+  <p>Template previews with the online-payment button checked in German and English.</p>
+
+  <h2>6. Known limits</h2>
+  <ul>
+    <li><strong>Paid but not reconciled:</strong> money in the bank but not matched to the invoice → status Not Paid → reminder is sent. Reconcile the bank before the daily run. Optional extra check (skip if an open bank line matches) is not built.</li>
+    <li><strong>Payment-link orders</strong> (invoice posted by the connector but never sent): never reminded and not flagged. Question to Florian: email reminders or an internal weekly To-Do?</li>
+    <li>Reminder steps are counted from the invoice/due date, not from the send date. An invoice sent late can get Reminder 1 the next day.</li>
+    <li>Partial payments are reminded with the remaining amount.</li>
+  </ul>
+
+  <h2>7. How to stop / undo</h2>
+  <ol>
+    <li><strong>Emergency stop:</strong> Scheduled Actions → IQ – Daily payment reminders → Active off.</li>
+    <li>Templates can stay; they send nothing on their own.</li>
+    <li>Never use “Run Manually” in production (sends real emails immediately).</li>
+  </ol>
+
+  <h2>8. Still open</h2>
+  <ul>
+    <li><span class="wait">⏳</span> Florian: final OK on texts, sender address, fees in Reminder 3, payment-link orders.</li>
+    <li><span class="wait">⏳</span> Inform Patricia that it is live.</li>
+    <li><span class="wait">⏳</span> List of old open invoices (before go-live) for Florian.</li>
+    <li><span class="wait">⏳</span> Check the first real reminders in production (Settings → Technical → Emails, invoice chatter).</li>
+  </ul>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shopify dealer orders: payment terms from the customer – IQ Dogsport</title>
+<style>
+  :root { --red:#b3261e; --ink:#1a1a1a; --muted:#555; --bg:#f3f2ef; --card:#fff; --line:#e3e1dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.55; }
+  header { background:#161616; color:#fff; padding:40px 0 34px; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+  .kicker { color:#f08c8c; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  header h1 { margin:8px 0 6px; font-size:30px; }
+  header p { margin:0; color:#ddd; }
+  .back { display:inline-block; margin:24px 0 0; color:var(--red); text-decoration:none; font-weight:600; }
+  main { padding:8px 0 60px; }
+  h2 { font-size:21px; margin:40px 0 14px; padding-top:10px; border-top:3px solid var(--red); display:inline-block; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  .meta { font-size:14px; color:var(--muted); margin-top:16px; }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin:14px 0; }
+  .box.note { border-left:4px solid var(--red); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); margin:12px 0; font-size:14px; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#faf9f7; font-weight:600; }
+  code { font-family:SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; background:#efedea; padding:1px 5px; border-radius:3px; }
+  pre { background:#1e1e1e; color:#eaeaea; padding:14px 16px; border-radius:6px; overflow-x:auto; font-size:13px; line-height:1.5; }
+  pre code { background:none; padding:0; color:inherit; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--red); }
+  ul, ol { padding-left:22px; }
+  li { margin:4px 0; }
+  .ok { color:#1b7a3a; font-weight:600; }
+  .wait { color:#a15c00; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="kicker">IQ Dogsport GmbH · Internal documentation</div>
+    <h1>Shopify dealer orders: payment terms from the customer</h1>
+    <p>Why dealer invoices were “due immediately”, what the Shopify connector does, and the automation rule that gives Hundesport Kallinger 15 days.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <a class="back" href="../../">← Odoo customizations</a>
+  <div class="meta">Prepared by: Hamza Mohsin · Done: 12.11.2026 · <span class="tag">Live in production</span> · Patricia point 2 (weekly check 11.11.2026)</div>
+</div>
+
+
+<main class="wrap">
+
+  <h2>1. Why</h2>
+  <p>Patricia's weekly check of 11.11.2026, point 2: dealer invoices were due <strong>immediately</strong> although the dealer has payment terms in Shopify. Examples: RE/2026/05772, RE/2026/05406 (Hundesport Kallinger), RE/2026/05020 (CaniTess). The invoice PDF says “Sofortige Zahlung”, and Odoo shows the invoice as overdue from day 1. That makes open items and reminders wrong.</p>
+
+  <h2>2. Debugging: what was found</h2>
+  <table>
+    <tr><th>Check</th><th>Result</th></tr>
+    <tr><td>Shopify order #IQD-99640 (Kallinger) → Timeline</td><td>“New payment terms were added”: <strong>Net 30</strong>, due 10.12.2026, status <em>Payment pending</em>. Shopify was correct.</td></tr>
+    <tr><td>Odoo sales order #IQD-99640 → Other Info / Shopify Info</td><td>Payment Gateway <code>no_payment_gateway</code>, Workflow “Automatic Validation for Manual Payment”, Payment Terms <strong>Immediate Payment</strong></td></tr>
+    <tr><td>Shopify → Configuration → Financial Status (connector)</td><td>All <strong>21</strong> lines for <code>no_payment_gateway</code> have Payment Term = <strong>Immediate Payment</strong>. The connector always takes the term from this table and <strong>ignores</strong> the Shopify payment terms and the customer's own term.</td></tr>
+    <tr><td>Financial Status: clear the Payment Term (staging test)</td><td>Not possible: the field is <strong>required</strong> (“Missing required fields”).</td></tr>
+    <tr><td>Shopify → Customers → Companies</td><td>B2B companies have different terms: Kallinger Net 30, CaniTess and yakkihundsport “Due on fulfillment”, K9 Norway and Edog Kalypsoland none.</td></tr>
+    <tr><td>CaniTess order #IQD-98953 (RE/2026/05020)</td><td>Payment terms <strong>Due on fulfillment</strong>, so Odoo matches Shopify here. Not a technical error; whether CaniTess gets more days is a business decision.</td></tr>
+    <tr><td>Odoo contact Bruno Fluri</td><td>SALES Payment Terms = “Zahlbar sofort ohne Abzug” (immediate)</td></tr>
+    <tr><td>Odoo payment terms list</td><td>10, 21, 30, 45 Days etc. existed, <strong>no 15 Days</strong></td></tr>
+    <tr><td>Staging → Shopify → Configuration → Instances</td><td>Staging is connected to the <strong>live store</strong> (<code>iqdogsport.myshopify.com</code>), not the test store. Test-store orders cannot reach staging; do not run Import Orders in staging.</td></tr>
+  </table>
+  <div class="box note"><strong>Root cause:</strong> the Emipro connector sets the order's payment term from its own Financial Status table (gateway + financial status + order status). For <code>no_payment_gateway</code> that is always “Immediate Payment”. The dealer's terms from Shopify or from the Odoo contact are never used.</div>
+
+  <h3>Decision (Florian, 12.11.2026)</h3>
+  <p>Hundesport Kallinger gets <strong>15 days</strong> (not 30). Changed by Hamza in Shopify on the company <strong>and</strong> its location (both Net 15).</p>
+
+  <h2>3. What was changed, and where</h2>
+
+  <h3>3.1 Payment term “15 Days”</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Accounting → Configuration → Payment Terms → New</td></tr>
+    <tr><td>Name</td><td>Production: <code>15 Days</code> · Staging: <code>15 days</code></td></tr>
+    <tr><td>Due terms</td><td>100 % · 15 days after invoice date · no early discount</td></tr>
+  </table>
+
+  <h3>3.2 Contact Hundesport Kallinger e.U.</h3>
+  <table>
+    <tr><th>Field</th><th>Before</th><th>After</th></tr>
+    <tr><td>Sales &amp; Purchase → <strong>SALES</strong> → Payment Terms</td><td>Zahlbar sofort ohne Abzug</td><td><strong>15 Days</strong> (company contact; person contacts inherit it)</td></tr>
+    <tr><td>Sales &amp; Purchase → PURCHASE → Payment Terms</td><td>(set to 15 Days by mistake)</td><td>empty again (Kallinger is not a supplier)</td></tr>
+  </table>
+  <p>The Financial Status table of the connector was <strong>not</strong> changed.</p>
+
+  <h3>3.3 Automation rule</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Settings → Technical → Automation → Automation Rules</td></tr>
+    <tr><td>Name</td><td>IQ – Payment term from customer for unpaid Shopify orders</td></tr>
+    <tr><td>Model / Trigger</td><td>Sales Order (<code>sale.order</code>) / On create</td></tr>
+    <tr><td>Apply on</td><td><code>[("shopify_instance_id", "!=", False), ("shopify_payment_gateway_id.name", "=", "no_payment_gateway")]</code></td></tr>
+    <tr><td>Action</td><td>Execute Code</td></tr>
+    <tr><td>Status</td><td>Staging: created 12.11.2026 · Production: live 12.11.2026</td></tr>
+  </table>
+<pre><code>for order in records:
+    term = order.partner_id.commercial_partner_id.property_payment_term_id
+    if term and order.payment_term_id != term:
+        old = order.payment_term_id.name or "-"
+        order.write({"payment_term_id": term.id})
+        order.message_post(body="Payment term set from customer: %s (was: %s)" % (term.name, old))</code></pre>
+
+  <h3>What the rule does and does not do</h3>
+  <table>
+    <tr><th>New Shopify order with no_payment_gateway</th><th>Result</th></tr>
+    <tr><td>Customer company has a SALES payment term (Kallinger = 15 Days)</td><td>Order gets that term + chatter note; the invoice created from the order gets it too</td></tr>
+    <tr><td>Customer without a term</td><td>No change, stays Immediate Payment</td></tr>
+    <tr><td>Customer with “Zahlbar sofort ohne Abzug” (e.g. Bruno Fluri)</td><td>Gets that term instead of “Immediate Payment” (same meaning, different text)</td></tr>
+  </table>
+  <p>Not affected: existing orders and invoices, manual Odoo orders, orders paid by card / PayPal / Vorkasse / COD (other gateways), contacts.</p>
+
+  <h2>4. Tests</h2>
+  <table>
+    <tr><th>Test</th><th>Result</th></tr>
+    <tr><td>Staging: duplicate of #IQD-99307 (S00490)</td><td class="ok">Shopify Instance and Gateway are not copied → rule correctly did not run ✅ (shows that non-Shopify orders are ignored)</td></tr>
+    <tr><td>Test store: Net 15 order for “Test Kallinger”</td><td class="wait">Could not be imported: staging is connected to the live store</td></tr>
+    <tr><td>Production: first real Kallinger order after 12.11.</td><td class="wait">⏳ Check Payment Terms = 15 Days, chatter note, invoice due date = invoice date + 15</td></tr>
+  </table>
+
+  <h2>5. How to undo</h2>
+  <ol>
+    <li><strong>Rule:</strong> Automation Rules → “IQ – Payment term from customer…” → archive.</li>
+    <li><strong>Contact:</strong> Kallinger → SALES → Payment Terms back to “Zahlbar sofort ohne Abzug”.</li>
+  </ol>
+  <p>The payment term “15 Days” can stay; it does nothing unless it is used.</p>
+
+  <h2>6. Next: automatic payment reminders (Florian)</h2>
+  <p>Florian's request: remind unpaid customers automatically and notify Florian and Patricia if still unpaid. Findings 12.11.2026 (production and staging are the same):</p>
+  <ul>
+    <li>Accounting → Configuration → Follow-up Levels: two levels, <strong>15 Days</strong> and <strong>30 Days</strong> after due date, Email on, <strong>Automatic off</strong>. That is why no reminders go out.</li>
+    <li>Templates “Payment Reminder” and “Second reminder followup” are Odoo's default English texts (“Pay now” button, 8 days).</li>
+    <li>Proposed rule (to confirm with Florian): due date friendly email · +7 official reminder · +14 second reminder · +21 To-Do for Patricia/Florian.</li>
+    <li>Before switching on Automatic: check the 26 late invoices (paid in Shopify but not matched = no reminder).</li>
+    <li>Shopify also offers its own payment reminders for orders with payment terms (alternative to compare).</li>
+  </ul>
+
+  <h2>7. Still open</h2>
+  <ul>
+    <li><span class="wait">⏳</span> Inform Patricia that the rule is live (she asked to be told before production changes).</li>
+    <li><span class="wait">⏳</span> Contact check: which customers already have a SALES payment term (Contacts → Payment Terms is set → group by).</li>
+    <li><span class="wait">⏳</span> Which other dealers get payment terms (Florian/Patricia); set them in Shopify (company + location) and on the Odoo contact.</li>
+    <li><span class="wait">⏳</span> Emipro: can the connector use the Shopify payment terms or the customer's term? Then the rule is no longer needed.</li>
+    <li><span class="wait">⏳</span> Staging should be connected to the test store for real end-to-end tests (ask Emipro).</li>
+    <li><span class="wait">⏳</span> Old posted invoices (RE/2026/05020, 05406, 05772) stay as they are; Patricia decides on due dates.</li>
+  </ul>
+
+</main>
+</body>
+</html>

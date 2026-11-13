@@ -349,3 +349,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Vacation left/entitlement now taken directly from Odoo (fixes wrong numbers caused by expired allocations). Clicking vacation opens the employee's request list. All pending approvals in one list: leave, allocation requests, overtime.",
     link: "odoo/wareneingaenge/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-13", area: "Odoo", status: "Live",
+    title: "Automatic payment reminders",
+    summary: "Florian's reminder plan built as scheduled action IQ - Daily payment reminders with 3 email templates (DE/EN, invoice PDF, online payment button). Only posted, sent, unpaid customer invoices from go-live on; each step once (chatter marker IQ-REMINDER-x); To-Do for Florian and Patricia after reminder 3. Standard follow-up levels stay non-automatic. Tested in staging on RE/2026/05541-05545, live in production 13.11.2026.",
+    link: "odoo/payment-reminders/" }
+]);
