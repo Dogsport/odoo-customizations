@@ -363,3 +363,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Reminder rule extended in production: skip invoices with the 'No Follow-up' flag, use the due date of the receivable line instead of the invoice header, skip invoices covered by an open credit, and skip contacts tagged 'Keine Mahnung' (Bruno Fluri, CaniTess, Sprenger USA). Dealer terms agreed with Florian and set in Odoo and Shopify (company + location): Kallinger 15 days, Bruno Fluri / CaniTess / Sprenger USA 60 days; new payment term '60 Days' created. Proof in production: #IQD-99777 set to 15 Days automatically. Master data fixed: Kallinger VAT in Shopify (old owner Gernot vs current Jasmin), Tessa Otte personal VAT.",
     link: "odoo/payment-reminders/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-16", area: "Odoo", status: "Live",
+    title: "Quality control on the TC22 + QC Dashboard",
+    summary: "Server action IQ QC page: phone QC flow (OK per size with quantity, defects with photos and reason chips, label print on the Brother QL-800 via PrintNode), QC Dashboard, details, QC report, DE/EN; menu Goods Receipts -> QC Dashboard. Only purchase-order receipts listed. One-time import of the paper checks 11.-16.11. (Wintermantel 263 OK + 50 defects, Parka 90 OK + 4 defects, 78 photos). quality.check / quality.alert / attachments only, no new fields.",
+    link: "odoo/quality-control/" }
+]);

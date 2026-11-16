@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quality control on the TC22 – IQ Dogsport</title>
+<style>
+  :root { --red:#b3261e; --ink:#1a1a1a; --muted:#555; --bg:#f3f2ef; --card:#fff; --line:#e3e1dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.55; }
+  header { background:#161616; color:#fff; padding:40px 0 34px; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+  .kicker { color:#f08c8c; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  header h1 { margin:8px 0 6px; font-size:30px; }
+  header p { margin:0; color:#ddd; }
+  .back { display:inline-block; margin:24px 0 0; color:var(--red); text-decoration:none; font-weight:600; }
+  main { padding:8px 0 60px; }
+  h2 { font-size:21px; margin:40px 0 14px; padding-top:10px; border-top:3px solid var(--red); display:inline-block; }
+  h3 { font-size:16px; margin:26px 0 8px; }
+  .meta { font-size:14px; color:var(--muted); margin-top:16px; }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:18px 20px; margin:14px 0; }
+  .box.note { border-left:4px solid var(--red); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); margin:12px 0; font-size:14px; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:#faf9f7; font-weight:600; }
+  code { font-family:SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; background:#efedea; padding:1px 5px; border-radius:3px; }
+  pre { background:#1e1e1e; color:#eaeaea; padding:14px 16px; border-radius:6px; overflow-x:auto; font-size:13px; line-height:1.5; }
+  pre code { background:none; padding:0; color:inherit; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--red); }
+  ul, ol { padding-left:22px; }
+  li { margin:4px 0; }
+  .ok { color:#1b7a3a; font-weight:600; }
+  .wait { color:#a15c00; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="kicker">IQ Dogsport GmbH · Internal documentation</div>
+    <h1>Quality control on the TC22 + QC Dashboard</h1>
+    <p>Phone page for checking incoming goods (OK / defect with photos and label), dashboard, details and QC report – built on the standard Odoo Quality app.</p>
+  </div>
+</header>
+<div class="wrap">
+  <a class="back" href="../../">← Odoo customizations</a>
+  <div class="meta">Prepared by: Hamza Mohsin · Live: 16.11.2026 · <span class="tag">Live in production</span> · TC22 quality documentation task (Florian)</div>
+</div>
+<main class="wrap">
+
+  <h2>1. Why</h2>
+  <p>Incoming coats were checked on paper: OK tallies per size on cardboard, defects on sticky notes, photos on a phone. Counting, reporting to the supplier and finding the photos again took hours. The goal: one simple phone flow, all data in Odoo, a report per product at any time.</p>
+
+  <h2>2. How the team uses it</h2>
+  <ol>
+    <li>Goods Receipts → <b>QC Dashboard</b> (or the bookmarked link on the TC22) → <b>Start checking</b>.</li>
+    <li>Choose the product, then the receipt (only purchase-order receipts are listed).</li>
+    <li>Tap the size. Good coat: choose quantity (1, 2, 3, 5, 10, …) → <b>OK</b>.</li>
+    <li>Defective coat: <b>Defect</b> → take photos → tap a reason chip (or type a new one) → note → <b>Save &amp; print label</b>. The label prints on the Brother QL-800 and the page goes back to checking.</li>
+    <li>Dashboard / Details: checked, OK, defects, defect rate, by size, by reason, all photos; <b>Create QC report</b> prints or saves a PDF.</li>
+  </ol>
+
+  <h2>3. How it is built (no new fields)</h2>
+  <table>
+    <tr><th>Thing</th><th>Odoo record</th></tr>
+    <tr><td>OK coat</td><td><code>quality.check</code>, state <code>pass</code>, product variant = size, receipt</td></tr>
+    <tr><td>Defective coat</td><td><code>quality.check</code> (<code>fail</code>) + <code>quality.alert</code> with reason tag, description, size, receipt</td></tr>
+    <tr><td>Photos</td><td><code>ir.attachment</code> on the quality alert</td></tr>
+    <tr><td>Page</td><td>Server action "IQ QC page" (website path <code>iq-qc</code>), same link key and team password as the warehouse calendar</td></tr>
+    <tr><td>Menu</td><td>Goods Receipts → QC Dashboard (URL action, new tab)</td></tr>
+    <tr><td>Label</td><td>Paper format "IQ QC Label 62x30" (landscape) + hidden report <code>iq_qc.label_62x30</code>, printed via Direct Print / PrintNode; printer in system parameter <code>iq.qc_printnode_printer_id</code></td></tr>
+  </table>
+  <div class="box note"><strong>No stock effect:</strong> the page only creates quality records. Receipts are still validated in Odoo as before (only after the quality check – Patricia's rule).</div>
+
+  <h2>4. Printer</h2>
+  <p>Brother QL-800 with DK-22251 (62 mm continuous, black/red) on the Direct Print client. CUPS/driver settings: media 62 mm, colour 2-Color (Black/Red). A Wi-Fi model (QL-810W / QL-820NWB) can replace it later – only the printer parameter changes.</p>
+
+  <h2>5. Paper checks imported (one time)</h2>
+  <p>The paper checks 11.–16.11.2026 were collected into a confirmed list and imported with the defect photos through the one-time <b>Papier-Import</b> page: Wintermantel Damen 263 OK + 50 defects, Unisex Winter Parka 90 OK + 4 defects, 78 photos. Coats without a recorded size are stored as size "?" (<code>[Größe unbekannt]</code>). All imported records are marked <code>IQ-QC-IMPORT-2026-11-16</code>; the import page has an undo button.</p>
+
+  <h2>6. Install / update</h2>
+  <p>Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-16_quality_control_page_PRODUCTION.py</code> → Save → Run Manually → F5. Log lines: "IQ QC page installed (v10)" and "IQ QC menu added". Safe to run again. Code is kept in the local folder <code>odoo-customizations/quality-control/</code>.</p>
+
+  <h2>7. Open</h2>
+  <ul>
+    <li>2 Wintermantel defects without description – add on the TC22.</li>
+    <li>16 older OK checks on P00061 – confirm test or real.</li>
+    <li>Wi-Fi label printer; barcode scanning on the TC22.</li>
+  </ul>
+</main>
+</body>
+</html>
