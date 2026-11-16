@@ -44,7 +44,7 @@
 
 <div class="wrap">
   <a class="back" href="../../">← Odoo customizations</a>
-  <div class="meta">Prepared by: Hamza Mohsin · Done: 13.11.2026 · <span class="tag">Live in production</span> · Requested by Florian · <a href="IQ_Payment_Reminders_Overview.pdf">Overview PDF for Florian (9 pages)</a></div>
+  <div class="meta">Prepared by: Hamza Mohsin · Done: 13.11.2026 · updated 16.11.2026 · <span class="tag">Live in production</span> · Requested by Florian · <a href="IQ_Payment_Reminders_Overview.pdf">Overview PDF for Florian (9 pages)</a></div>
 </div>
 
 <main class="wrap">
@@ -165,12 +165,80 @@ for inv in env[&#x27;account.move&#x27;].search(domain):
     <li>Never use “Run Manually” in production (sends real emails immediately).</li>
   </ol>
 
-  <h2>8. Still open</h2>
+  <h2>8. Update 16.11.2026 – Patricia's three checks</h2>
+  <p>Patricia asked for three additions before the reminders start. All three are in the scheduled action in production since 16.11.2026. Go-live date <code>START</code> = 17.11.2026, so the earliest possible email is 01.12.2026.</p>
+  <table>
+    <tr><th>Her request</th><th>How it is implemented</th></tr>
+    <tr><td>Skip invoices where the receivable line has the <strong>"No Follow-up"</strong> flag</td><td>Open receivable lines are read; if any has <code>blocked = True</code> the invoice is skipped. Example she gave: RE/2026/02023 (CaniTess), open in Odoo but paid in March.</td></tr>
+    <tr><td>Use the <strong>due date of the receivable line</strong>, not the invoice header</td><td>The earliest <code>date_maturity</code> of the open receivable lines is used instead of <code>invoice_date_due</code>. Handles installment payment terms correctly.</td></tr>
+    <tr><td>Skip if the customer has an <strong>open credit</strong> that covers the invoice</td><td>Unreconciled credit lines on the customer's receivable account are summed. If the credit covers the open amount, the invoice is skipped and a chatter note <code>IQ-REMINDER-CREDIT</code> is written once. <strong>Open question with Patricia:</strong> any credit on the customer, or only a credit note linked to that invoice?</td></tr>
+  </table>
+
+  <h3>8.1 Contact tag "Keine Mahnung"</h3>
+  <p>Patricia asked that Bruno Fluri, CaniTess and Sprenger USA get no reminders until their payment terms were agreed. Implemented as a <strong>contact tag</strong> rather than hardcoded names, so accounting can manage it without a code change.</p>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Where</td><td>Contacts → company contact → <strong>Tags</strong></td></tr>
+    <tr><td>Tag name</td><td><code>Keine Mahnung</code> (must match <code>SKIP_TAG</code> in the code exactly)</td></tr>
+    <tr><td>Code</td><td><code>if SKIP_TAG in partner.category_id.mapped('name'): continue</code></td></tr>
+    <tr><td>Scope</td><td>Read from <code>commercial_partner_id</code>, so a tag on the parent company also covers its child addresses</td></tr>
+    <tr><td>Currently tagged</td><td>Bruno Fluri (ALEADON KLG), CaniTess Tessa Otté, Rachel Novak (Sprenger USA)</td></tr>
+    <tr><td>To remove</td><td>Click the ✕ on the tag and save; takes effect on the next daily run</td></tr>
+  </table>
+  <p>To list everyone excluded: Contacts → search box → type <code>Keine Mahnung</code> → "Search Tags for: Keine Mahnung".</p>
+  <div class="box note">The tag is a <strong>temporary</strong> safety measure. Patricia is cleaning up invoices that show as open but were already paid. Until that list is done, these three stay excluded. If the tag is never removed they would never be reminded at all, which is the opposite of what Florian asked for.</div>
+
+  <h3>8.2 Code added at the top of the loop</h3>
+<pre><code>SKIP_TAG = "Keine Mahnung"
+...
+for inv in env['account.move'].search(domain):
+    partner = inv.commercial_partner_id
+
+    # contacts excluded until their payment terms are agreed
+    if SKIP_TAG in partner.category_id.mapped('name'):
+        continue
+
+    # skip if "No Follow-up" is set on an open receivable line
+    recv = inv.line_ids.filtered(lambda l: l.account_id.account_type == 'asset_receivable')
+    open_recv = recv.filtered(lambda l: not l.reconciled)
+    if not open_recv or any(open_recv.mapped('blocked')):
+        continue
+
+    # due date from the receivable line, earliest open one
+    dates = [d for d in open_recv.mapped('date_maturity') if d]
+    if not dates:
+        continue
+    due = min(dates)
+
+    # skip if an open credit covers the invoice
+    credit = env['account.move.line'].search([
+        ('partner_id', '=', partner.id),
+        ('account_id.account_type', '=', 'asset_receivable'),
+        ('parent_state', '=', 'posted'),
+        ('reconciled', '=', False),
+        ('credit', '&gt;', 0),
+    ])
+    open_credit = -sum(credit.mapped('amount_residual'))
+    if open_credit &gt;= inv.amount_residual:
+        if not env['mail.message'].search_count([
+                ('model', '=', 'account.move'), ('res_id', '=', inv.id),
+                ('body', 'ilike', 'IQ-REMINDER-CREDIT')]):
+            inv.message_post(body="IQ-REMINDER-CREDIT: no reminder, customer has an open credit of %.2f EUR." % open_credit)
+        continue
+
+    # Immediate (due = invoice date) -&gt; start 14 days later; otherwise start on the due date
+    base = due
+    if due &lt;= inv.invoice_date:
+        base = inv.invoice_date + datetime.timedelta(days=14)</code></pre>
+  <p>Everything from <code>days = (today - base).days</code> downward is unchanged.</p>
+
+  <h2>9. Still open</h2>
   <ul>
-    <li><span class="wait">⏳</span> Florian: final OK on texts, sender address, fees in Reminder 3, payment-link orders.</li>
-    <li><span class="wait">⏳</span> Inform Patricia that it is live.</li>
-    <li><span class="wait">⏳</span> List of old open invoices (before go-live) for Florian.</li>
-    <li><span class="wait">⏳</span> Check the first real reminders in production (Settings → Technical → Emails, invoice chatter).</li>
+    <li><span class="wait">⏳</span> Patricia: how should "open credit" be measured – any credit on the customer, or only one linked to that invoice?</li>
+    <li><span class="wait">⏳</span> Patricia's list of wrongly open invoices (duplicates, unreconciled payments); then remove the "Keine Mahnung" tag.</li>
+    <li><span class="wait">⏳</span> Verify the three new checks in staging (no-follow-up flag, credit note, tag).</li>
+    <li><span class="wait">⏳</span> Check the first real reminders from 01.12. (Settings → Technical → Emails, invoice chatter).</li>
+    <li><span class="wait">⏳</span> Florian: sender address, fees in Reminder 3, payment-link orders (invoice posted but never sent).</li>
   </ul>
 
 </main>

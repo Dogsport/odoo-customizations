@@ -44,7 +44,7 @@
 
 <div class="wrap">
   <a class="back" href="../../">← Odoo customizations</a>
-  <div class="meta">Prepared by: Hamza Mohsin · Done: 12.11.2026 · <span class="tag">Live in production</span> · Patricia point 2 (weekly check 11.11.2026)</div>
+  <div class="meta">Prepared by: Hamza Mohsin · Done: 12.11.2026 · updated 16.11.2026 · <span class="tag">Live in production</span> · Patricia point 2 (weekly check 11.11.2026)</div>
 </div>
 
 
@@ -140,7 +140,33 @@
     <li>Shopify also offers its own payment reminders for orders with payment terms (alternative to compare).</li>
   </ul>
 
-  <h2>7. Still open</h2>
+  <h2>7. Update 16.11.2026 – agreed dealer terms set</h2>
+  <p>Florian agreed the payment terms for the dealers. Set in Odoo <strong>and</strong> in Shopify, so both systems match.</p>
+  <table>
+    <tr><th>Dealer</th><th>Agreed</th><th>Odoo contact (SALES)</th><th>Shopify company</th><th>Shopify location</th></tr>
+    <tr><td>Hundesport Kallinger e.U.</td><td>15 days</td><td>15 Days ✅</td><td>Net 15 ✅</td><td>Vorsingerweg… n/a, own location Net 15 ✅</td></tr>
+    <tr><td>Bruno Fluri / ALEADON KLG</td><td>60 days</td><td>60 Days ✅</td><td>Net 60 ✅</td><td>Vorsingerweg 3 → Net 60 ✅</td></tr>
+    <tr><td>CaniTess Tessa Otté</td><td>60 days</td><td>60 Days ✅</td><td>Net 60 ✅</td><td>CaniTess → Net 60 ✅</td></tr>
+    <tr><td>Sprenger USA (Rachel Novak)</td><td>60 days</td><td>60 Days ✅</td><td>Net 60 ✅</td><td>43 Everts Ave → Net 60 ✅</td></tr>
+  </table>
+  <div class="box note"><strong>Both Shopify levels must be set.</strong> A Shopify B2B company has a company-level default <em>and</em> a per-location setting. The <strong>location</strong> is what the checkout uses; changing only the company changes nothing for existing locations. Kallinger, ALEADON and CaniTess all had a mismatch between the two.</div>
+
+  <h3>7.1 New payment term "60 Days"</h3>
+  <p>Accounting → Configuration → Payment Terms → New · Name <code>60 Days</code> · 100 % · 60 days after invoice date · Description on invoice: "Zahlbar innerhalb von 60 Tagen ohne Abzug". ("15 Days" was created on 12.11. for Kallinger.)</p>
+
+  <h3>7.2 Proof that the rule works in production</h3>
+  <p>Order <strong>#IQD-99777</strong> (Hundesport Kallinger, 15.11.2026) came in from the connector with "Immediate Payment". The rule set it automatically:</p>
+  <pre><code>Payment term set from customer: 15 Days (was: Immediate Payment)</code></pre>
+  <p>Same order also confirms the VAT work: VAT ATU83618649 on the partner, taxes 0 % EU D, address Florianigasse 6, Inh. Jasmin Kallinger.</p>
+  <div class="box note"><strong>The rule reads the Odoo contact, not Shopify.</strong> Shopify's Net 15 / Net 60 is only what the dealer sees at checkout. Odoo takes the term from the customer contact. Both must be kept in sync by hand until the connector can read the Shopify payment terms (see "Still open").</div>
+
+  <h3>7.3 Master data corrected</h3>
+  <ul>
+    <li><strong>Kallinger VAT:</strong> Shopify had the old owner's number (ATU66742723, Gernot Kallinger, Neustiftgasse 14, Lackenbach). Odoo had the current one (ATU83618649, Jasmin Kallinger, Florianigasse 6, Deutschkreutz). Both are valid in VIES but belong to different people — the business changed owner. Elena corrected Shopify on 13.11.</li>
+    <li><strong>Tessa Otté (CaniTess):</strong> her <em>personal</em> Shopify customer record had an invalid VAT (BE1025.031.76) with "collect tax". Corrected to BE1025031761 with the reverse-charge exemption. Her orders placed for CaniTess were not affected, those use the company's tax details.</li>
+  </ul>
+
+  <h2>8. Still open</h2>
   <ul>
     <li><span class="wait">⏳</span> Inform Patricia that the rule is live (she asked to be told before production changes).</li>
     <li><span class="wait">⏳</span> Contact check: which customers already have a SALES payment term (Contacts → Payment Terms is set → group by).</li>

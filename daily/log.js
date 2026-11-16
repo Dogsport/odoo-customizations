@@ -356,3 +356,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Florian's reminder plan built as scheduled action IQ - Daily payment reminders with 3 email templates (DE/EN, invoice PDF, online payment button). Only posted, sent, unpaid customer invoices from go-live on; each step once (chatter marker IQ-REMINDER-x); To-Do for Florian and Patricia after reminder 3. Standard follow-up levels stay non-automatic. Tested in staging on RE/2026/05541-05545, live in production 13.11.2026.",
     link: "odoo/payment-reminders/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-16", area: "Odoo", status: "Live",
+    title: "Payment reminders: Patricia's three checks + dealer payment terms",
+    summary: "Reminder rule extended in production: skip invoices with the 'No Follow-up' flag, use the due date of the receivable line instead of the invoice header, skip invoices covered by an open credit, and skip contacts tagged 'Keine Mahnung' (Bruno Fluri, CaniTess, Sprenger USA). Dealer terms agreed with Florian and set in Odoo and Shopify (company + location): Kallinger 15 days, Bruno Fluri / CaniTess / Sprenger USA 60 days; new payment term '60 Days' created. Proof in production: #IQD-99777 set to 15 Days automatically. Master data fixed: Kallinger VAT in Shopify (old owner Gernot vs current Jasmin), Tessa Otte personal VAT.",
+    link: "odoo/payment-reminders/" }
+]);
