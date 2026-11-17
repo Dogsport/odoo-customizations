@@ -370,3 +370,14 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Server action IQ QC page: phone QC flow (OK per size with quantity, defects with photos and reason chips, label print on the Brother QL-800 via PrintNode), QC Dashboard, details, QC report, DE/EN; menu Goods Receipts -> QC Dashboard. Only purchase-order receipts listed. One-time import of the paper checks 11.-16.11. (Wintermantel 263 OK + 50 defects, Parka 90 OK + 4 defects, 78 photos). quality.check / quality.alert / attachments only, no new fields.",
     link: "odoo/quality-control/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-17", area: "Odoo", status: "Staging",
+    title: "QC page: barcode scanning, safeguards, open receipts only, Hinweis, OK-Mengen button",
+    summary: "TC22 barcode scanning with beep and big size; name required, double-scan guard, progress vs. receipt; QC only on open receipts (defects never booked); 'Hinweis - kein Defekt' for acceptable pieces; booking overview; new receipt button 'QC: OK-Mengen uebernehmen' (sets OK quantities, no validation). No new fields.",
+    link: "odoo/quality-control/" },
+  { date: "2026-11-17", area: "Odoo", status: "Staging",
+    title: "Calendar opens the Goods Receipt card",
+    summary: "Warehouse calendar entries, overdue box, monthly list and search now open the Goods Receipt card in the Goods Receipts app instead of the purchase order (fallback: purchase order).",
+    link: "odoo/wareneingaenge/" }
+]);
