@@ -122,7 +122,8 @@
   <li><a href="code/staging-fixes/fix_2026-11-12_calendar_low_stock.py">fix_2026-11-12_calendar_low_stock.py</a> · <a href="code/staging-fixes/fix_2026-11-13_manager_invoices.py">fix_2026-11-13_manager_invoices.py</a> · <a href="code/staging-fixes/fix_2026-11-13b_manager_dashboard.py">…13b_manager_dashboard.py</a> · <a href="code/staging-fixes/fix_2026-11-13c_reminder_stages.py">…13c_reminder_stages.py</a></li>
   <li><a href="code/staging-fixes/fix_2026-11-17_calendar_goods_receipt_links.py">fix_2026-11-17_calendar_goods_receipt_links.py</a> – calendar opens the Goods Receipt card</li>
   <li><a href="code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – managers add planned deliveries</li>
-  <li><a href="code/staging-fixes/fix_2026-11-20_calendar_qc_link.py">fix_2026-11-20_calendar_qc_link.py</a> – <b>newest</b>: QC Dashboard link (contains everything before)</li>
+  <li><a href="code/staging-fixes/fix_2026-11-20_calendar_qc_link.py">fix_2026-11-20_calendar_qc_link.py</a> – QC Dashboard link</li>
+  <li><a href="code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – <b>newest</b>: "Ware angekommen", booked = not overdue, icons (contains everything before)</li>
 </ul>
 
 <h2>My hours &amp; vacation / Team overview (since 2026-11-09)</h2>
@@ -142,7 +143,27 @@
   <tr><td>17.11.</td><td>Calendar entries, overdue box, monthly list and search open the <b>Goods Receipt card</b> (fallback: purchase order)</td><td><code>fix_2026-11-17_calendar_goods_receipt_links.py</code></td></tr>
   <tr><td>19.11.</td><td><b>+ Lieferung eintragen</b> (managers, manager PIN): date, quantity, purchase order (optional), supplier, order no., product, note. Saved as a delivery schedule line on the Goods Receipt card; note in the card's and the purchase order's chatter. Partial deliveries = one entry each. Managers see "✎ Bearbeiten": change, "✓ Angekommen" or delete.</td><td><code>fix_2026-11-19_calendar_add_deliveries.py</code></td></tr>
   <tr><td>20.11.</td><td>Link <b>QC Dashboard</b> in the calendar's top menu. The manager login is shared with the QC page (log in on one = logged in on both).</td><td><code>fix_2026-11-20_calendar_qc_link.py</code></td></tr>
+  <tr><td>20.11. (b–d)</td><td><b>"Ware angekommen"</b> for the warehouse (see below), header redesigned for phones, real icons, planned deliveries that are already booked are no longer "overdue".</td><td><code>fix_2026-11-20d_calendar_arrival_booked.py</code> (newest)</td></tr>
 </table>
+
+<h2>Ware angekommen – reporting arrived goods (since 2026-11-20)</h2>
+<p>For the warehouse person, with the team password and their name (no PIN). <b>Nothing is booked</b> and receipt quantities are not changed – booking stays after the quality check.</p>
+<ol>
+  <li>Calendar → orange button <b>"Ware angekommen"</b> (or "Angekommen?" under a due delivery, or "Wareneingang melden" on the QC start page).</li>
+  <li>List of all expected deliveries (planned deliveries + open receipts of purchase orders), overdue and today first, with search.</li>
+  <li>One delivery: name · photo/PDF of the delivery note (+ number) · per size <b>quantity on the delivery note</b> and <b>counted</b> (difference shown at once, "delivery note = open quantity" button) · boxes/pallets · note → <b>"Wareneingang speichern"</b>.</li>
+  <li>Saved on the <b>Goods Receipt card</b>, the <b>purchase order</b> and the <b>open receipt</b> (chatter note + delivery note files), arrival date set on the card, a planned delivery is marked as arrived.</li>
+  <li>Calendar: amber entry "angekommen · name · counted"; a partly arrived order shows only the rest as expected.</li>
+</ol>
+<h3>Goods without a purchase order</h3>
+<ul>
+  <li>"Nicht in der Liste? Ware ohne Bestellung melden": as soon as the supplier or product is typed, matching open orders / planned deliveries are shown ("Gehört die Ware dazu? Dann dort melden"). Saving only after ticking "gehört zu keiner Bestellung" – avoids duplicate receipts.</li>
+  <li>Creates a Goods Receipt card <b>"Ohne Bestellung"</b> (supplier, delivery note no. as supplier order no., products, counts, files). Shown red in the calendar ("Angekommen ohne Bestellung") and on the manager dashboard ("Bestellung anlegen").</li>
+  <li>Manager creates the purchase order with <b>vendor reference = delivery note no.</b> → the existing automation links it to the card.</li>
+</ul>
+<h3>Booked = not overdue</h3>
+<p>The received quantity of a purchase order is matched to its planned deliveries in date order (oldest first). Fully covered planned deliveries disappear from "expected / overdue", partly covered ones show only the rest.</p>
+<p>Storage: each report is a small text file "Wareneingang-Meldung …" on the card (first line machine-readable). No new fields.</p>
 <p>Each file contains everything before it and changes only the server action "IQ Public delivery calendar". Run the newest one once (Scheduled Action → Run Manually). No new fields. Files are kept in <code>~/Documents/odoo-customizations/wareneingaenge/</code>.</p>
 <p>Quality control on the TC22, packing defects and handovers: see <a href="../quality-control/">Quality control</a>.</p>
 

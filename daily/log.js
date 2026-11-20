@@ -411,3 +411,14 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "QC report with logo, no links, no names, no notes, full photos, print only after photos are loaded, interim banner until a manager taps 'Pruefung abschliessen'; managers edit defects in the same screen as creating (no label print, change logged in the chatter); inspector name as first mandatory card; scanning detected even inside text fields; team password locked after 5 wrong tries. No new fields.",
     link: "odoo/quality-control/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-20", area: "Odoo", status: "Staging",
+    title: "Calendar: 'Ware angekommen' for the warehouse + goods without purchase order",
+    summary: "Warehouse reports arrived goods on the phone (name, delivery note photo/PDF, per size quantity on delivery note + counted, boxes, note) - saved on Goods Receipt card, PO and open receipt, nothing booked. Goods without PO: open orders of that supplier/product are shown first (no duplicates), then a card 'Ohne Bestellung' for managers. Booked planned deliveries no longer overdue. Phone header redesigned, line icons. No new fields.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-20", area: "Odoo", status: "Staging",
+    title: "QC page v19.16.9-v19.16.10 + quick guides",
+    summary: "Button 'Wareneingang melden' on the QC start page, line icons instead of emoji. Printable 2-page quick guides (German/English and English) for checking and packing defects.",
+    link: "odoo/quality-control/" }
+]);

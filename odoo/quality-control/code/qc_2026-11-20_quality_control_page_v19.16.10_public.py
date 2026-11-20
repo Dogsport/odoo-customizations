@@ -1,6 +1,8 @@
 # PUBLIC REFERENCE COPY for the documentation – supplier tech-pack drawings removed. Install with the original file from
 # ~/Documents/odoo-customizations/quality-control/ (this copy works too, but sets up no drawings). No keys or PINs are in this file.
-# IQ Quality control page (QC) - PRODUCTION 20.11.2026 (v19.16.8 inspector card + report logo on top)
+# IQ Quality control page (QC) - PRODUCTION 20.11.2026 (v19.16.10 icons instead of emoji)
+# v19.16.10: real line icons instead of emoji ('Wareneingang melden' box icon, 'Keine Zeichnung' warning icon).
+# v19.16.9: QC start page: orange button '📦 Wareneingang melden' -> 'Ware angekommen' page of the warehouse calendar.
 # v19.16.8: Inspector card: compact one line '✓ Prüfer: Name · ändern' once filled in (was unreadable – light text on green);
 #          QC report: IQ Dogsport logo at the very top, above the interim banner.
 # v19.16.7: Managers mark the quality check of a product as completed ('Prüfung abschließen' on the details page) – then the
@@ -158,6 +160,8 @@ DEF_TAGS = ['Loch Brusttasche', 'Brusttasche defekt', 'Innentasche zugenäht', '
 
 TAG_EN = {'Nähfehler': 'Sewing defect', 'Loch Brusttasche': 'Hole in chest pocket', 'Brusttasche defekt': 'Chest pocket defective', 'Innentasche zugenäht': 'Inner pocket sewn shut', 'Naht offen': 'Seam open', 'Lose Fäden': 'Loose threads', 'Fleck / Verschmutzung': 'Stain / dirt', 'Reißverschluss defekt': 'Zipper defective', 'Druckknopf defekt': 'Snap button defective', 'Falsches Größenetikett': 'Wrong size label', 'Stoff beschädigt': 'Fabric damaged'}
 TR = [
+    ('Wareneingang melden<small>', 'Report arrived goods<small>'),
+    ('Ware angekommen? Lieferschein + Menge erfassen', 'Goods arrived? Record delivery note + quantity'),
     ('Wer prüft? Bitte zuerst deinen Namen eingeben', 'Who is checking? Please enter your name first'),
     ('Dein Name – Pflichtfeld', 'Your name – required'),
     ('Der Name wird auf diesem Handy gemerkt.', 'The name is remembered on this phone.'),
@@ -249,7 +253,7 @@ TR = [
     ('Karton(s)', 'box(es)'),
     ('Karton ', 'Box '),
     ('Bekleidung aus offenen Wareneingängen (Erwartet / Teilweise gebucht). „Prüfen starten“ öffnet die Prüfung mit dieser Lieferung.', 'Clothing from open goods receipts (expected / partly booked). “Start checking” opens the check with this delivery.'),
-    ('⚠ Keine Zeichnung – <u>einrichten</u>', '⚠ No drawing – <u>set up</u>'),
+    ('Keine Zeichnung – <u>einrichten</u>', 'No drawing – <u>set up</u>'),
     ('Zu prüfen – offene Wareneingänge', 'To check – open goods receipts'),
     ('>Standard-Zeichnung<', '>Standard drawing<'),
     ('✓ Eigene Zeichnung', '✓ Own drawing'),
@@ -1226,6 +1230,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .whoc.wok .whon{background:#16a34a}.whoe{font-size:13px;color:#555;display:none}.whoc.wok .whoe{display:inline}
 .whob{margin-top:8px}.whoc.wok .whob{display:none}.whoc input{width:100%;font-size:18px;padding:12px}.whob small{display:block;color:#555;margin-top:4px}
 .whoc.shake{animation:wsh .4s}@keyframes wsh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.ic{width:1.15em;height:1.15em;vertical-align:-.2em;margin-right:.35em}
+.arrbtn{display:block;background:#f59e0b;color:#151515;text-decoration:none;border-radius:12px;padding:14px 16px;margin-bottom:12px;font:800 18px Arial}.arrbtn small{display:block;font:400 13px Arial;margin-top:2px}
 .pcmp{width:100%;border-collapse:collapse}.pcmp th,.pcmp td{padding:7px 5px;font-size:14px}.pcmp th{font-size:10px;letter-spacing:.3px}
 @media(max-width:560px){.pcmp th,.pcmp td{padding:6px 3px;font-size:13px}.pcmp th{font-size:9px}}
 .pprod{margin:-4px 0 10px;font-weight:800;font-size:15px}.pligone{opacity:.75}.pgn{font-size:13px;font-weight:700;color:#4b5563;margin-top:2px}
@@ -4179,6 +4185,10 @@ WHO_JS = ('function lsw(k,v){try{if(v===undefined)return localStorage.getItem(k)
           'function needName(){if(W.value.trim())return false;try{beep("err")}catch(e){}if(window.flash)try{flash("Bitte zuerst deinen Namen eingeben (oben)","#b91c1c")}catch(e){}'
           'WC.classList.remove("shake");void WC.offsetWidth;WC.classList.add("shake");W.scrollIntoView({block:"center"});W.focus();return true}')
 
+# v19.16.10: real icons instead of emoji
+ICB = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>'
+ICW = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 21h20z"/><path d="M12 10v5"/><path d="M12 18h.01"/></svg>'
+
 
 PACK_JS = r"""
 (function(){
@@ -5764,7 +5774,7 @@ elif params.get('view') == 'dash':
             elif is_custom(g):
                 dst = '<span class="tds tdsok">✓ Eigene Zeichnung</span>'
             elif g == 'gen':
-                dst = '<span class="tds tdswarn">⚠ Keine Zeichnung – <u>einrichten</u></span>'
+                dst = '<span class="tds tdswarn">' + ICW + 'Keine Zeichnung – <u>einrichten</u></span>'
             else:
                 dst = '<span class="tds">Standard-Zeichnung</span>'
             od = pk.scheduled_date and pk.scheduled_date < now
@@ -6363,6 +6373,7 @@ else:
         rows = ''.join(['<a href="' + QB + '&amp;pt=' + str(t.id) + '"><span><b>' + esc(t.name) + '</b><br><small>' + str(len(t.product_variant_ids)) + ' Größen/Varianten</small></span><small>→</small></a>' for t in ts])
         html = (head('Qualitätskontrolle') + topbar('Qualitätskontrolle', '') + '<div class="wrap">'
                 + WHO_CARD
+                + '<a class="arrbtn" href="' + CAL_URL + '&amp;arr=1">' + ICB + 'Wareneingang melden<small>Ware angekommen? Lieferschein + Menge erfassen</small></a>'
                 + '<div class="card"><h2>1 · Produkt wählen</h2><form method="get" action=""><input type="hidden" name="key" value="' + KEY + '">'
                 + '<input type="search" name="q" value="' + esc(q) + '" placeholder="Produkt suchen, z. B. Wintermantel"></form></div>'
                 + '<div class="scan" id="scan"><div class="sp">Etikett scannen</div><div class="bp">oder Produkt oben suchen</div></div>'
@@ -6462,7 +6473,7 @@ else:
         prn = Pr.browse(int(cur)).exists() if cur.isdigit() else Pr.browse([])
         mode = CP.get_param('iq.qc_label_mode') or ('zpl' if [w for w in ['ZPL', 'ZD4', 'ZD2', 'ZEBRA', 'ZDESIGNER'] if w in (prn.name or '').upper()] else 'pdf')
         pinfo = ('printer: ' + (prn.name or '') + ' (id ' + str(prn.id) + ') | mode: ' + mode) if prn else 'NO printer selected – set system parameter iq.qc_printnode_printer_id'
-    log('IQ QC page installed (v19.16.8 inspector card + logo) | link for the phones: /website/action/iq-qc?key=' + (CP.get_param('iq.delivery_calendar_key') or '?') + ' | ' + pinfo
+    log('IQ QC page installed (v19.16.10 icons) | link for the phones: /website/action/iq-qc?key=' + (CP.get_param('iq.delivery_calendar_key') or '?') + ' | ' + pinfo
         + ' | OUTPUT: ' + (CP.get_param('iq.qc_label_output_mode') or '')
         + ' | label format: ' + pf.name + ' (id ' + str(pf.id) + '), report id ' + str(rep.id))
 

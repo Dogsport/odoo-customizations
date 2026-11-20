@@ -43,7 +43,7 @@
 </header>
 <div class="wrap">
   <a class="back" href="../../">← Odoo customizations</a>
-  <div class="meta">Prepared by: Hamza Mohsin · Live: 16.11.2026 · Last update: 20.11.2026 (v19.16.8) · <span class="tag">Live in production</span> · TC22 quality documentation task (Florian)</div>
+  <div class="meta">Prepared by: Hamza Mohsin · Live: 16.11.2026 · Last update: 20.11.2026 (v19.16.10) · <span class="tag">Live in production</span> · TC22 quality documentation task (Florian)</div>
 </div>
 <main class="wrap">
 
@@ -181,7 +181,16 @@
     <tr><td>v19.16.6</td><td>Clean QC report, "Bearbeiten" for managers, team-password lock (see 10.9 – 10.11)</td></tr>
     <tr><td>v19.16.7</td><td>"Prüfung abschließen" (final report), logo on the report, edit without printing, inspector name first, scanning in text fields</td></tr>
     <tr><td>v19.16.8</td><td>Inspector card as one compact line once filled in (text was unreadable); logo at the very top of the report</td></tr>
+    <tr><td>v19.16.9</td><td>Start page: orange button <b>"Wareneingang melden"</b> → "Ware angekommen" page of the warehouse calendar</td></tr>
+    <tr><td>v19.16.10</td><td>Real line icons instead of emoji (box, warning)</td></tr>
   </table>
+
+  <h3>10.14 Quick guides for the warehouse (print and hang up)</h3>
+  <ul>
+    <li><a href="IQ_QC_Kurzanleitung_Quick_Guide_DE_EN.pdf">IQ_QC_Kurzanleitung_Quick_Guide_DE_EN.pdf</a> – German with English underneath, 2 pages</li>
+    <li><a href="IQ_QC_Quick_Guide_EN.pdf">IQ_QC_Quick_Guide_EN.pdf</a> – English only, 2 pages</li>
+  </ul>
+  <p>Page 1: checking (name → scan → OK / defect: reason, place, photo, another defect, label / note – not a defect). Page 2: packing defects into boxes, box label, printing, check Odoo ↔ boxes, manager-only actions.</p>
 
   <h3>10.9 QC report (from the details page: "QC-Bericht erstellen")</h3>
   <ul>
@@ -216,15 +225,15 @@
 
   <h2>11. Install / update (current)</h2>
   <ol>
-    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-20_quality_control_page_v19.16.8_STAGING.py</code> → Save → Run Manually.</li>
-    <li>Log line: "IQ QC page installed (v19.16.8 inspector card + logo)".</li>
-    <li>Test, then the same with <code>…_v19.16.8_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
-    <li>Calendar link back to the QC Dashboard: <code>fix_2026-11-20_calendar_qc_link.py</code> (one time, same way).</li>
+    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-20_quality_control_page_v19.16.10_STAGING.py</code> → Save → Run Manually.</li>
+    <li>Log line: "IQ QC page installed (v19.16.10 icons)".</li>
+    <li>Test, then the same with <code>…_v19.16.10_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
+    <li>Calendar (QC Dashboard link, "Ware angekommen", booked = not overdue): <code>fix_2026-11-20d_calendar_arrival_booked.py</code> (one time, same way, same file for staging and production).</li>
   </ol>
   <h3>Code</h3>
   <ul>
-    <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.8_public.py">qc_2026-11-20_quality_control_page_v19.16.8_public.py</a> – the complete QC page v19.16.8 (page, menu, labels, packing, login, report, edit). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
-    <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20_calendar_qc_link.py">fix_2026-11-20_calendar_qc_link.py</a> – calendar with the QC Dashboard link (contains all earlier calendar changes)</li>
+    <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.10_public.py">qc_2026-11-20_quality_control_page_v19.16.10_public.py</a> – the complete QC page v19.16.10 (page, menu, labels, packing, login, report, edit). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
+    <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – newest calendar: QC Dashboard link, "Ware angekommen", booked deliveries not overdue (contains all earlier calendar changes)</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – calendar "+ Lieferung eintragen"</li>
   </ul>
   <p>To install, use the original STAGING / PRODUCTION files from the local folder <code>~/Documents/odoo-customizations/quality-control/</code> – they also set up the drawings for Wintermantel, Winter Parka and Hundesportweste 4.0.</p>
