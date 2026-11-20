@@ -404,3 +404,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "QC Dashboard link in the calendar's top menu; manager login shared between calendar and QC page.",
     link: "odoo/wareneingaenge/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-20", area: "Odoo", status: "Staging",
+    title: "QC page v19.16.6-v19.16.8: clean report, manager edit, check completed, name first",
+    summary: "QC report with logo, no links, no names, no notes, full photos, print only after photos are loaded, interim banner until a manager taps 'Pruefung abschliessen'; managers edit defects in the same screen as creating (no label print, change logged in the chatter); inspector name as first mandatory card; scanning detected even inside text fields; team password locked after 5 wrong tries. No new fields.",
+    link: "odoo/quality-control/" }
+]);

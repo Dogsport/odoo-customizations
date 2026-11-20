@@ -1,6 +1,19 @@
 # PUBLIC REFERENCE COPY for the documentation – supplier tech-pack drawings removed. Install with the original file from
 # ~/Documents/odoo-customizations/quality-control/ (this copy works too, but sets up no drawings). No keys or PINs are in this file.
-# IQ Quality control page (QC) - PRODUCTION 20.11.2026 (v19.16.5 login, packing, handovers, admin-only delete/photo)
+# IQ Quality control page (QC) - PRODUCTION 20.11.2026 (v19.16.8 inspector card + report logo on top)
+# v19.16.8: Inspector card: compact one line '✓ Prüfer: Name · ändern' once filled in (was unreadable – light text on green);
+#          QC report: IQ Dogsport logo at the very top, above the interim banner.
+# v19.16.7: Managers mark the quality check of a product as completed ('Prüfung abschließen' on the details page) – then the
+#          QC report is the final report (no 'Zwischenstand' banner); 'Wieder öffnen' undoes it. IQ Dogsport logo on the report.
+#          Edit: 'Änderungen speichern' without printer icon, label reprint only optional (tick box).
+#          Inspector name: first card on the start and check page, red until filled in, scanning blocked without a name.
+#          Scanning also works when the cursor is in a text field (fast scanner input is detected and removed from the field).
+# v19.16.6: QC report: no links, no inspector names, no 'Hinweis – kein Defekt' entries, every photo shown complete,
+#          print button only after all photos are loaded, banner 'ZWISCHENSTAND – NICHT FINAL' (managers: 'Als Endbericht (final)'),
+#          browser header/footer with the page link removed when printing.
+#          'Bearbeiten' on defect cards (managers): same screen as creating, pre-filled – reason, place, size, note, photos,
+#          switch Defekt <-> Hinweis; every change is written into the chatter of the quality alert.
+#          Team password: 5 wrong tries -> 15 min lock. Fix: inspectors can again cancel a just-saved defect in the photo step.
 # v19.16.5: Defect cards: 'Löschen' and 'Foto hinzufügen' only for logged-in managers (hidden + server check).
 #          Inspectors can still add photos during the check (up to 2 h after saving the defect).
 # v19.16.4: 'Karton abgegeben' – a whole closed box can be marked as handed over (who + date, managers only, undo possible);
@@ -145,6 +158,37 @@ DEF_TAGS = ['Loch Brusttasche', 'Brusttasche defekt', 'Innentasche zugenäht', '
 
 TAG_EN = {'Nähfehler': 'Sewing defect', 'Loch Brusttasche': 'Hole in chest pocket', 'Brusttasche defekt': 'Chest pocket defective', 'Innentasche zugenäht': 'Inner pocket sewn shut', 'Naht offen': 'Seam open', 'Lose Fäden': 'Loose threads', 'Fleck / Verschmutzung': 'Stain / dirt', 'Reißverschluss defekt': 'Zipper defective', 'Druckknopf defekt': 'Snap button defective', 'Falsches Größenetikett': 'Wrong size label', 'Stoff beschädigt': 'Fabric damaged'}
 TR = [
+    ('Wer prüft? Bitte zuerst deinen Namen eingeben', 'Who is checking? Please enter your name first'),
+    ('Dein Name – Pflichtfeld', 'Your name – required'),
+    ('Der Name wird auf diesem Handy gemerkt.', 'The name is remembered on this phone.'),
+    ('Bitte zuerst deinen Namen eingeben (oben)', 'Please enter your name first (top)'),
+    ('Prüfer: ', 'Inspector: '),
+    ('>ändern<', '>change<'),
+    ('IQ Dogsport GmbH · Qualitätsprüfung Wareneingang', 'IQ Dogsport GmbH · Incoming goods quality inspection'),
+    ('✓ Prüfung abgeschlossen', '✓ Quality check completed'),
+    (' · Der QC-Bericht ist ein Endbericht.', ' · The QC report is a final report.'),
+    ('Prüfung läuft', 'Check in progress'),
+    (' · Der QC-Bericht ist ein Zwischenstand (nicht final).', ' · The QC report is an interim report (not final).'),
+    ('Prüfung abschließen', 'Complete check'),
+    ('Wieder öffnen', 'Reopen'),
+    ('✓ Änderungen speichern', '✓ Save changes'),
+    ('Danach Etikett neu drucken', 'Print a new label afterwards'),
+    ('(optional – nur wenn ein neues Etikett gebraucht wird)', '(optional – only if a new label is needed)'),
+    ('Nur die Änderungen werden gespeichert – es wird kein Etikett gedruckt (außer oben angehakt).', 'Only the changes are saved – no label is printed (unless ticked above).'),
+    ('ZWISCHENSTAND – NICHT FINAL', 'INTERIM REPORT – NOT FINAL'),
+    ('Die Qualitätsprüfung ist noch nicht abgeschlossen. Zahlen können sich bis zum Endbericht noch ändern.', 'The quality check is not completed yet. Numbers may still change until the final report.'),
+    ('Der Druck-Knopf wird aktiv, sobald alle Fotos geladen sind.', 'The print button becomes active as soon as all photos are loaded.'),
+    ('Fotos werden geladen …', 'Loading photos …'),
+    (' – Endbericht', ' – final report'),
+    (' – Zwischenstand', ' – interim'),
+    ('Als Endbericht (final)', 'As final report'),
+    ('Als Zwischenstand', 'As interim report'),
+    ('Änderungen speichern', 'Save changes'),
+    ('Vorhandene Fotos – zum Entfernen anhaken', 'Existing photos – tick to remove'),
+    (' entfernen</span>', ' remove</span>'),
+    ('>Bearbeiten<', '>Edit<'),
+    ('Bearbeiten: ', 'Edit: '),
+    ('Zu viele falsche Versuche', 'Too many wrong attempts'),
     (' (ganzer Karton)', ' (whole box)'),
     ('Karton(s) im Lager', 'box(es) in stock'),
     ('Karton(s) abgegeben', 'box(es) handed over'),
@@ -1157,6 +1201,31 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .pwarn{background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px;font-weight:700}
 .pfix{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px}.pfix summary{font-weight:800;cursor:pointer}
 .pok{display:none;background:#dcfce7;border:1px solid #16a34a;color:#166534;border-radius:8px;padding:8px 10px;font-weight:800;margin:8px 0 0}
+.rnotfinal{border:2px solid #b45309;background:#fff7ed;color:#7c2d12;border-radius:10px;padding:12px 14px;margin:0 0 12px;font-size:14px}
+.rbar{margin-bottom:10px}.rkg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rk{border:1px solid #e7e7e3;border-radius:10px;overflow:hidden;background:#fff;break-inside:avoid;page-break-inside:avoid}
+.rk .rph{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#f4f4f2;border-bottom:1px solid #eee}.rk .rph.r1{grid-template-columns:1fr}
+.rk .rimg{display:block;width:100%;height:260px;object-fit:contain;background:#f4f4f2}.rk .rph.r1 .rimg{height:340px}
+.rep h2{break-after:avoid;page-break-after:avoid}
+.rk .bd{padding:10px 12px 12px}.rk .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rk .szp{font:800 17px Arial;background:#151515;color:#fff;border-radius:8px;padding:3px 10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rk .rs{font:700 13px Arial;color:var(--red);background:#fde8e8;border-radius:8px;padding:4px 9px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.rk .wo{font-size:13px;margin-top:6px}.rk .tx{margin-top:6px;font-size:13px}.rk .meta{font-size:11px;color:var(--mut);margin-top:6px}.rk .rdraw{margin-top:6px}
+.rk .rdraw .ldr-row{justify-content:flex-start}.rk .rdraw .lfig{max-width:90px}
+.rep .hcol,.rep .hidep{display:none!important}
+@media print{@page{size:A4;margin:0}.rep{padding:12mm 12mm!important}.rk .rimg{height:190px}.rk .rph.r1 .rimg{height:250px}.rkg{gap:8px}.rnotfinal{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media(max-width:700px){.rkg{grid-template-columns:1fr}}
+.edbox{border:2px solid #151515}.edrow{display:flex;gap:8px}.edrow a{flex:1;text-align:center;padding:10px;border:1px solid #d1d5db;border-radius:8px;text-decoration:none;font-weight:800;color:inherit}.edrow a.on{background:#151515;color:#fff;border-color:#151515}
+.ephs{display:flex;flex-wrap:wrap;gap:8px}.eph{display:flex;flex-direction:column;align-items:center;font-size:12px;gap:4px}.eph img{width:96px;height:96px;object-fit:cover;border-radius:8px}
+.rhead{display:flex;align-items:center;gap:14px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid #151515}.rhead img{height:38px;width:auto;filter:invert(1)}.rhead span{font:700 12px Arial;letter-spacing:.06em;text-transform:uppercase;color:#555}
+.qdone{border-left:5px solid #f59e0b;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.qdone.on{border-left-color:#16a34a;background:#f0fdf4}
+.erp{display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:700;font-size:14px}.erp small{font-weight:400;color:var(--mut)}
+.whoc{border:1px solid var(--line);background:#fff;padding:10px 14px}.whoc.wneed{border:3px solid #dc2626;background:#fef2f2;padding:14px}
+.whoh{display:flex;align-items:center;gap:10px;font-size:16px;color:#151515}.whoh b{flex:1;color:#151515}
+.whon{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;font:900 15px Arial;flex:0 0 26px}
+.whoc.wok .whon{background:#16a34a}.whoe{font-size:13px;color:#555;display:none}.whoc.wok .whoe{display:inline}
+.whob{margin-top:8px}.whoc.wok .whob{display:none}.whoc input{width:100%;font-size:18px;padding:12px}.whob small{display:block;color:#555;margin-top:4px}
+.whoc.shake{animation:wsh .4s}@keyframes wsh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .pcmp{width:100%;border-collapse:collapse}.pcmp th,.pcmp td{padding:7px 5px;font-size:14px}.pcmp th{font-size:10px;letter-spacing:.3px}
 @media(max-width:560px){.pcmp th,.pcmp td{padding:6px 3px;font-size:13px}.pcmp th{font-size:9px}}
 .pprod{margin:-4px 0 10px;font-weight:800;font-size:15px}.pligone{opacity:.75}.pgn{font-size:13px;font-weight:700;color:#4b5563;margin-top:2px}
@@ -1298,11 +1367,14 @@ SCANJS = ('var AC=null;function beep(k){try{AC=AC||new(window.AudioContext||wind
           + 'var seq=k==="err"?[[220,.35]]:(k==="sw"?[[880,.09],[1320,.12]]:[[1500,.09]]),t=AC.currentTime;seq.forEach(function(q){var o=AC.createOscillator(),g=AC.createGain();o.type="square";o.frequency.value=q[0];'
           + 'g.gain.value=.12;o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+q[1]);t+=q[1]+.04})}catch(e){}if(navigator.vibrate)navigator.vibrate(k==="err"?[120,60,120]:40)}'
           + 'document.addEventListener("click",function(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}},{once:true});'
-          + 'var SB="",ST=0,STO=null;function scanDone(){var c=SB.trim();SB="";if(c.length>=4&&window.onScan)window.onScan(c)}'
-          + 'document.addEventListener("keydown",function(e){var t=e.target,tag=(t&&t.tagName)||"";if(tag==="TEXTAREA"||(tag==="INPUT"&&/^(text|search|password|number|email|tel)$/.test(t.type||"text")))return;'
-          + 'var n=Date.now();if(n-ST>120)SB="";ST=n;clearTimeout(STO);'
-          + 'if(e.key==="Enter"||e.key==="Tab"){if(SB.length>=4){e.preventDefault();scanDone()}return}'
-          + 'if(e.key&&e.key.length===1){SB+=e.key;STO=setTimeout(function(){if(SB.length>=6)scanDone()},180)}});'
+          + 'var SB="",ST=0,STO=null,SF=0,STG=null;function scanDone(){var c=SB.trim();SB="";SF=0;if(c.length>=4&&window.onScan)window.onScan(c)}'
+          + 'function scanStrip(t){try{if(t&&t.value!==undefined&&SB&&t.value.slice(-SB.length)===SB)t.value=t.value.slice(0,-SB.length)}catch(x){}}'
+          + 'document.addEventListener("keydown",function(e){var t=e.target,tag=(t&&t.tagName)||"";if(tag==="TEXTAREA"||(t&&(t.id==="mcode"||t.id==="pscan")))return;'
+          + 'var inp=tag==="INPUT"&&/^(text|search|password|number|email|tel)$/.test(t.type||"text");'
+          + 'var n=Date.now(),gap=n-ST;if(gap>120){SB="";SF=0}else if(gap<45)SF++;ST=n;clearTimeout(STO);STG=t;'
+          + 'function fast(){return !inp||SF>=SB.length-2}'
+          + 'if(e.key==="Enter"||e.key==="Tab"){if(SB.length>=4&&fast()){e.preventDefault();if(inp)scanStrip(t);scanDone()}return}'
+          + 'if(e.key&&e.key.length===1){SB+=e.key;STO=setTimeout(function(){if(SB.length>=6&&fast()){if(inp)scanStrip(STG);scanDone()}},180)}},true);'
           + 'function scanPost(code,extra,cb){var fd=new FormData();fd.append("csrf_token",CSRF);fd.append("key",KEY);fd.append("act","scan");fd.append("code",code);for(var k in extra)fd.append(k,extra[k]);'
           + 'fetch(location.pathname,{method:"POST",body:fd,credentials:"same-origin"}).then(function(r){return r.text()}).then(function(t){cb(t.split("|"))}).catch(function(){cb(["ERR","Keine Verbindung – bitte nochmal."])})}'
           + 'function remPick(tm,v){try{if(v===undefined)return localStorage.getItem("iq_qc_pick_"+tm)||"";if(v)localStorage.setItem("iq_qc_pick_"+tm,v)}catch(e){return ""}}'
@@ -1314,6 +1386,7 @@ DEFECT_JS = r"""
 (function(){
     // v19.10: one defect = (1) reason -> (2) place on the drawing -> (3) photo. Several defects per garment, one label.
     var btn=document.getElementById('save'),error=document.getElementById('err'),hint=document.getElementById('savehint');
+    var EDM=(typeof EDIT!=='undefined'&&EDIT)?EDIT:'';
     var rid=String(Date.now())+'-'+Math.random().toString(36).slice(2);
     var ISN=KIND==='note',V0=(document.querySelector('#lview button')?document.querySelector('#lview button').getAttribute('data-v'):'V'),V=V0,LIST=[],cur=blank();
     var selR=document.getElementById('reason'),nt=document.getElementById('newtag'),cam=document.getElementById('fcam');
@@ -1321,7 +1394,7 @@ DEFECT_JS = r"""
     function $(id){return document.getElementById(id)}
     function zlabel(c){var e=document.querySelector('[data-z="'+c+'"]');return e?e.getAttribute('data-l'):c}
     function placeOk(c){return ISN||c.z.length>0}
-    function photoOk(c){return ISN||c.ph.length>0||c.nofoto}
+    function photoOk(c){return ISN||!!EDM||c.ph.length>0||c.nofoto}
     function complete(c){return !!c.r&&placeOk(c)&&photoOk(c)}
     function empty(c){return !c.r&&!c.z.length&&!c.ph.length}
     function flash(el){if(!el)return;el.classList.remove('qflash');void el.offsetWidth;el.classList.add('qflash');if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'})}
@@ -1396,7 +1469,7 @@ DEFECT_JS = r"""
         var tx=document.createElement('div');var b=document.createElement('b');b.textContent=(i+1)+'. '+it.t;
         var sp=document.createElement('span');sp.textContent=it.z.length?it.z.map(zlabel).join(', '):'–';
         var th=document.createElement('div');th.className='qths';thumbs(th,it,false);
-        if(!it.ph.length&&!ISN){var nf=document.createElement('small');nf.className='photo-missing';nf.textContent='ohne Foto';th.appendChild(nf)}
+        if(!it.ph.length&&!ISN&&!it.ex){var nf=document.createElement('small');nf.className='photo-missing';nf.textContent='ohne Foto';th.appendChild(nf)}
         tx.appendChild(b);tx.appendChild(sp);tx.appendChild(th);d.appendChild(tx);
         var x=document.createElement('button');x.type='button';x.className='fx';x.textContent='✕';x.setAttribute('aria-label','Entfernen');
         x.onclick=function(){if(confirm('Fehler '+(i+1)+' entfernen?')){LIST.splice(i,1);ui()}};d.appendChild(x);box.appendChild(d);
@@ -1437,7 +1510,8 @@ DEFECT_JS = r"""
         msg('');
         if(!empty(cur)){if(!complete(cur)){addCur();return}LIST.push(cur);cur=blank();ui()}
         if(!LIST.length){fail('Schritt 1: Grund wählen.');flash($('rbox'));return}
-        var fd=new FormData();fd.append('csrf_token',CSRF);fd.append('key',KEY);fd.append('act','defect');fd.append('pid',PID);fd.append('pick',PICK);
+        var fd=new FormData();fd.append('csrf_token',CSRF);fd.append('key',KEY);fd.append('act',EDM?'defect_edit':'defect');fd.append('pid',(EDM&&document.getElementById('esize'))?document.getElementById('esize').value:PID);fd.append('pick',PICK);
+        if(EDM){fd.append('aid',EDM);document.querySelectorAll('.ephx:checked').forEach(function(x){fd.append('delph',x.value)});var rpx=document.getElementById('ereprint');if(rpx&&rpx.checked)fd.append('reprint','1')}
         fd.append('reqid',rid);fd.append('tags',LIST.map(function(x){return x.r}).join('\n'));fd.append('newtag','');fd.append('kind',KIND);
         fd.append('garm',GARM);fd.append('defs',LIST.map(function(x){return x.r.replace(/[\t\n]/g,' ')+'\t'+x.z.join(',')}).join('\n'));
         var nph=0;LIST.forEach(function(x,i){x.ph.forEach(function(p){fd.append('photo_'+(i+1),p.b,'foto.jpg');nph++})});
@@ -1445,10 +1519,12 @@ DEFECT_JS = r"""
         btn.disabled=true;btn.textContent=nph?('Speichert + lädt '+nph+' Foto(s) hoch …'):'Speichert …';
         fetch(location.pathname,{method:'POST',body:fd,credentials:'same-origin'}).then(function(r){return r.text().then(function(t){if(!r.ok)throw new Error('Serverfehler '+r.status+': '+t.slice(0,180));return t})})
         .then(function(t){var a=t.split('|');if(a[0]!=='OK')throw new Error(a[1]||t);
+            if(EDM){if(a[2]==='D')window.open('?key='+encodeURIComponent(KEY)+'&pdf_label='+encodeURIComponent(EDM),'_blank');location.replace(BACK);return}
             location.replace('?key='+encodeURIComponent(KEY)+'&photo_for='+encodeURIComponent(a[2])+'&stage=2&pr='+encodeURIComponent(a[4]||'')+'&pe='+encodeURIComponent(a[5]||'')+'&nph='+nph);
         }).catch(function(e){fail('Keine Verbindung oder Fehler – bitte erneut versuchen: '+e.message)});
     };
     function who(){try{return localStorage.getItem('iq_qc_who')||''}catch(e){return ''}}
+    if(EDM){btn.textContent=SVT;LIST=EDEFS.map(function(d){return {r:d[0],t:d[1],z:d[2],ph:[],nofoto:true,ex:true}});var nn=document.getElementById('note');if(nn){nn.value=ENOTE||'';if(ENOTE&&nn.closest('details'))nn.closest('details').open=true}}
     ui();
 })();
 """
@@ -3818,6 +3894,10 @@ if len(MPIN_Q) >= 8 and len(mcv) == 3 and mcv[0] == 'M' and mcv[1].isdigit() and
     ADM = msig(mcv[1]) == mcv[2]
     ADM_LEFT = (int(mcv[1]) - NOWTS) // 60 if ADM else 0
 CAL_URL = '/website/action/iq-delivery-calendar?key=' + KEY
+TFV = (P.get_param('iq.qc_pwfail') or '0|0').split('|')
+TF_N = int(TFV[0]) if TFV[0].isdigit() else 0
+TF_TS = int(TFV[1]) if len(TFV) > 1 and TFV[1].isdigit() else 0
+TEAM_LOCKED = TF_N >= 5 and NOWTS - TF_TS < 900  # v19.16.6: 5 wrong team passwords -> 15 min lock
 PHOTO_WINDOW = 7200  # v19.16.5: inspectors may add photos for 2 h after saving a defect; later only managers
 
 
@@ -4064,6 +4144,42 @@ def packed_by_size(boxes):
 
 
 
+# v19.16.6: report – print button only after every photo has loaded
+REP_JS = ('<script>(function(){var b=document.getElementById("rprint"),st=document.getElementById("rstat");if(!b)return;'
+          'var ims=[].slice.call(document.querySelectorAll("img")),n=ims.length,d=0,bad=0;'
+          'function upd(){if(d>=n){b.disabled=false;b.textContent="Drucken / als PDF speichern";st.textContent=bad?(bad+" Foto(s) konnten nicht geladen werden – bitte Seite neu laden."):("Alle "+n+" Fotos geladen.")}else{b.textContent="Fotos werden geladen … ("+d+"/"+n+")"}}'
+          'ims.forEach(function(im){if(im.complete){d++;if(!im.naturalWidth)bad++}else{im.addEventListener("load",function(){d++;upd()});im.addEventListener("error",function(){d++;bad++;upd()})}});'
+          'b.onclick=function(){window.print()};upd()})();</script>')
+
+# v19.16.7: quality check completed per product (attachment, no new field)
+DONEFILE = 'iq_qc_done.txt'
+
+
+def qc_done_of(tid):
+    a = Att.search([('res_model', '=', 'product.template'), ('res_id', '=', int(tid)), ('name', '=', DONEFILE)], limit=1)
+    if not a:
+        return False
+    pr = (a.raw or b'').decode('utf-8', 'ignore').split('|', 1)
+    return [pr[0], pr[1] if len(pr) > 1 else '']
+
+
+# v19.16.7: inspector name first and mandatory (start page + check page)
+WHO_CARD = ('<div class="card whoc" id="whoc"><div class="whoh"><span class="whon">!</span><b id="whot">Wer prüft? Bitte zuerst deinen Namen eingeben</b>'
+            '<a href="#" id="whoe" class="whoe">ändern</a></div>'
+            '<div class="whob"><input type="text" id="who" placeholder="Dein Name – Pflichtfeld" autocomplete="off"><small>Der Name wird auf diesem Handy gemerkt.</small></div></div>')
+WHO_JS = ('function lsw(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localStorage.setItem(k,v)}catch(e){return ""}}'
+          'var W=document.getElementById("who"),WC=document.getElementById("whoc");W.value=lsw("iq_qc_who");'
+          'function whoUi(){var ok=!!W.value.trim(),ed=WC.classList.contains("wed");WC.classList.toggle("wok",ok&&!ed);WC.classList.toggle("wneed",!ok);'
+          'document.getElementById("whot").textContent=ok?("Prüfer: "+W.value.trim()):"Wer prüft? Bitte zuerst deinen Namen eingeben";'
+          'document.querySelector("#whoc .whon").textContent=ok?"✓":"!";W.classList.toggle("needname",!ok)}'
+          'document.getElementById("whoe").onclick=function(e){e.preventDefault();WC.classList.add("wed");whoUi();W.focus();W.select()};'
+          'W.onchange=function(){lsw("iq_qc_who",W.value.trim());if(W.value.trim())WC.classList.remove("wed");whoUi()};'
+          'W.oninput=function(){lsw("iq_qc_who",W.value.trim());WC.classList.toggle("wneed",!W.value.trim())};'
+          'W.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();W.blur();W.onchange()}};whoUi();'
+          'function needName(){if(W.value.trim())return false;try{beep("err")}catch(e){}if(window.flash)try{flash("Bitte zuerst deinen Namen eingeben (oben)","#b91c1c")}catch(e){}'
+          'WC.classList.remove("shake");void WC.offsetWidth;WC.classList.add("shake");W.scrollIntoView({block:"center"});W.focus();return true}')
+
+
 PACK_JS = r"""
 (function(){
   var err=document.getElementById('perr'),busy=false;
@@ -4126,7 +4242,13 @@ PACK_JS = r"""
 # ------------------------------------------------------------------ routing
 if not KEY or params.get('key') != KEY or not PW:
     response = request.make_response('Not found', headers=[('Content-Type', 'text/plain; charset=utf-8')], status=404)
+elif request.httprequest.method == 'POST' and params.get('pw') is not None and TEAM_LOCKED:
+    response = resp(head('Gesperrt') + '<div class="wrap"><div class="card" style="max-width:480px;margin:40px auto"><h2>Zu viele falsche Versuche</h2><p>Das Team-Passwort ist für 15 Minuten gesperrt. Bitte später erneut versuchen.</p></div></div></body></html>')
 elif request.httprequest.method == 'POST' and params.get('pw') is not None:
+    if params.get('pw') != PW:
+        P.set_param('iq.qc_pwfail', str((0 if NOWTS - TF_TS >= 900 else TF_N) + 1) + '|' + str(NOWTS))
+    else:
+        P.set_param('iq.qc_pwfail', False)
     if params.get('pw') == PW:
         response = request.make_response('', headers=[('Location', QB)], status=303)
         response.set_cookie('iq_cal', TOKEN, max_age=2592000, httponly=True, secure=True, samesite='Lax')
@@ -4361,6 +4483,141 @@ elif params.get('boxpdf'):
 
 
 # ------------------------------------------------------------------ actions (fetch POST from the phone)
+elif request.httprequest.method == 'POST' and params.get('act') in ('qc_done', 'qc_reopen'):
+    # v19.16.7: manager marks the quality check of a product as completed (final report) or opens it again
+    t = Tmpl.browse(int(params.get('tmpl') or 0)).exists() if str(params.get('tmpl') or '').isdigit() else Tmpl.browse([])
+    if not ADM:
+        response = txt('ERR|Nur für Führungskräfte – bitte oben anmelden.')
+    elif not t:
+        response = txt('ERR|Produkt nicht gefunden.')
+    else:
+        old = Att.search([('res_model', '=', 'product.template'), ('res_id', '=', t.id), ('name', '=', DONEFILE)])
+        old.unlink()
+        if params.get('act') == 'qc_done':
+            Att.create({'name': DONEFILE, 'raw': (str(NOWTS) + '|' + str(params.get('note') or '')[:200]).encode('utf-8'), 'mimetype': 'text/plain', 'res_model': 'product.template', 'res_id': t.id})
+        response = txt('OK|' + params.get('act'))
+
+elif request.httprequest.method == 'POST' and params.get('act') == 'defect_edit':
+    # v19.16.6: manager edits an existing defect / note (reason, place, size, note, type, photos) – change is written to the chatter
+    al = QA.browse(int(params.get('aid') or 0)).exists() if str(params.get('aid') or '').isdigit() else QA.browse([])
+    p = Prod.browse(int(params.get('pid') or 0)).exists() if str(params.get('pid') or '').isdigit() else Prod.browse([])
+    if not ADM:
+        response = txt('ERR|Bearbeiten nur für Führungskräfte – Anmeldung abgelaufen? Bitte in einem neuen Tab anmelden und erneut speichern.')
+    elif not al or not p:
+        response = txt('ERR|Defekt oder Größe nicht gefunden.')
+    elif al.product_id and p.product_tmpl_id.id != al.product_id.product_tmpl_id.id:
+        response = txt('ERR|Größe gehört zu einem anderen Produkt.')
+    else:
+        isnote = params.get('kind') == 'note'
+        garm = params.get('garm') if (params.get('garm') in LOC_PROD or is_custom(params.get('garm'))) else 'gen'
+        defs = []
+        for ln in (params.get('defs') or '').split(chr(10))[:20]:
+            if chr(9) not in ln:
+                continue
+            pr = ln.split(chr(9), 1)
+            rn = loc_clean(clean_reason(pr[0].strip()[:60]))
+            if not rn:
+                continue
+            zs = []
+            for z in pr[1].split(','):
+                z = z.strip()
+                if loc_code_ok(z) and z not in zs:
+                    zs.append(z)
+            found = False
+            for d0 in defs:
+                if d0[0] == rn:
+                    found = True
+                    for z in zs:
+                        if z not in d0[1]:
+                            d0[1].append(z)
+            if not found:
+                defs.append([rn, zs[:12]])
+        if not defs:
+            response = txt('ERR|Bitte mindestens einen Grund angeben.')
+        else:
+            old_title = (al.title or '') if 'title' in AF else ''
+            old_size = size_of(al.product_id) if al.product_id else '?'
+            old_note = is_note(al)
+            tids = []
+            if TAG:
+                for d0 in defs:
+                    ex = TAG.search([('name', '=ilike', d0[0])], limit=1)
+                    tids.append(ex.id if ex else TAG.create({'name': d0[0]}).id)
+            # photos: remove the ticked ones (only photos of this defect), add new ones
+            delids = [int(x) for x in request.httprequest.form.getlist('delph') if str(x).isdigit()]
+            ndel = 0
+            if delids:
+                dl_ = Att.search([('id', 'in', delids), ('res_model', '=', 'quality.alert'), ('res_id', '=', al.id)])
+                ndel = len(dl_)
+                dl_.unlink()
+            nadd = 0
+            for fi0 in range(1, 21):
+                for fl in request.httprequest.files.getlist('photo_' + str(fi0)):
+                    data = fl.read()
+                    if data and len(data) <= 12000000 and (fl.mimetype or 'image/jpeg').lower().startswith('image/'):
+                        nadd += 1
+                        Att.create({'name': al.name + '-E' + str(fi0) + '-' + str(nadd) + '.jpg', 'raw': data, 'mimetype': fl.mimetype or 'image/jpeg', 'res_model': 'quality.alert', 'res_id': al.id})
+            nph = Att.search_count([('res_model', '=', 'quality.alert'), ('res_id', '=', al.id), ('mimetype', '=like', 'image%')])
+            # description: keep everything after the free note (Prüfer, import marks, references), rebuild size / place / note
+            d = str(al.description or '') if 'description' in AF else ''
+            d = d.replace(MISSING_HTML, '').replace('<p>' + NOTEMARK + ' kein Defekt – wird gebucht, beobachten</p>', '')
+            cut = len(d)
+            for mk in ['<p>Prüfer:', '<p>Größe:', '<p>Nachgetragen']:
+                ix = d.find(mk)
+                if 0 <= ix < cut:
+                    cut = ix
+            keep = ''
+            for pp in d[cut:].split('</p>'):
+                if not pp.strip() or 'Größe:' in pp or LOCMARK in pp:
+                    continue
+                keep += pp + '</p>'
+            nnote = str(params.get('note') or '').strip()
+            hasloc = len([d0 for d0 in defs if d0[1]]) > 0
+            vals = {}
+            if 'description' in AF:
+                vals['description'] = ((('<p>' + NOTEMARK + ' kein Defekt – wird gebucht, beobachten</p>') if isnote else '') + (('<p>' + esc(nnote) + '</p>') if nnote else '') + keep
+                                       + '<p>Größe: ' + esc(size_of(p)) + '</p>' + (('<p>' + LOCMARK + garm + '] ' + ' | '.join([d0[0] + '=' + ','.join(d0[1]) for d0 in defs]) + '</p>') if hasloc else '')
+                                       + (MISSING_HTML if (not nph and not hasloc and not isnote) else ''))
+            if 'title' in AF:
+                tparts = []
+                for d0 in defs:
+                    tparts.append(d0[0] + ((' @ ' + ', '.join([loc_short(z, garm) for z in d0[1]])) if d0[1] else ''))
+                vals['title'] = ('Hinweis: ' if isnote else '') + '; '.join(tparts)[:240] + ' · Gr. ' + size_of(p)
+            if 'tag_ids' in AF and TAG:
+                vals['tag_ids'] = [(6, 0, tids)]
+            if p.id != al.product_id.id:
+                vals['product_id'] = p.id
+            al.write(vals)
+            chk = al.check_id if 'check_id' in AF else False
+            if chk:
+                cvals = {'quality_state': 'pass' if isnote else 'fail'}
+                if p.id != chk.product_id.id:
+                    cvals['product_id'] = p.id
+                chk.write(cvals)
+            chg = []
+            if old_note != isnote:
+                chg.append('Typ: ' + ('Defekt' if old_note else 'Hinweis') + ' → ' + ('Hinweis – kein Defekt' if isnote else 'Defekt'))
+            if old_size != size_of(p):
+                chg.append('Größe: ' + old_size + ' → ' + size_of(p))
+            if 'title' in AF and old_title != vals.get('title'):
+                chg.append('Grund/Ort: ' + old_title + ' → ' + vals.get('title'))
+            if ndel:
+                chg.append(str(ndel) + ' Foto(s) entfernt')
+            if nadd:
+                chg.append(str(nadd) + ' Foto(s) hinzugefügt')
+            chg.append('Notiz: ' + (nnote or '–'))
+            try:
+                al.message_post(body='Geändert auf der QC-Seite (Führungskraft, ' + loc(now).strftime('%d.%m.%Y %H:%M') + '): ' + ' · '.join(chg))
+            except Exception:
+                pass
+            rp_ = ''
+            if params.get('reprint') == '1' and not isnote:
+                if PRINT_ENABLED:
+                    rp_ = 'P' if not pn_print(al) else 'D'
+                else:
+                    rp_ = 'D'
+            response = txt('OK|' + str(al.id) + '|' + rp_)
+
 elif request.httprequest.method == 'POST' and params.get('act') in ('ok', 'defect') and get_pick() and not pick_open(get_pick()):
     response = txt('ERR|Lieferung schon gebucht – QC nur für offene Wareneingänge. Nichts gespeichert.')
 elif request.httprequest.method == 'POST' and params.get('act') == 'ok':
@@ -4554,10 +4811,10 @@ elif request.httprequest.method == 'POST' and params.get('act') == 'print':
         response = txt(('OK|' + al.name) if not perr else ('ERR|Druck fehlgeschlagen: ' + perr))
 elif request.httprequest.method == 'POST' and params.get('act') == 'del':
     al = QA.browse(int(params.get('aid') or 0)).exists() if str(params.get('aid') or '').isdigit() else QA.browse([])
-    if not ADM:
-        response = txt('ERR|Löschen nur für Führungskräfte – bitte oben anmelden.')
-    elif not al:
+    if not al:
         response = txt('ERR|Defekt nicht gefunden')
+    elif not ADM and not (al.create_date and (now - al.create_date).total_seconds() <= PHOTO_WINDOW):
+        response = txt('ERR|Löschen nur für Führungskräfte – bitte oben anmelden.')
     else:
         nm = al.name
         chk = al.check_id if 'check_id' in AF else False
@@ -5649,7 +5906,7 @@ elif params.get('view') in ('prod', 'report'):
                 reasons[tn] = reasons.get(tn, 0) + 1
         tot = len(cs)
         bad = len([c for c in cs if c.quality_state == 'fail'])
-        srows = ''.join(['<tr><td><b>' + esc(s) + '</b></td><td class="r">' + str(v[0]) + '</td><td class="r">' + str(v[0] - v[1]) + '</td><td class="r">' + (str(nbys[s]) if nbys.get(s) else '–') + '</td><td class="r' + (' neg' if v[1] else '') + '">' + str(v[1]) + '</td>'
+        srows = ''.join(['<tr><td><b>' + esc(s) + '</b></td><td class="r">' + str(v[0]) + '</td><td class="r">' + str(v[0] - v[1]) + '</td><td class="r hcol">' + (str(nbys[s]) if nbys.get(s) else '–') + '</td><td class="r' + (' neg' if v[1] else '') + '">' + str(v[1]) + '</td>'
                          + '<td class="r">' + ('%.1f' % (100.0 * v[1] / v[0] if v[0] else 0)).replace('.', ',') + ' %</td></tr>' for s, v in sorted(bys.items(), key=lambda kv: size_rank(kv[0]))])
         rrows = ''.join(['<tr><td>' + esc(k) + '</td><td class="r">' + str(n) + '</td><td class="r">' + ('%.0f' % (100.0 * n / bad if bad else 0)) + ' %</td></tr>' for k, n in sorted(reasons.items(), key=lambda kv: -kv[1])])
         dl = ''
@@ -5675,6 +5932,8 @@ elif params.get('view') in ('prod', 'report'):
                 if t not in frs and not isn:
                     frs.append(t)
             pics = ''.join(['<img loading="lazy" src="' + QB + '&amp;img=' + str(i.id) + '" data-g="' + str(al.id) + '" alt="">' for i in ims])
+            if rep and isn:
+                continue
             lg = locs_of(al)
             lcodes = loc_codes(al)
             wo = ''
@@ -5694,6 +5953,15 @@ elif params.get('view') in ('prod', 'report'):
             ldr = loc_draws(lg[0], lcodes, 'mini') if lcodes else ''
             if lcodes and not ldr:
                 ldr = '<b>' + esc(loc_label('X-ALL')) + '</b>'
+            if rep:
+                # v19.16.6: report card – every photo complete (not cropped), drawing below, no links, no names
+                card = ('<div class="rk">' + (('<div class="rph' + (' r1' if len(ims) == 1 else '') + '">' + ''.join(['<img class="rimg" src="' + QB + '&amp;img=' + str(i.id) + '" alt="">' for i in ims]) + '</div>') if ims else '')
+                        + '<div class="bd"><div class="hd"><span class="szp">' + esc(szv) + '</span>' + ''.join(['<span class="rs">' + esc(t) + '</span>' for t in tgs]) + '</div>'
+                        + wo + ('<div class="tx">' + esc(note.replace(PACKMARK + ' Beim Verpacken der Defekt-Kartons gefunden – keine Einzeldokumentation, kein Foto.', 'Beim Verpacken gefunden – ohne Einzelfoto.')) + '</div>' if note else '')
+                        + (('<div class="rdraw">' + ldr + '</div>') if ldr else '')
+                        + '<div class="meta">' + esc(al.name) + ' · ' + loc(al.create_date).strftime('%d.%m.%Y') + (' · ' + esc(al.picking_id.name) if 'picking_id' in AF and al.picking_id else '') + (' · ' + str(len(ims)) + ' Fotos' if len(ims) > 1 else '') + '</div></div></div>')
+                dl += card
+                continue
             card = ('<div class="dk' + (' nt' if isn else '') + '" data-s="' + esc(szv) + '" data-r="' + esc('|'.join(tgs)) + '" data-o="' + esc('|'.join(lcodes)) + '">'
                    + (('<div class="pics' + (' one' if len(ims) == 1 else '') + (' hasd' if ldr else '') + '"' + ((' data-n="+' + str(len(ims) - 1) + '"') if len(ims) > 1 else '') + '>' + pics + (('<div class="pdraw">' + ldr + '</div>') if ldr else '') + '</div>') if ims else (('<div class="nopic locpic">' + ldr + '</div>') if ldr else '<div class="nopic photo-missing">Foto fehlt</div>'))
                    + '<div class="bd"><div class="hd"><span class="szp">' + esc(szv) + '</span>' + ('<span class="rs">Foto fehlt</span>' if not ims and not ldr else '') + ('<span class="rs nt">Hinweis – kein Defekt</span>' if isn else '') + ''.join(['<span class="rs' + (' nt' if isn else '') + '">' + esc(t) + '</span>' for t in tgs]) + '</div>'
@@ -5701,6 +5969,7 @@ elif params.get('view') in ('prod', 'report'):
                    + '<div class="meta">' + esc(al.name) + ' · ' + loc(al.create_date).strftime('%d.%m.%Y %H:%M') + (' · ' + esc(who) if who else '')
                    + (' · ' + esc(al.picking_id.name) if 'picking_id' in AF and al.picking_id else '') + (' · ' + str(len(ims)) + ' Fotos' if len(ims) > 1 else '') + (' <span class="imp">nachgetragen</span>' if imp else '') + '</div>'
                    + ('' if rep else '<div class="ac noprint"><a href="/odoo/quality.alert/' + str(al.id) + '" target="_blank">In Odoo öffnen ↗</a>' + ('' if isn else ((' · <a href="' + QB + '&amp;pdf_label=' + str(al.id) + '" download>PDF herunterladen</a>' + (' · <a href="#" data-rp="' + str(al.id) + '">Etikett neu drucken</a>' if PRINT_ENABLED else ''))))
+                   + ((' · <a href="' + QB + '&amp;tmpl=' + str(al.product_id.product_tmpl_id.id) + '&amp;defect=' + str(al.product_id.id) + '&amp;edit=' + str(al.id) + ('&amp;kind=note' if isn else '') + (('&amp;pick=' + str(al.picking_id.id)) if 'picking_id' in AF and al.picking_id else '') + '" style="font-weight:800">Bearbeiten</a>') if ADM else '')
                    + ((' · <a href="' + QB + '&amp;photo_for=' + str(al.id) + '&amp;stage=late">Foto hinzufügen</a> · <a href="#" data-del="' + str(al.id) + '" data-n="' + esc(al.name) + '" style="color:var(--red)">Löschen</a>') if ADM else '') + '</div>')
                    + '</div></div>')
             if isn:
@@ -5764,20 +6033,28 @@ elif params.get('view') in ('prod', 'report'):
                      + '<p class="qcfilter-note">Zeitraum: ' + esc(dict(opts_time).get(period, 'Alle Zeiträume')) + ' · ' + ('Lieferung ' + esc(pick.name) if pick else 'Alle Lieferungen') + '. Grundlage: Speicherdatum der QC-Prüfung.</p></div>')
         active_query = (('&amp;period=' + esc(period)) if period != 'all' else '') + (('&amp;inspector=' + esc(inspector)) if inspector else '')
         title = ('QC-Bericht' if rep else 'QC Details') + ' – ' + esc(tmpl.name)
-        html = (head(title) + ('' if rep else topbar('QC Details', QB + '&amp;view=dash')) + '<div class="wrap wide">'
-                + ('<div class="noprint" style="margin-bottom:10px"><button class="btn" onclick="window.print()">Drucken / als PDF speichern</button> <a class="btn" style="background:#e9e9e6;color:#151515" href="' + QB + '&amp;view=prod&amp;tmpl=' + str(tmpl.id) + ('&amp;pick=' + str(pick.id) if pick else '') + '">Zurück</a></div>' if rep else '')
-                + '<div class="card"><h2>' + ('Qualitätsprüfbericht' if rep else 'Produkt') + '</h2><div style="font:800 20px Arial">' + esc(tmpl.name) + '</div>'
-                + '<div class="mut">' + (('Lieferung ' + esc(pick_label(pick)) + ' · ') if pick else 'Alle Lieferungen · ') + 'Stand ' + loc(now).strftime('%d.%m.%Y %H:%M') + (' · ' + esc(chosen_label) if inspector else '') + (' · ' + dict(opts_time).get(period, '') if period != 'all' else '') + '</div></div>'
-                + pfl + filter_bar + daily_box + bko
+        qdone = qc_done_of(tmpl.id)
+        rfinal = bool(qdone)
+        html = (head(title) + ('' if rep else topbar('QC Details', QB + '&amp;view=dash')) + '<div class="wrap wide' + (' rep' if rep else '') + '">'
+                + ('<div class="noprint rbar"><button class="btn" id="rprint" disabled>Fotos werden geladen …</button> <button class="btn" style="background:#e9e9e6;color:#151515" onclick="history.back()">Zurück</button>'
+
+                   + '<p class="mut" id="rstat" style="font-size:13px;margin:6px 0 0">Der Druck-Knopf wird aktiv, sobald alle Fotos geladen sind.</p></div>' if rep else '')
+                + (('<div class="rhead"><img src="' + LOGO + '" alt="IQ Dogsport"><span>IQ Dogsport GmbH · Qualitätsprüfung Wareneingang</span></div>') if rep else '')
+                + ('' if (not rep or rfinal) else '<div class="rnotfinal"><b>ZWISCHENSTAND – NICHT FINAL</b><br>Die Qualitätsprüfung ist noch nicht abgeschlossen. Zahlen können sich bis zum Endbericht noch ändern.</div>')
+                + ('' if rep else ('<div class="card qdone' + (' on' if qdone else '') + '">' + (('<b>✓ Prüfung abgeschlossen</b> am ' + ts_txt(qdone[0])[:10] + ((' – ' + esc(qdone[1])) if qdone[1] else '') + ' · Der QC-Bericht ist ein Endbericht.') if qdone else '<b>Prüfung läuft</b> · Der QC-Bericht ist ein Zwischenstand (nicht final).')
+                                   + ((' <button class="btn" id="qdbtn" data-a="' + ('qc_reopen' if qdone else 'qc_done') + '">' + ('Wieder öffnen' if qdone else 'Prüfung abschließen') + '</button>') if ADM else '') + '</div>'))
+                + '<div class="card"><h2>' + (('Qualitätsprüfbericht' + (' – Endbericht' if rfinal else ' – Zwischenstand')) if rep else 'Produkt') + '</h2><div style="font:800 20px Arial">' + esc(tmpl.name) + '</div>'
+                + '<div class="mut">' + (('Lieferung ' + esc(pick_label(pick)) + ' · ') if pick else 'Alle Lieferungen · ') + 'Stand ' + loc(now).strftime('%d.%m.%Y %H:%M') + (' · ' + esc(chosen_label) if (inspector and not rep) else '') + (' · ' + dict(opts_time).get(period, '') if period != 'all' else '') + '</div></div>'
+                + ('' if rep else (pfl + filter_bar + daily_box)) + bko
                 + '<div class="kp"><div><small>Geprüft</small><b>' + str(tot) + '</b></div><div class="g"><small>OK</small><b>' + str(tot - bad) + '</b></div><div class="d"><small>Defekt</small><b>' + str(bad) + '</b></div>'
                 + '<div><small>Defektquote</small><b>' + ('%.1f' % (100.0 * bad / tot if tot else 0)).replace('.', ',') + ' %</b></div></div>'
                 + ('' if rep else '<div class="noprint" style="margin-bottom:12px"><a class="btn" href="' + QB + '&amp;view=report&amp;tmpl=' + str(tmpl.id) + ('&amp;pick=' + str(pick.id) if pick else '') + active_query + '">QC-Bericht erstellen</a> '
                    + '<a class="btn" style="background:var(--grn)" href="' + ctx_q(tmpl, pick) + '">Weiter prüfen</a> '
                    + (('<a class="btn" style="background:#e9e9e6;color:#151515" href="' + QB + '&amp;view=draw&amp;tmpl=' + str(tmpl.id) + '">Zeichnung einrichten</a>') if ADM else '') + '</div>')
-                + '<div class="two"><div class="card"><h2>Nach Größe</h2><table><tr><th>Größe</th><th class="r">Geprüft</th><th class="r">OK</th><th class="r">Hinweis</th><th class="r">Defekt</th><th class="r">Quote</th></tr>' + srows + '</table></div>'
+                + '<div class="two"><div class="card"><h2>Nach Größe</h2><table><tr><th>Größe</th><th class="r">Geprüft</th><th class="r">OK</th><th class="r hcol">Hinweis</th><th class="r">Defekt</th><th class="r">Quote</th></tr>' + srows + '</table></div>'
                 + '<div class="card"><h2>Fehlergründe</h2>' + (('<table><tr><th>Grund</th><th class="r">Anzahl</th><th class="r">Anteil</th></tr>' + rrows + '</table>') if rrows else '<p class="mut">Keine Defekte.</p>') + '</div>'
-                + '</div>' + heat_html + '<div class="card"><h2>Alle Defekte (<span id="dn">' + str(len(als)) + '</span>)</h2>' + flt + '<div class="dkg">' + (dl or '<p class="mut">Keine Defekte.</p>') + '</div></div>'
-                + (('<div class="card"><h2>Hinweise – kein Defekt (' + str(len(notes)) + ')</h2><p class="mut" style="font-size:13px;margin-top:-4px">Auffällig, aber in Ordnung: diese Teile werden gebucht. Fotos zum Nachweis für den Lieferanten, im Auge behalten.</p><div class="dkg">' + nl + '</div></div>') if nl else '') + '</div>'
+                + '</div>' + heat_html + '<div class="card"><h2>' + ('Defekte' if rep else 'Alle Defekte') + ' (<span id="dn">' + str(len(als)) + '</span>)</h2>' + ('' if rep else flt) + '<div class="' + ('rkg' if rep else 'dkg') + '">' + (dl or '<p class="mut">Keine Defekte.</p>') + '</div></div>'
+                + (('<div class="card' + (' hidep' if rep else '') + '"><h2>Hinweise – kein Defekt (' + str(len(notes)) + ')</h2><p class="mut" style="font-size:13px;margin-top:-4px">Auffällig, aber in Ordnung: diese Teile werden gebucht. Fotos zum Nachweis für den Lieferanten, im Auge behalten.</p><div class="dkg">' + nl + '</div></div>') if nl else '') + '</div>'
                 + '<div class="lbx" id="lbx"><img id="lbi" alt=""><button class="x" id="lbc">×</button><button class="pv" id="lbp">‹</button><button class="nx" id="lbn">›</button><div class="cap" id="lbt"></div></div>'
                 + '<script>var CSRF="' + request.csrf_token() + '",KEY="' + KEY + '";'
                 + 'function post(d,cb){var fd=new FormData();fd.append("csrf_token",CSRF);fd.append("key",KEY);for(var k in d)fd.append(k,d[k]);'
@@ -5793,7 +6070,11 @@ elif params.get('view') in ('prod', 'report'):
                 + 'if(lbx){document.getElementById("lbc").onclick=function(){lbx.classList.remove("show")};document.getElementById("lbp").onclick=function(){lmove(-1)};document.getElementById("lbn").onclick=function(){lmove(1)};'
                 + 'lbx.onclick=function(e){if(e.target===lbx)lbx.classList.remove("show")};document.addEventListener("keydown",function(e){if(!lbx.classList.contains("show"))return;if(e.key==="Escape")lbx.classList.remove("show");if(e.key==="ArrowLeft")lmove(-1);if(e.key==="ArrowRight")lmove(1)});'
                 + 'var tx0=0;lbx.addEventListener("touchstart",function(e){tx0=e.touches[0].clientX},{passive:true});lbx.addEventListener("touchend",function(e){var dx=e.changedTouches[0].clientX-tx0;if(Math.abs(dx)>50)lmove(dx<0?1:-1)})}'
-                + '</script></body></html>')
+                + 'var QD=document.getElementById("qdbtn");if(QD)QD.onclick=function(){var a=QD.dataset.a,n="";if(a==="qc_done"){n=prompt("Prüfung für dieses Produkt abschließen? Der QC-Bericht wird dann zum Endbericht. Optional: Bemerkung","");if(n===null)return}else if(!confirm("Prüfung wieder öffnen? Der Bericht wird wieder ein Zwischenstand."))return;post({act:a,tmpl:"' + str(tmpl.id) + '",note:n},function(){location.reload()})};'
+                + '</script>' + (REP_JS if rep else '') + '</body></html>')
+        if rep:
+            # no clickable links in the report (the link contains the access key)
+            html = html.replace('<a ', '<span ').replace('</a>', '</span>')
         response = resp(html)
 
 # ------------------------------------------------------------------ check screen (product chosen)
@@ -5806,9 +6087,14 @@ elif params.get('tmpl') and str(params.get('tmpl')).isdigit():
             pick = opk
     if not tmpl:
         response = txt('Produkt nicht gefunden')
+    elif params.get('defect') and params.get('edit') and not ADM:
+        response = resp(head('Bearbeiten') + topbar('Bearbeiten', QB + '&amp;view=dash') + '<div class="wrap"><div class="card" style="max-width:520px;margin:20px auto">'
+                        + '<h2>Nur für Führungskräfte</h2><p>Defekte bearbeiten kann nur eine angemeldete Führungskraft.</p>'
+                        + '<a class="big blk" style="display:block;text-align:center;text-decoration:none" href="' + QB + '&amp;view=mlogin&amp;next=' + qself().replace('&', '%26') + '">Anmelden</a></div></div></body></html>')
     elif params.get('defect'):
         p = Prod.browse(int(params.get('defect'))).exists() if str(params.get('defect')).isdigit() else Prod.browse([])
         NT = params.get('kind') == 'note'
+        ED = QA.browse(int(params.get('edit'))).exists() if str(params.get('edit') or '').isdigit() and ADM else QA.browse([])
         used = {}
         for al in QA.search([('product_tmpl_id', '=', tmpl.id)], limit=300, order='create_date desc'):
             for tn in tags_of(al):
@@ -5854,7 +6140,31 @@ elif params.get('tmpl') and str(params.get('tmpl')).isdigit():
         if not p or p.product_tmpl_id.id != tmpl.id:
             response = txt('Größe fehlt')
         else:
-            html = (head('Hinweis erfassen' if NT else 'Defekt erfassen') + topbar('Hinweis erfassen' if NT else 'Defekt erfassen', ctx_q(tmpl, pick)) + '<div class="wrap">'
+            edhtml = ''
+            edjs = ''
+            if ED:
+                eback = QB + '&view=prod&tmpl=' + str(tmpl.id)
+                ekind = QB + '&amp;tmpl=' + str(tmpl.id) + '&amp;defect=' + str(p.id) + '&amp;edit=' + str(ED.id) + (('&amp;pick=' + str(pick.id)) if pick else '')
+                eopts = ''.join(['<option value="' + str(v.id) + '"' + (' selected' if v.id == p.id else '') + '>' + esc(size_of(v)) + '</option>' for v in sorted(tmpl.product_variant_ids, key=lambda v: (sz_parts(size_of(v))[0], size_rank(size_of(v))))])
+                eims = Att.search([('res_model', '=', 'quality.alert'), ('res_id', '=', ED.id), ('mimetype', '=like', 'image%')], order='id')
+                edefs = []
+                for it in locs_of(ED)[1]:
+                    edefs.append([clean_reason(it[0]), tl(clean_reason(it[0])), it[1]])
+                if not edefs:
+                    for tn in tags_of(ED):
+                        edefs.append([clean_reason(tn), tl(clean_reason(tn)), []])
+                ed_d = str(ED.description or '') if 'description' in AF else ''
+                enote = ed_d.replace(MISSING_HTML, '').split('<p>Prüfer:')[0].split('<p>Größe:')[0].split('<p>Nachgetragen')[0].replace(NOTEMARK + ' kein Defekt – wird gebucht, beobachten', '').replace('<p>', '').replace('</p>', ' ').strip()
+                enote = enote.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#x27;', "'").replace('&#39;', "'")
+                edhtml = ('<div class="card edbox"><h2>Bearbeiten: ' + esc(ED.name) + '</h2>'
+                          + '<div class="edrow"><a class="' + ('' if NT else 'on') + '" href="' + ekind + '">Defekt</a><a class="' + ('on' if NT else '') + '" href="' + ekind + '&amp;kind=note">Hinweis – kein Defekt</a></div>'
+                          + '<label class="qlbl" style="font-size:14px;margin-top:10px">Größe</label><select id="esize" style="width:100%">' + eopts + '</select>'
+                          + (('<label class="qlbl" style="font-size:14px;margin-top:10px">Vorhandene Fotos – zum Entfernen anhaken</label><div class="ephs">'
+                              + ''.join(['<label class="eph"><img src="' + QB + '&amp;img=' + str(i.id) + '" alt=""><span><input type="checkbox" class="ephx" value="' + str(i.id) + '"> entfernen</span></label>' for i in eims]) + '</div>') if eims else '')
+                          + ('' if NT else '<label class="erp"><input type="checkbox" id="ereprint"> Danach Etikett neu drucken <small>(optional – nur wenn ein neues Etikett gebraucht wird)</small></label>')
+                          + '<p class="mut" style="font-size:13px;margin:8px 0 0">Die Fehler unten sind schon eingetragen: mit ✕ entfernen, neue wie gewohnt hinzufügen (Schritt 1–3). Neue Fotos gehören zu einem neuen Fehler oder über „Foto hinzufügen“ auf der Karte.</p></div>')
+                edjs = ',EDIT=' + jsq(str(ED.id)) + ',EDEFS=[' + ','.join(['[' + jsq(e0[0]) + ',' + jsq(e0[1]) + ',[' + ','.join([jsq(z) for z in e0[2]]) + ']]' for e0 in edefs]) + '] ' + ',ENOTE=' + jsq(enote) + ',BACK=' + jsq(eback)
+            html = (head(('Hinweis' if NT else 'Defekt') + (' bearbeiten' if ED else ' erfassen')) + topbar(('Hinweis' if NT else 'Defekt') + (' bearbeiten' if ED else ' erfassen'), ctx_q(tmpl, pick)) + '<div class="wrap">' + edhtml
                     + ('<div class="swb" style="display:block">Hinweis – kein Defekt: das Teil ist in Ordnung und wird gebucht. Kein Etikett.</div>' if NT else '')
                     + '<div class="ctx"><span><b>' + esc(tmpl.name) + '</b><br>' + (esc(pick_label(pick)) if pick else 'ohne Lieferung') + '</span><span style="font:800 24px Arial;color:var(--fg);text-align:right;white-space:nowrap">' + (('<small style="display:block;font:700 13px Arial;color:var(--mut)">' + esc(sz_parts(size_of(p))[0]) + '</small>') if sz_parts(size_of(p))[0] else '') + 'Gr. ' + esc(sz_parts(size_of(p))[1]) + '</span></div>'
                     + '<ol class="qsteps"><li id="st1" class="cur"><b>1</b> Grund</li><li id="st2"><b>2</b> Wo?</li><li id="st3"><b>3</b> Foto' + (' <small>(optional)</small>' if NT else '') + '</li></ol>'
@@ -5873,11 +6183,11 @@ elif params.get('tmpl') and str(params.get('tmpl')).isdigit():
                     + '<button type="button" class="smallaction" id="addf" disabled>+ Weiteren ' + ('Hinweis' if NT else 'Fehler') + ' an dieser Jacke</button></div>'
                     + '<div class="card" id="flist-card" hidden><h2>' + ('Hinweise' if NT else 'Fehler') + ' an dieser Jacke (<span id="fn">0</span>)</h2><div id="flist"></div></div>'
                     + '<details class="card note-optional"><summary>Notiz (optional)</summary><textarea id="note" rows="2" placeholder="z. B. Stelle, Größe des Lochs"></textarea></details>'
-                    + '<div class="savebar"><p class="err" id="err"></p><p id="savehint"></p><div class="qsrow"><a class="qback" href="' + ctx_q(tmpl, pick) + '">← Zurück</a><button class="big blk ' + ('icon-note' if NT else ('icon-printer' if PRINT_ENABLED else 'icon-download')) + '" id="save">' + ('Hinweis speichern' if NT else ('Etikett drucken' if PRINT_ENABLED else 'Etikett-PDF erstellen')) + '</button></div></div>'
-                    + '<p class="mut" style="font-size:13px;text-align:center">' + ('Hinweis wird mit Fotos gespeichert. Kein Etikett.' if NT else ('Beim Drucken werden alle Fehler und Fotos gespeichert und ein Etikett gedruckt.' if PRINT_ENABLED else 'Beim Klick werden alle Fehler und Fotos gespeichert und das Etikett-PDF erstellt.')) + '</p>'
+                    + '<div class="savebar"><p class="err" id="err"></p><p id="savehint"></p><div class="qsrow"><a class="qback" href="' + ctx_q(tmpl, pick) + '">← Zurück</a><button class="big blk ' + ('' if ED else ('icon-note' if NT else ('icon-printer' if PRINT_ENABLED else 'icon-download'))) + '" id="save">' + ('✓ Änderungen speichern' if ED else ('Hinweis speichern' if NT else ('Etikett drucken' if PRINT_ENABLED else 'Etikett-PDF erstellen'))) + '</button></div></div>'
+                    + '<p class="mut" style="font-size:13px;text-align:center">' + ('Nur die Änderungen werden gespeichert – es wird kein Etikett gedruckt (außer oben angehakt).' if ED else '') + ('' if ED else ('Hinweis wird mit Fotos gespeichert. Kein Etikett.' if NT else ('Beim Drucken werden alle Fehler und Fotos gespeichert und ein Etikett gedruckt.' if PRINT_ENABLED else 'Beim Klick werden alle Fehler und Fotos gespeichert und das Etikett-PDF erstellt.'))) + '</p>'
                     + '<a class="noprint" href="' + ctx_q(tmpl, pick) + '" style="display:block;text-align:center;margin-top:8px">Abbrechen</a></div>'
                     + '<script>var CSRF=' + jsq(request.csrf_token()) + ',KEY=' + jsq(KEY) + ',PID=' + jsq(str(p.id)) + ',PICK=' + jsq(str(pick.id) if pick else '')
-                    + ',KIND=' + jsq('note' if NT else '') + ',GARM=' + jsq(g0) + ',SVT=' + jsq('Hinweis speichern' if NT else ('Etikett drucken' if PRINT_ENABLED else 'Etikett-PDF erstellen')) + ';' + DEFECT_JS + '</script></body></html>')
+                    + ',KIND=' + jsq('note' if NT else '') + ',GARM=' + jsq(g0) + ',SVT=' + jsq('Änderungen speichern' if ED else ('Hinweis speichern' if NT else ('Etikett drucken' if PRINT_ENABLED else 'Etikett-PDF erstellen'))) + edjs + ';' + DEFECT_JS + '</script></body></html>')
             response = resp(html)
 
     else:
@@ -5947,6 +6257,7 @@ elif params.get('tmpl') and str(params.get('tmpl')).isdigit():
                 + '<div class="swb" id="swb" style="display:none"></div>'
                 + ('<div class="swb" style="display:block;background:#fde8e8;color:#991b1b">Lieferung ' + esc(pick.name) + ' ist schon gebucht – QC nur für offene Wareneingänge. Bitte andere Lieferung wählen.</div>' if LOCK else '')
                 + ('' if pick else '<div class="swb" style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fde8e8;color:#991b1b"><span>Keine Lieferung gewählt – Zahlen gelten für alle Lieferungen.</span><a class="btn" style="white-space:nowrap" href="' + QB + '&amp;pt=' + str(tmpl.id) + '">Lieferung wählen →</a></div>')
+                + WHO_CARD
                 + '<div class="ctx"><span><b>' + esc(tmpl.name) + '</b><br>' + (('Lieferung: ' + esc(pick_label(pick))) if pick else ('<span style="color:var(--red)">' + ('ohne Lieferung – kein offener Wareneingang gefunden' if np else 'ohne Lieferung') + '</span>'))
                 + ' · <a href="' + QB + '&amp;pt=' + str(tmpl.id) + '">Lieferung ändern</a></span>'
                 + '<a href="' + QB + '&amp;view=prod&amp;tmpl=' + str(tmpl.id) + ('&amp;pick=' + str(pick.id) if pick else '') + '" style="font-size:13px;white-space:nowrap">Details →</a></div>'
@@ -5962,13 +6273,12 @@ elif params.get('tmpl') and str(params.get('tmpl')).isdigit():
                 + '<div class="card"><h2>Letzte Eingaben</h2><div id="lel">' + (lrows or '<p class="mut" id="le0">Noch nichts gespeichert.</p>') + '</div></div>'
                 + ('<div class="card"><h2>Fortschritt dieser Lieferung (geprüft / geliefert)</h2><div class="prg" id="prog"></div></div>' if recv else '')
                 + '<div id="qov" class="qov" hidden><div class="qovb"><div class="qsp"></div><b id="qovt"></b><span id="qovs"></span><small>Nächstes Teil scannen</small></div></div>'
-                + '<div class="card" id="whoc"><h2>Prüfer auf diesem Handy</h2><input type="text" id="who" placeholder="Name (wird gemerkt)"></div></div>'
+                + '</div>'
                 + '<script>var CSRF="' + request.csrf_token() + '",KEY="' + KEY + '",PICK="' + (str(pick.id) if pick else '') + '",TM="' + str(tmpl.id) + '",SP="' + SP + '",TN="' + esc(tmpl.name).replace('"', '') + '",pid="",sz="",lastId="",qty=1,mode="",lastPid="",lastN=0,lastOk=false,lastCode="",lastScanT=0;'
                 + 'var RECV=' + jrecv + ',CNT=' + jcnt + ',SZN=' + jsz + ',ORD=' + jord + ',LOCK=' + ('true' if LOCK else 'false') + ';'
                 + SCANJS
                 + 'function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||"";localStorage.setItem(k,v)}catch(e){return ""}}'
-                + 'var W=document.getElementById("who");W.value=ls("iq_qc_who");W.onchange=W.oninput=function(){ls("iq_qc_who",W.value.trim());W.classList.toggle("needname",!W.value.trim())};if(PICK)remPick(TM,PICK);'
-                + 'function needName(){if(W.value.trim())return false;beep("err");flash("Bitte zuerst Prüfer-Name eingeben (unten)","#b91c1c");W.classList.add("needname");W.scrollIntoView({block:"center"});W.focus();return true}'
+                + WHO_JS + 'if(PICK)remPick(TM,PICK);'
                 + 'function over(p,n){return RECV[p]!==undefined&&(CNT[p]||0)+n>RECV[p]}'
                 + 'function renderProg(){var g=document.getElementById("prog");if(g){var h="";ORD.forEach(function(p){var c=CNT[p]||0,r=RECV[p]||0,cl=c>r?"ov":(c===r&&r>0?"dn":""),w=r?Math.min(100,Math.round(100*c/r)):0;'
                 + 'h+="<b>"+SZN[p]+"</b><div class=\\"br "+cl+"\\"><i style=\\"width:"+w+"%\\"></i></div><span class=\\"n "+cl+"\\">"+c+" / "+r+"</span>"});g.innerHTML=h}'
@@ -6052,12 +6362,13 @@ else:
             hd = 'Zuletzt geprüft'
         rows = ''.join(['<a href="' + QB + '&amp;pt=' + str(t.id) + '"><span><b>' + esc(t.name) + '</b><br><small>' + str(len(t.product_variant_ids)) + ' Größen/Varianten</small></span><small>→</small></a>' for t in ts])
         html = (head('Qualitätskontrolle') + topbar('Qualitätskontrolle', '') + '<div class="wrap">'
+                + WHO_CARD
                 + '<div class="card"><h2>1 · Produkt wählen</h2><form method="get" action=""><input type="hidden" name="key" value="' + KEY + '">'
                 + '<input type="search" name="q" value="' + esc(q) + '" placeholder="Produkt suchen, z. B. Wintermantel"></form></div>'
                 + '<div class="scan" id="scan"><div class="sp">Etikett scannen</div><div class="bp">oder Produkt oben suchen</div></div>'
                 + '<div class="card"><h2>' + hd + '</h2><div class="list">' + (rows or '<p class="mut">Nichts gefunden. Bitte oben suchen.</p>') + '</div></div></div>'
-                + '<script>var CSRF="' + request.csrf_token() + '",KEY="' + KEY + '";' + SCANJS
-                + 'window.onScan=function(c){scanPost(c,{},function(a){if(a[0]!=="OK"){beep("err");var s=document.getElementById("scan");s.innerHTML="<div class=sp style=color:#b91c1c>"+(a[1]||"Fehler")+"</div>";return}'
+                + '<script>var CSRF="' + request.csrf_token() + '",KEY="' + KEY + '";' + SCANJS + WHO_JS
+                + 'window.onScan=function(c){if(needName())return;scanPost(c,{},function(a){if(a[0]!=="OK"){beep("err");var s=document.getElementById("scan");s.innerHTML="<div class=sp style=color:#b91c1c>"+(a[1]||"Fehler")+"</div>";return}'
                 + 'beep("ok");goScan(a,false)})};</script></body></html>')
         response = resp(html)
 '''
@@ -6151,7 +6462,7 @@ else:
         prn = Pr.browse(int(cur)).exists() if cur.isdigit() else Pr.browse([])
         mode = CP.get_param('iq.qc_label_mode') or ('zpl' if [w for w in ['ZPL', 'ZD4', 'ZD2', 'ZEBRA', 'ZDESIGNER'] if w in (prn.name or '').upper()] else 'pdf')
         pinfo = ('printer: ' + (prn.name or '') + ' (id ' + str(prn.id) + ') | mode: ' + mode) if prn else 'NO printer selected – set system parameter iq.qc_printnode_printer_id'
-    log('IQ QC page installed (v19.16.5 admin-only delete + photo) | link for the phones: /website/action/iq-qc?key=' + (CP.get_param('iq.delivery_calendar_key') or '?') + ' | ' + pinfo
+    log('IQ QC page installed (v19.16.8 inspector card + logo) | link for the phones: /website/action/iq-qc?key=' + (CP.get_param('iq.delivery_calendar_key') or '?') + ' | ' + pinfo
         + ' | OUTPUT: ' + (CP.get_param('iq.qc_label_output_mode') or '')
         + ' | label format: ' + pf.name + ' (id ' + str(pf.id) + '), report id ' + str(rep.id))
 

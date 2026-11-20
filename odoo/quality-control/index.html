@@ -43,7 +43,7 @@
 </header>
 <div class="wrap">
   <a class="back" href="../../">← Odoo customizations</a>
-  <div class="meta">Prepared by: Hamza Mohsin · Live: 16.11.2026 · Last update: 20.11.2026 (v19.16.5) · <span class="tag">Live in production</span> · TC22 quality documentation task (Florian)</div>
+  <div class="meta">Prepared by: Hamza Mohsin · Live: 16.11.2026 · Last update: 20.11.2026 (v19.16.8) · <span class="tag">Live in production</span> · TC22 quality documentation task (Florian)</div>
 </div>
 <main class="wrap">
 
@@ -152,6 +152,7 @@
     <tr><td>Pack defects into boxes, close box, print label</td><td class="ok">yes</td><td class="ok">yes</td></tr>
     <tr><td>Add photos to a defect while checking</td><td class="ok">yes, up to 2 h after saving</td><td class="ok">yes, any time</td></tr>
     <tr><td>Delete a defect, add photos later</td><td>no (hidden + blocked)</td><td class="ok">yes</td></tr>
+    <tr><td>Edit a defect, complete the check of a product</td><td>no</td><td class="ok">yes</td></tr>
     <tr><td>Drawing status, Zeichnungen einrichten</td><td>no (hidden)</td><td class="ok">yes</td></tr>
     <tr><td>Fehlende in Odoo nachtragen, handovers, Karton abgegeben</td><td>no</td><td class="ok">yes</td></tr>
   </table>
@@ -164,6 +165,7 @@
     <tr><td>Handover entry</td><td>Same format, <code>iq_qc_gone_0001.txt</code>; variant id 0 = size unknown</td></tr>
     <tr><td>Drawings</td><td>Attachments on the product template: <code>iq_qc_draw.txt</code> (parts/boxes) + picture, line version and 1-bit raster per side</td></tr>
     <tr><td>Manager login</td><td>Signed cookie <code>iq_emp</code> (30 min), PIN from <code>iq.delivery_calendar_manager_pin</code>, wrong tries in <code>iq.cal_pinfail.M</code></td></tr>
+    <tr><td>Check completed</td><td><code>iq_qc_done.txt</code> on the product template: date|remark</td></tr>
     <tr><td>Defects added at packing</td><td><code>quality.check</code> (fail) + <code>quality.alert</code>, tag "Beim Verpacken gefunden", note <code>[IQ-QC-PACK]</code></td></tr>
   </table>
 
@@ -176,18 +178,52 @@
     <tr><td>v19.16.3</td><td>"Bereits abgegeben" (handover entries)</td></tr>
     <tr><td>v19.16.4</td><td>"Karton abgegeben" for whole boxes, undo; product name above the comparison</td></tr>
     <tr><td>v19.16.5</td><td>"Löschen" and "Foto hinzufügen" on defect cards only for managers (inspectors: photos up to 2 h after saving)</td></tr>
+    <tr><td>v19.16.6</td><td>Clean QC report, "Bearbeiten" for managers, team-password lock (see 10.9 – 10.11)</td></tr>
+    <tr><td>v19.16.7</td><td>"Prüfung abschließen" (final report), logo on the report, edit without printing, inspector name first, scanning in text fields</td></tr>
+    <tr><td>v19.16.8</td><td>Inspector card as one compact line once filled in (text was unreadable); logo at the very top of the report</td></tr>
   </table>
+
+  <h3>10.9 QC report (from the details page: "QC-Bericht erstellen")</h3>
+  <ul>
+    <li>IQ Dogsport logo at the top, then the status: orange <b>"ZWISCHENSTAND – NICHT FINAL"</b> while the check is open; no banner and title "Endbericht" once a manager has completed the check.</li>
+    <li>Only real defects: "Hinweis – kein Defekt" entries and the Hinweis column are left out. No inspector names, no links (nothing in the PDF is clickable, the browser header/footer with the page link is not printed).</li>
+    <li>Every photo is shown complete (not cropped): 2 photos side by side, 1 photo full width; the defect place drawing below.</li>
+    <li>The button <b>"Drucken / als PDF speichern"</b> is only active once all photos have loaded ("Fotos werden geladen … 3/8").</li>
+  </ul>
+
+  <h3>10.10 Completing the check of a product (managers)</h3>
+  <p>The details page shows a status bar: orange <b>"Prüfung läuft"</b> or green <b>"✓ Prüfung abgeschlossen am …"</b>. A logged-in manager taps <b>"Prüfung abschließen"</b> (optional remark) – from then on the QC report is the final report. <b>"Wieder öffnen"</b> makes it an interim report again (e.g. when more pieces arrive). Stored as attachment <code>iq_qc_done.txt</code> on the product (date|remark), no new field.</p>
+
+  <h3>10.11 Editing a defect (managers)</h3>
+  <ul>
+    <li>Defect cards on the details page have <b>"Bearbeiten"</b>. It opens the same screen as creating a defect, already filled in: change reasons and places, size, note, remove photos (tick), switch <b>Defekt ↔ Hinweis – kein Defekt</b>.</li>
+    <li><b>"✓ Änderungen speichern"</b> saves only the changes – no label is printed. A new label only if <b>"Danach Etikett neu drucken"</b> is ticked (optional).</li>
+    <li>Every change is written into the chatter of the quality alert ("Geändert auf der QC-Seite (Führungskraft, date): Typ / Größe / Grund/Ort / Fotos / Notiz").</li>
+  </ul>
+
+  <h3>10.12 Easier for new inspectors</h3>
+  <ul>
+    <li><b>Name first:</b> the start page and the check page begin with a red card "Wer prüft? Bitte zuerst deinen Namen eingeben". Scanning or saving without a name shakes the card and puts the cursor into the field. Once filled in it becomes one line "✓ Prüfer: Name · ändern"; the phone remembers the name.</li>
+    <li><b>Scanning always works:</b> scanner input is recognised by its speed even when the cursor is in a text field (search, name); the code is removed from the field and handled as a scan. Normal typing is not affected.</li>
+  </ul>
+
+  <h3>10.13 Protection of the link</h3>
+  <ul>
+    <li>Team password: 5 wrong tries → locked for 15 minutes (counter <code>iq.qc_pwfail</code>). The page is marked "noindex" (not listed by search engines).</li>
+    <li>Inspectors (team password) can see dashboard, details and reports but cannot edit, delete or complete anything.</li>
+    <li>Recommended: a long random link key (<code>iq.delivery_calendar_key</code>, nobody types it – bookmark + menu) and a pass phrase of 3–4 words with a number as team password (<code>iq.delivery_calendar_password</code>). After a key change run "IQ Calendar: update menu link" and update the bookmark on the TC22. The calendar uses the same key and password.</li>
+  </ul>
 
   <h2>11. Install / update (current)</h2>
   <ol>
-    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-20_quality_control_page_v19.16.5_STAGING.py</code> → Save → Run Manually.</li>
-    <li>Log line: "IQ QC page installed (v19.16.5 admin-only delete + photo)".</li>
-    <li>Test, then the same with <code>…_v19.16.5_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
+    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-20_quality_control_page_v19.16.8_STAGING.py</code> → Save → Run Manually.</li>
+    <li>Log line: "IQ QC page installed (v19.16.8 inspector card + logo)".</li>
+    <li>Test, then the same with <code>…_v19.16.8_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
     <li>Calendar link back to the QC Dashboard: <code>fix_2026-11-20_calendar_qc_link.py</code> (one time, same way).</li>
   </ol>
   <h3>Code</h3>
   <ul>
-    <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.5_public.py">qc_2026-11-20_quality_control_page_v19.16.5_public.py</a> – the complete QC page v19.16.5 (page, menu, labels, packing, login). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
+    <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.8_public.py">qc_2026-11-20_quality_control_page_v19.16.8_public.py</a> – the complete QC page v19.16.8 (page, menu, labels, packing, login, report, edit). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20_calendar_qc_link.py">fix_2026-11-20_calendar_qc_link.py</a> – calendar with the QC Dashboard link (contains all earlier calendar changes)</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – calendar "+ Lieferung eintragen"</li>
   </ul>
@@ -196,7 +232,9 @@
 
   <h2>12. Open (20.11.2026)</h2>
   <ul>
-    <li>Test the box label on the real Brother (RAW queue) and the scanning on the TC22.</li>
+    <li>Test the box label on the real Brother (RAW queue) and the scanning on the TC22 (also with the cursor in the search field).</li>
+    <li>Set a long link key and a pass-phrase team password (10.13).</li>
+    <li>Team login on a device still lasts 30 days (shared with the calendar) – shorten in both files if wanted.</li>
     <li>Check the production manager PIN (<code>iq.delivery_calendar_manager_pin</code>) – the staging value may differ.</li>
     <li>Defects found after a delivery is booked (no open receipt) – own process, planned.</li>
     <li>Patricia: one combined CD quality report or one per product.</li>
