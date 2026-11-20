@@ -185,7 +185,13 @@
     <li>Test, then the same with <code>…_v19.16.5_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
     <li>Calendar link back to the QC Dashboard: <code>fix_2026-11-20_calendar_qc_link.py</code> (one time, same way).</li>
   </ol>
-  <p>The code files are kept in the local folder <code>~/Documents/odoo-customizations/quality-control/</code> (not in this public repo – they contain supplier drawings and import data).</p>
+  <h3>Code</h3>
+  <ul>
+    <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.5_public.py">qc_2026-11-20_quality_control_page_v19.16.5_public.py</a> – the complete QC page v19.16.5 (page, menu, labels, packing, login). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
+    <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20_calendar_qc_link.py">fix_2026-11-20_calendar_qc_link.py</a> – calendar with the QC Dashboard link (contains all earlier calendar changes)</li>
+    <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – calendar "+ Lieferung eintragen"</li>
+  </ul>
+  <p>To install, use the original STAGING / PRODUCTION files from the local folder <code>~/Documents/odoo-customizations/quality-control/</code> – they also set up the drawings for Wintermantel, Winter Parka and Hundesportweste 4.0.</p>
   <div class="box note"><strong>Technical rules for this code:</strong> Odoo server actions run in <code>safe_eval</code>: no imports, no closures (lambda / inner function using an outer variable), and only a limited set of built-ins (e.g. no <code>reversed()</code> – use <code>list[::-1]</code>). Every version is tested with a mock run using only the allowed built-ins before delivery.</div>
 
   <h2>12. Open (20.11.2026)</h2>
