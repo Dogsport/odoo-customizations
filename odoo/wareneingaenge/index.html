@@ -130,6 +130,18 @@
 <p>Security: page password first, then PIN; session 10 minutes; 5 wrong PINs lock that login for 15 minutes (counter in system parameters <code>iq.cal_pinfail.*</code>). Shared calendar never shows the leave type.</p>
 <div class="note">Odoo rejects code with closures (a lambda or inner function using a variable of the function around it: "forbidden opcode(s) in 'lambda'"). Check new page code for this before running it.</div>
 
+<h2>Updates 12.–20.11.2026 (calendar page)</h2>
+<table>
+  <tr><th>Date</th><th>Change</th><th>File</th></tr>
+  <tr><td>12.11.</td><td>Stock page "Lagerbestand" (removed again on 13.11.)</td><td><code>fix_2026-11-12_calendar_low_stock.py</code></td></tr>
+  <tr><td>13.11.</td><td>Manager team overview: open customer invoices; redesigned as a dashboard ("Jetzt erledigen"); payment reminder stages (IQ-REMINDER-1/2/3)</td><td><code>fix_2026-11-13_manager_invoices.py</code>, <code>…13b_manager_dashboard.py</code>, <code>…13c_reminder_stages.py</code></td></tr>
+  <tr><td>17.11.</td><td>Calendar entries, overdue box, monthly list and search open the <b>Goods Receipt card</b> (fallback: purchase order)</td><td><code>fix_2026-11-17_calendar_goods_receipt_links.py</code></td></tr>
+  <tr><td>19.11.</td><td><b>+ Lieferung eintragen</b> (managers, manager PIN): date, quantity, purchase order (optional), supplier, order no., product, note. Saved as a delivery schedule line on the Goods Receipt card; note in the card's and the purchase order's chatter. Partial deliveries = one entry each. Managers see "✎ Bearbeiten": change, "✓ Angekommen" or delete.</td><td><code>fix_2026-11-19_calendar_add_deliveries.py</code></td></tr>
+  <tr><td>20.11.</td><td>Link <b>QC Dashboard</b> in the calendar's top menu. The manager login is shared with the QC page (log in on one = logged in on both).</td><td><code>fix_2026-11-20_calendar_qc_link.py</code></td></tr>
+</table>
+<p>Each file contains everything before it and changes only the server action "IQ Public delivery calendar". Run the newest one once (Scheduled Action → Run Manually). No new fields. Files are kept in <code>~/Documents/odoo-customizations/wareneingaenge/</code>.</p>
+<p>Quality control on the TC22, packing defects and handovers: see <a href="../quality-control/">Quality control</a>.</p>
+
 <h2>Open points</h2>
 <ul>
   <li>PDF import is tuned to the Holfelder layout; other suppliers' PDFs fall back to the open PO quantity – check with the first PDF of each supplier.</li>

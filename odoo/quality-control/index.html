@@ -38,12 +38,12 @@
   <div class="wrap">
     <div class="kicker">IQ Dogsport GmbH · Internal documentation</div>
     <h1>Quality control on the TC22 + QC Dashboard</h1>
-    <p>Phone page for checking incoming goods (OK / defect with photos and label), dashboard, details and QC report – built on the standard Odoo Quality app.</p>
+    <p>Phone page for checking incoming goods (OK / defect with photos, defect places and label), dashboard, details, QC report, packing defects into labelled boxes with a check against Odoo, and manager login – built on the standard Odoo Quality app.</p>
   </div>
 </header>
 <div class="wrap">
   <a class="back" href="../../">← Odoo customizations</a>
-  <div class="meta">Prepared by: Hamza Mohsin · Live: 16.11.2026 · <span class="tag">Live in production</span> · TC22 quality documentation task (Florian)</div>
+  <div class="meta">Prepared by: Hamza Mohsin · Live: 16.11.2026 · Last update: 20.11.2026 (v19.16.5) · <span class="tag">Live in production</span> · TC22 quality documentation task (Florian)</div>
 </div>
 <main class="wrap">
 
@@ -96,6 +96,105 @@
     <li>Standard "QC Wareneingang" checks from Quality Control Points are ignored in the counts. Phone layout for all pages.</li>
   </ul>
   <p>Status: staging tested, production files ready.</p>
+
+  <h2>9. Updates 18.–19.11.2026 (v19.1 – v19.15)</h2>
+  <table>
+    <tr><th>Version</th><th>What changed</th></tr>
+    <tr><td>v19.1 – v19.8</td><td>Labels on the 62 mm continuous Brother roll grow with the text (no cut-off reasons). Direct PDF download of the label without a printer. Brother printing in <b>RAW mode</b> (the page builds the printer raster itself; needs a separate macOS CUPS RAW queue on the Direct Print computer). Period and inspector filters in details/report. At least one photo is required before a defect is finished. Icons without emoji, phone layout.</td></tr>
+    <tr><td>v19.9 – v19.11</td><td><b>Defect locations</b>: the inspector taps the place on a drawing of the jacket (front / back / inside). Guided steps: size → photo → reason → place → label. "Saved" screen, reason chips by tapping. The label shows a small drawing with the marked places.</td></tr>
+    <tr><td>v19.12 – v19.13</td><td>The drawing is chosen by the <b>article number</b> (not the product name). New reason chip <b>"Reißverschluss defekt"</b> (zipper) always visible.</td></tr>
+    <tr><td>v19.14</td><td><b>Zeichnungen einrichten</b>: own drawing per product. Upload pictures (e.g. screenshots from the supplier's tech pack), drag boxes over the parts and name them. Drawings for Wintermantel Damen (CD 167918) and Unisex Winter Parka (CD 1610007) set up from the tech packs.</td></tr>
+    <tr><td>v19.15</td><td>Dashboard section <b>"Zu prüfen – offene Wareneingänge"</b>: every open receipt with clothing, checked / delivered, overdue flag and "Prüfen starten" with the delivery pre-selected. Drawing for IQ Hundesportweste 4.0 Unisex (CD tech pack 167904).</td></tr>
+  </table>
+  <p>Also on 19.11.: quality reports for CD Company (PO 10319 Wintermantel Damen, PO 10337 Winter Parka Unisex) as PDF – combined and one per product, in English. A6 and 62 mm box labels for the defect boxes.</p>
+
+  <h2>10. Update 20.11.2026 (v19.16 – v19.16.5): manager login, packing defects, handovers</h2>
+
+  <h3>10.1 Manager login on the QC page</h3>
+  <ul>
+    <li>Button <b>Anmelden</b> top right. Uses the <b>same manager PIN</b> as the Lager- &amp; Teamkalender (system parameter <code>iq.delivery_calendar_manager_pin</code>, at least 8 characters).</li>
+    <li>The login lasts <b>30 minutes</b>; the button then shows <b>Abmelden (xx Min.)</b>. Logging in on the QC page also logs you in on the calendar and the other way round (same session cookie).</li>
+    <li>5 wrong PINs → that login is locked for 15 minutes (same counter as the calendar).</li>
+    <li>While logged in, saving a drawing asks for no PIN.</li>
+  </ul>
+
+  <h3>10.2 Top bar</h3>
+  <p>New links on every QC page: <b>Verpacken</b> (Defekte verpacken), <b>Kalender</b> (Lager- &amp; Teamkalender) and Anmelden / Abmelden. The calendar got a <b>QC Dashboard</b> link back.</p>
+
+  <h3>10.3 Defekte verpacken (pack defects into boxes)</h3>
+  <p>Black button under "Prüfen starten" on the dashboard. Anyone can use it, no login. Goal: the number of defective pieces in the boxes always matches Odoo (example: Wintermantel – Odoo said 55, the boxes held 63).</p>
+  <ol>
+    <li>Choose the product → choose the delivery → <b>Karton 1 beginnen</b>. The box number is set automatically.</li>
+    <li><b>Scan</b> each defective piece (TC22 scanner, no Enter needed, the field does not need to be tapped) or <b>tap the size</b>. Beep + green line "✓ Gr. M – jetzt 5 Stk. in diesem Karton". Wrong product or unknown barcode → low beep + red message. − / + to correct.</li>
+    <li><b>Karton abschließen &amp; Etikett drucken</b> → label on the Brother (RAW) or as PDF: KARTON n, DEFEKT, each size with article number and count, total, "NICHT BUCHEN", date, delivery.</li>
+    <li>Closed boxes: <b>Etikett</b> (reprint), <b>PDF</b>, <b>Öffnen</b> (reopen to change). An empty box can be deleted (to remove a box with items: reopen, − to 0, "Leeren Karton löschen").</li>
+  </ol>
+
+  <h3>10.4 Comparison Odoo ↔ boxes</h3>
+  <p>Below the box, per size: <b>Odoo Defekte · In Kartons · Abgegeben · Differenz</b>. Difference = boxes + handed over − Odoo. ✓ = matches, red = check. The product name is shown above the table.</p>
+  <ul>
+    <li><b>+</b> = more pieces than in Odoo (found while packing, not recorded). A logged-in manager can use <b>Fehlende in Odoo nachtragen</b>: creates one defect per piece with reason "Beim Verpacken gefunden" (no photo), on the chosen delivery, marked <code>[IQ-QC-PACK]</code>.</li>
+    <li><b>−</b> = Odoo has more than packed: pieces not packed yet, missing, or recorded under another size.</li>
+    <li>"? (ohne Größe)" = defects from the paper import without size.</li>
+  </ul>
+
+  <h3>10.5 Already handed over (managers only)</h3>
+  <ul>
+    <li><b>Abgabe erfassen</b>: pieces that already left (e.g. the supplier took them): who / where, date, delivery, count per size or "Größe unbekannt". They count in the "Abgegeben" column, not in a box.</li>
+    <li><b>Karton abgegeben</b> on a closed box: asks who took it and the date. The whole box moves from "In Kartons" to "Abgegeben"; nothing is typed twice. Label/PDF still work. <b>Rückgängig</b> undoes it. A handed-over box cannot be reopened.</li>
+  </ul>
+  <div class="box note"><strong>Example 20.11.2026 – Holfelder (P00053, MFJ 4.0):</strong> Holfelder took the non-sellable jackets from the quality reports: Women 8 (Schwarz XS, M, L, 3XL, 4XL × 1; grau M × 1, XL × 2), Unisex 2 (grau S × 2). Recorded as handovers. Unisex: Odoo 2 = handed over 2 ✓. Women: Odoo 16 = 8 handed over + 8 in Box 1 ✓.</div>
+
+  <h3>10.6 Only for managers</h3>
+  <table>
+    <tr><th>Function</th><th>Everyone (team password)</th><th>Manager (logged in)</th></tr>
+    <tr><td>Check, OK, defect with photos, label</td><td class="ok">yes</td><td class="ok">yes</td></tr>
+    <tr><td>Pack defects into boxes, close box, print label</td><td class="ok">yes</td><td class="ok">yes</td></tr>
+    <tr><td>Add photos to a defect while checking</td><td class="ok">yes, up to 2 h after saving</td><td class="ok">yes, any time</td></tr>
+    <tr><td>Delete a defect, add photos later</td><td>no (hidden + blocked)</td><td class="ok">yes</td></tr>
+    <tr><td>Drawing status, Zeichnungen einrichten</td><td>no (hidden)</td><td class="ok">yes</td></tr>
+    <tr><td>Fehlende in Odoo nachtragen, handovers, Karton abgegeben</td><td>no</td><td class="ok">yes</td></tr>
+  </table>
+  <p>Every manager function is also checked on the server, not only hidden on the page.</p>
+
+  <h3>10.7 How it is stored (no new fields)</h3>
+  <table>
+    <tr><th>Thing</th><th>Storage</th></tr>
+    <tr><td>Box</td><td>Text attachment on the product template <code>iq_qc_box_0001.txt</code>: line <code>H|no|open/closed/gone|created|closed|receipt id</code>, <code>V|variant id|qty</code> per size, <code>N|who</code> + <code>G|date</code> when handed over</td></tr>
+    <tr><td>Handover entry</td><td>Same format, <code>iq_qc_gone_0001.txt</code>; variant id 0 = size unknown</td></tr>
+    <tr><td>Drawings</td><td>Attachments on the product template: <code>iq_qc_draw.txt</code> (parts/boxes) + picture, line version and 1-bit raster per side</td></tr>
+    <tr><td>Manager login</td><td>Signed cookie <code>iq_emp</code> (30 min), PIN from <code>iq.delivery_calendar_manager_pin</code>, wrong tries in <code>iq.cal_pinfail.M</code></td></tr>
+    <tr><td>Defects added at packing</td><td><code>quality.check</code> (fail) + <code>quality.alert</code>, tag "Beim Verpacken gefunden", note <code>[IQ-QC-PACK]</code></td></tr>
+  </table>
+
+  <h3>10.8 Version history 20.11.</h3>
+  <table>
+    <tr><th>Version</th><th>Change</th></tr>
+    <tr><td>v19.16</td><td>Manager login, drawing UI only for managers, Kalender/Verpacken links, Defekte verpacken with box labels and comparison, Fehlende nachtragen</td></tr>
+    <tr><td>v19.16.1</td><td>Fix: 500 error on the packing page (<code>reversed()</code> is not allowed in Odoo server actions)</td></tr>
+    <tr><td>v19.16.2</td><td>Scanning without Enter and without tapping the field; English texts</td></tr>
+    <tr><td>v19.16.3</td><td>"Bereits abgegeben" (handover entries)</td></tr>
+    <tr><td>v19.16.4</td><td>"Karton abgegeben" for whole boxes, undo; product name above the comparison</td></tr>
+    <tr><td>v19.16.5</td><td>"Löschen" and "Foto hinzufügen" on defect cards only for managers (inspectors: photos up to 2 h after saving)</td></tr>
+  </table>
+
+  <h2>11. Install / update (current)</h2>
+  <ol>
+    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-20_quality_control_page_v19.16.5_STAGING.py</code> → Save → Run Manually.</li>
+    <li>Log line: "IQ QC page installed (v19.16.5 admin-only delete + photo)".</li>
+    <li>Test, then the same with <code>…_v19.16.5_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
+    <li>Calendar link back to the QC Dashboard: <code>fix_2026-11-20_calendar_qc_link.py</code> (one time, same way).</li>
+  </ol>
+  <p>The code files are kept in the local folder <code>~/Documents/odoo-customizations/quality-control/</code> (not in this public repo – they contain supplier drawings and import data).</p>
+  <div class="box note"><strong>Technical rules for this code:</strong> Odoo server actions run in <code>safe_eval</code>: no imports, no closures (lambda / inner function using an outer variable), and only a limited set of built-ins (e.g. no <code>reversed()</code> – use <code>list[::-1]</code>). Every version is tested with a mock run using only the allowed built-ins before delivery.</div>
+
+  <h2>12. Open (20.11.2026)</h2>
+  <ul>
+    <li>Test the box label on the real Brother (RAW queue) and the scanning on the TC22.</li>
+    <li>Check the production manager PIN (<code>iq.delivery_calendar_manager_pin</code>) – the staging value may differ.</li>
+    <li>Defects found after a delivery is booked (no open receipt) – own process, planned.</li>
+    <li>Patricia: one combined CD quality report or one per product.</li>
+  </ul>
 </main>
 </body>
 </html>

@@ -381,3 +381,26 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Warehouse calendar entries, overdue box, monthly list and search now open the Goods Receipt card in the Goods Receipts app instead of the purchase order (fallback: purchase order).",
     link: "odoo/wareneingaenge/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-18", area: "Odoo", status: "Live",
+    title: "QC page v19.1-v19.8: label length, PDF download, Brother RAW print",
+    summary: "QC labels on the 62 mm Brother roll grow with the text; label PDF download without a printer; Brother RAW printing via a separate CUPS RAW queue; period and inspector filters; photo required before a defect is finished; phone layout.",
+    link: "odoo/quality-control/" },
+  { date: "2026-11-19", area: "Odoo", status: "Live",
+    title: "QC page v19.9-v19.15: defect places on drawings, own drawings, open receipts to check",
+    summary: "Tap the defect place on a jacket drawing (front/back/inside), guided steps, label with drawing, zipper reason chip, drawing by article number, 'Zeichnungen einrichten' (own drawing per product from tech packs: Wintermantel, Winter Parka, Hundesportweste 4.0), dashboard section 'Zu pruefen - offene Wareneingaenge'. No new fields.",
+    link: "odoo/quality-control/" },
+  { date: "2026-11-19", area: "Odoo", status: "Live",
+    title: "Calendar: managers add planned deliveries",
+    summary: "'+ Lieferung eintragen' with manager PIN: date, quantity, PO, supplier, product, note; saved as a delivery schedule line on the Goods Receipt card with chatter notes on card and PO; edit / arrived / delete for managers.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-20", area: "Odoo", status: "Staging",
+    title: "QC page v19.16-v19.16.5: manager login, pack defects, handovers, admin-only delete",
+    summary: "Manager login on the QC page (same PIN + session as the calendar, 30 min); drawing tools only for managers; new 'Defekte verpacken': scan pieces into numbered boxes, box label (Brother RAW/PDF), comparison Odoo vs boxes vs handed over per size, 'Fehlende in Odoo nachtragen'; handover entries and 'Karton abgegeben' (Holfelder took 8 + 2 MFJ 4.0); delete / late photos only for managers. Attachments only, no new fields.",
+    link: "odoo/quality-control/" },
+  { date: "2026-11-20", area: "Odoo", status: "Staging",
+    title: "Calendar: link to the QC Dashboard",
+    summary: "QC Dashboard link in the calendar's top menu; manager login shared between calendar and QC page.",
+    link: "odoo/wareneingaenge/" }
+]);
