@@ -433,3 +433,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Employees request Vacation, Extra Hours, Sick Time Off or Unpaid from their own page (icon tiles with days/hours left, half days or hours, optional file). Creates a normal Odoo Time Off request (To Approve -> Second Approval -> Approved); open requests can be withdrawn. No new fields.",
     link: "odoo/wareneingaenge/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-23", area: "Odoo", status: "Staging",
+    title: "QC page v19.18: supplier checks the goods himself (guest mode)",
+    summary: "Manager switches one phone to a supplier (e.g. Holfelder). The supplier uses the normal check screen (scan, OK / defect with place, photo, label) only for articles of his open or booked deliveries - no dashboard, packing, calendar or other suppliers; end with manager PIN or automatically. Results count in the normal QC as 'Holfelder-Prüfung - Name', defect cards marked 'Lieferantenprüfung'; pieces taken ('Mitgenommen') per product on the dashboard. No new fields.",
+    link: "odoo/quality-control/" }
+]);

@@ -223,16 +223,56 @@
     <li>Recommended: a long random link key (<code>iq.delivery_calendar_key</code>, nobody types it – bookmark + menu) and a pass phrase of 3–4 words with a number as team password (<code>iq.delivery_calendar_password</code>). After a key change run "IQ Calendar: update menu link" and update the bookmark on the TC22. The calendar uses the same key and password.</li>
   </ul>
 
+  <h2>11a. Update 23.11.2026 (v19.17 – v19.18c): supplier checks the goods himself ("Lieferanten-Prüfung")</h2>
+  <p>Use case: Holfelder comes to IQ Dogsport and checks the goods with our phone and scanner. He must not see other deliveries, suppliers or our dashboard.</p>
+  <h3>11a.1 Start / end (managers)</h3>
+  <ul>
+    <li>Log in as manager on the phone (Anmelden, manager PIN).</li>
+    <li>QC Dashboard → on the supplier's delivery card <b>"Lieferant prüft selbst (Gastmodus)"</b> (10 h) – or the card <b>"Lieferanten-Prüfungen"</b>: choose supplier + 4 / 8 / 10 / 12 h → <b>"Lieferanten-Prüfung auf diesem Gerät starten"</b>.</li>
+    <li>The manager login on that phone ends, the remembered inspector name is cleared.</li>
+    <li>End: <b>Beenden</b> (top right) + manager PIN (letters and numbers, normal keyboard) – or automatically when the time is up. 5 wrong PINs → 15 min lock.</li>
+  </ul>
+  <h3>11a.2 What the supplier sees</h3>
+  <ul>
+    <li>Orange bar "Lieferantenprüfung · Holfelder GmbH", only <b>Start</b> and <b>Beenden</b> in the top bar. Always German.</li>
+    <li>Start page: name card + "Etikett scannen" + "Heute geprüft" (his own counts) with <b>"Mitgenommen"</b> (pieces he takes with him) per product.</li>
+    <li>Scan → <b>our normal check screen</b>: OK (Auto-OK, quantity) / Defekt with reason, place on the drawing, photo, label print – exactly the IQ workflow. Ready for the next scan without touching the screen.</li>
+    <li>Only articles of his receipts – open <b>or already booked</b>. Other articles: "Gehört nicht zu dieser Prüfung", nothing saved.</li>
+    <li>Not reachable: dashboard, packing, calendar, reports, editing, login, other products / suppliers (every other page leads back to his start page). His counters show only his own checks.</li>
+  </ul>
+  <h3>11a.3 Where the results are</h3>
+  <ul>
+    <li>Normal quality checks / alerts, <b>counted like every IQ check</b>: dashboard, product cards, defect rate, QC Details, QC report, packing comparison.</li>
+    <li>Inspector always shown as <b>"Holfelder-Prüfung · Name"</b> (inspector table + Prüfer filter of QC Details → only his checks). Defect cards: note "Lieferantenprüfung" (report: "Lieferantenprüfung Holfelder GmbH", no personal names).</li>
+    <li>Dashboard card "Lieferanten-Prüfungen": per day + product checked, defects, <b>Mitgenommen</b>, link to QC Details.</li>
+    <li>Pieces he takes with him: also record them on the Packing page under "Bereits abgegeben" so the comparison Odoo ↔ boxes stays balanced.</li>
+  </ul>
+  <h3>11a.4 How it is stored (no new fields)</h3>
+  <ul>
+    <li>Mark in check note / alert description: <code>[Lieferantenprüfung &lt;Firma&gt; IQ-SUP:&lt;partner id&gt;]</code>.</li>
+    <li>"Mitgenommen": text file <code>iq_qc_sup_YYYY-MM-DD.txt</code> on the supplier contact (lines <code>T|time|template id|pieces|</code>, last entry per product counts).</li>
+    <li>Supplier mode = signed cookie <code>iq_qcg</code> (supplier id, end time) on that phone only.</li>
+  </ul>
+  <h3>11a.5 Version history 23.11.</h3>
+  <table>
+    <tr><th>Version</th><th>Change</th></tr>
+    <tr><td>v19.17 – v19.17d</td><td>First supplier page of its own (separate storage, scan only, open + booked deliveries, PIN keyboard, always German) – replaced by v19.18</td></tr>
+    <tr><td>v19.18</td><td>Supplier uses the normal check screen (place, photo, label)</td></tr>
+    <tr><td>v19.18b</td><td>Results in the normal QC lists and figures (no separate view); fix "By size" table</td></tr>
+    <tr><td>v19.18c</td><td>Inspector shown as "Holfelder-Prüfung · Name" everywhere</td></tr>
+  </table>
+
   <h2>11. Install / update (current)</h2>
   <ol>
-    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-20_quality_control_page_v19.16.10_STAGING.py</code> → Save → Run Manually.</li>
-    <li>Log line: "IQ QC page installed (v19.16.10 icons)".</li>
-    <li>Test, then the same with <code>…_v19.16.10_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
+    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-23_quality_control_page_v19.18_STAGING.py</code> → Save → Run Manually.</li>
+    <li>Log line: "IQ QC page installed (v19.18c supplier check)".</li>
+    <li>Test, then the same with <code>…_v19.18_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
     <li>Calendar (QC Dashboard link, "Ware angekommen", booked = not overdue): <code>fix_2026-11-20d_calendar_arrival_booked.py</code> (one time, same way, same file for staging and production).</li>
   </ol>
   <h3>Code</h3>
   <ul>
-    <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.10_public.py">qc_2026-11-20_quality_control_page_v19.16.10_public.py</a> – the complete QC page v19.16.10 (page, menu, labels, packing, login, report, edit). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
+    <li><a href="code/qc_2026-11-23_quality_control_page_v19.18_public.py">qc_2026-11-23_quality_control_page_v19.18_public.py</a> – <b>newest</b>: complete QC page v19.18c incl. supplier check (page, menu, labels, packing, login, report, edit).</li>
+    <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.10_public.py">qc_2026-11-20_quality_control_page_v19.16.10_public.py</a> – previous version v19.16.10 (page, menu, labels, packing, login, report, edit). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – newest calendar: QC Dashboard link, "Ware angekommen", booked deliveries not overdue (contains all earlier calendar changes)</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – calendar "+ Lieferung eintragen"</li>
   </ul>
