@@ -422,3 +422,14 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Button 'Wareneingang melden' on the QC start page, line icons instead of emoji. Printable 2-page quick guides (German/English and English) for checking and packing defects.",
     link: "odoo/quality-control/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-23", area: "Odoo", status: "Staging",
+    title: "Goods arrival simple + scanner, Goods Receipts column 'Ware angekommen', booking-only status, admin drag",
+    summary: "Warehouse: products without order found by search or hand scanner, supplier optional, one clear saved screen, no role words. Goods Receipts: first column 'Ware angekommen' with To-Do for admins; 'Partly booked'/'Done' only through booking (new automation, admins may override); only Settings admins can drag cards. Calendar full width, header controls on the right. No new fields.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-23", area: "Odoo", status: "Staging",
+    title: "My hours & vacation: request and withdraw time off",
+    summary: "Employees request Vacation, Extra Hours, Sick Time Off or Unpaid from their own page (icon tiles with days/hours left, half days or hours, optional file). Creates a normal Odoo Time Off request (To Approve -> Second Approval -> Approved); open requests can be withdrawn. No new fields.",
+    link: "odoo/wareneingaenge/" }
+]);

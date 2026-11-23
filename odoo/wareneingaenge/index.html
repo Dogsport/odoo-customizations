@@ -123,7 +123,11 @@
   <li><a href="code/staging-fixes/fix_2026-11-17_calendar_goods_receipt_links.py">fix_2026-11-17_calendar_goods_receipt_links.py</a> – calendar opens the Goods Receipt card</li>
   <li><a href="code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – managers add planned deliveries</li>
   <li><a href="code/staging-fixes/fix_2026-11-20_calendar_qc_link.py">fix_2026-11-20_calendar_qc_link.py</a> – QC Dashboard link</li>
-  <li><a href="code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – <b>newest</b>: "Ware angekommen", booked = not overdue, icons (contains everything before)</li>
+  <li><a href="code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – "Ware angekommen", booked = not overdue, icons</li>
+  <li><a href="code/staging-fixes/fix_2026-11-23_calendar_arrival_simple.py">fix_2026-11-23_calendar_arrival_simple.py</a> – <b>newest calendar</b>: simple arrival flow, scanner, header, time off requests (contains everything before)</li>
+  <li><a href="code/staging-fixes/fix_2026-11-23_goods_receipts_arrived_column.py">fix_2026-11-23_goods_receipts_arrived_column.py</a> – column "Ware angekommen" + card design</li>
+  <li><a href="code/staging-fixes/fix_2026-11-23_goods_receipts_stage_guard.py">fix_2026-11-23_goods_receipts_stage_guard.py</a> – automation: "Partly booked" / "Done" only through booking</li>
+  <li><a href="code/staging-fixes/fix_2026-11-23_goods_receipts_admin_drag.py">fix_2026-11-23_goods_receipts_admin_drag.py</a> – only Settings admins can drag cards (v2 for Odoo 19)</li>
 </ul>
 
 <h2>My hours &amp; vacation / Team overview (since 2026-11-09)</h2>
@@ -143,8 +147,46 @@
   <tr><td>17.11.</td><td>Calendar entries, overdue box, monthly list and search open the <b>Goods Receipt card</b> (fallback: purchase order)</td><td><code>fix_2026-11-17_calendar_goods_receipt_links.py</code></td></tr>
   <tr><td>19.11.</td><td><b>+ Lieferung eintragen</b> (managers, manager PIN): date, quantity, purchase order (optional), supplier, order no., product, note. Saved as a delivery schedule line on the Goods Receipt card; note in the card's and the purchase order's chatter. Partial deliveries = one entry each. Managers see "✎ Bearbeiten": change, "✓ Angekommen" or delete.</td><td><code>fix_2026-11-19_calendar_add_deliveries.py</code></td></tr>
   <tr><td>20.11.</td><td>Link <b>QC Dashboard</b> in the calendar's top menu. The manager login is shared with the QC page (log in on one = logged in on both).</td><td><code>fix_2026-11-20_calendar_qc_link.py</code></td></tr>
-  <tr><td>20.11. (b–d)</td><td><b>"Ware angekommen"</b> for the warehouse (see below), header redesigned for phones, real icons, planned deliveries that are already booked are no longer "overdue".</td><td><code>fix_2026-11-20d_calendar_arrival_booked.py</code> (newest)</td></tr>
+  <tr><td>20.11. (b–d)</td><td><b>"Ware angekommen"</b> for the warehouse (see below), header redesigned for phones, real icons, planned deliveries that are already booked are no longer "overdue".</td><td><code>fix_2026-11-20d_calendar_arrival_booked.py</code></td></tr>
+  <tr><td>23.11.</td><td>"Ware angekommen" made simple + scanner, new Goods Receipts column <b>"Ware angekommen"</b> with To-Do, columns "Partly booked" / "Done" only through booking, only admins drag cards, full-width page and new header, <b>time off requests</b> on "My hours &amp; vacation" (see below).</td><td><code>fix_2026-11-23_calendar_arrival_simple.py</code> (newest) + 3 Goods Receipts files</td></tr>
 </table>
+
+<h2>Updates 23.11.2026</h2>
+<h3>Install order (staging first, then production; each file once: Scheduled Action → paste only the file → Run Manually)</h3>
+<ol>
+  <li><code>fix_2026-11-23_goods_receipts_arrived_column.py</code> – log "IQ goods receipts 23.11"</li>
+  <li><code>fix_2026-11-23_calendar_arrival_simple.py</code> – log "IQ calendar 23.11 …"</li>
+  <li><code>fix_2026-11-23_goods_receipts_stage_guard.py</code> – log "IQ goods receipts 23.11b"</li>
+  <li><code>fix_2026-11-23_goods_receipts_admin_drag.py</code> – log "IQ goods receipts 23.11c admin drag v2"</li>
+</ol>
+<h3>Ware angekommen – simpler</h3>
+<ul>
+  <li>Search also finds products <b>without an order</b> → "Ohne Bestellung melden: &lt;product&gt;" (product prefilled).</li>
+  <li>Goods without order: only name + product + quantity + photo of the delivery note. <b>Supplier optional</b>; supplier, delivery note no., boxes, note under "Mehr (optional)". Matching open orders are only a hint (no tick box).</li>
+  <li><b>Hand scanner</b> on every page (no click, no Enter needed): without order = product filled in + 1 counted (packaging barcode = its quantity); with order = +1 at the right size; list = scan to search. Unknown barcode → red message.</li>
+  <li>Service products (fees, advertising …) are no longer offered.</li>
+  <li>After saving one clear screen: "Gemeldet – die Ware ist im Lager" (buttons: next goods / calendar). No role words (manager …) on these pages.</li>
+  <li>The list no longer shows planned deliveries that are already booked (same rule as the calendar).</li>
+</ul>
+<h3>Goods Receipts board</h3>
+<ul>
+  <li>New first column <b>"Ware angekommen" / "Goods arrived"</b> (stage, sequence 5): every report moves the card there – amber edge, "Im Lager seit &lt;date&gt;", without order the counted pieces. Already reported cards were moved once.</li>
+  <li>Each report creates a <b>To-Do</b> (top bar clock) for the Settings admins, or for the logins in system parameter <code>iq.arrival_notify_logins</code>.</li>
+  <li>Booking moves the card on as before (automation "Status bei Buchung" unchanged).</li>
+  <li>New automation <b>"IQ Wareneingang: Status nur durch Buchung"</b>: "Partly booked" only with purchase order + something booked, "Done" only when everything is booked (or the open receipt is cancelled). Settings admins may move any card (e.g. samples). Otherwise the card jumps back with a message.</li>
+  <li>Only <b>Settings admins can drag</b> cards to another column (the board view shows the stage field read-only for everybody else: <code>readonly="1" groups="!base.group_system"</code>). Odoo 19 does not allow groups on an inherited view record – that was the error of v1.</li>
+</ul>
+<h3>Calendar layout</h3>
+<ul>
+  <li>Page uses the full screen width; logo left, month controls + buttons together on the right (thin divider). Narrower screens: buttons in one row that scrolls sideways; phones: slim line + swipe row.</li>
+</ul>
+<h3>My hours &amp; vacation – request time off</h3>
+<ul>
+  <li>Button <b>"+ Abwesenheit beantragen"</b>: icon tiles for the types IQ uses – Vacation (days left of entitlement), Extra Hours (hours available = overtime balance), Sick Time Off (file optional), Unpaid. Other list: system parameter <code>iq.timeoff_types</code> (English names, comma separated).</li>
+  <li>Dates, morning/afternoon (half-day types) or time from–to (hour types), description, optional file → normal Odoo Time Off request <b>To Approve → Second Approval → Approved</b>, created as the employee's user. Odoo's own checks apply (balance, overlaps, extra hours); its message is shown and nothing is saved.</li>
+  <li>Open requests can be <b>withdrawn</b> ("Zurückziehen") → cancelled in Odoo with a note. Approved requests cannot be withdrawn here.</li>
+</ul>
+<p>No new fields in any of these updates.</p>
 
 <h2>Ware angekommen – reporting arrived goods (since 2026-11-20)</h2>
 <p>For the warehouse person, with the team password and their name (no PIN). <b>Nothing is booked</b> and receipt quantities are not changed – booking stays after the quality check.</p>
@@ -160,6 +202,7 @@
   <li>"Nicht in der Liste? Ware ohne Bestellung melden": as soon as the supplier or product is typed, matching open orders / planned deliveries are shown ("Gehört die Ware dazu? Dann dort melden"). Saving only after ticking "gehört zu keiner Bestellung" – avoids duplicate receipts.</li>
   <li>Creates a Goods Receipt card <b>"Ohne Bestellung"</b> (supplier, delivery note no. as supplier order no., products, counts, files). Shown red in the calendar ("Angekommen ohne Bestellung") and on the manager dashboard ("Bestellung anlegen").</li>
   <li>Manager creates the purchase order with <b>vendor reference = delivery note no.</b> → the existing automation links it to the card.</li>
+  <li>Since 23.11.: supplier optional, no tick box, scanner – see "Updates 23.11.2026".</li>
 </ul>
 <h3>Booked = not overdue</h3>
 <p>The received quantity of a purchase order is matched to its planned deliveries in date order (oldest first). Fully covered planned deliveries disappear from "expected / overdue", partly covered ones show only the rest.</p>
