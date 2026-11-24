@@ -440,3 +440,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Manager switches one phone to a supplier (e.g. Holfelder). The supplier uses the normal check screen (scan, OK / defect with place, photo, label) only for articles of his open or booked deliveries - no dashboard, packing, calendar or other suppliers; end with manager PIN or automatically. Results count in the normal QC as 'Holfelder-Prüfung - Name', defect cards marked 'Lieferantenprüfung'; pieces taken ('Mitgenommen') per product on the dashboard. No new fields.",
     link: "odoo/quality-control/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-24", area: "Odoo", status: "Staging",
+    title: "QC page v19.18d-e: supplier packs his defects + Brother labels for DK-44205",
+    summary: "Supplier mode: 'Defekte verpacken' on the same phone - only his products, defects and own boxes (marked Holfelder-Pruefung), no reopening or handover. Brother QL-820NWB: defect and box labels as single-colour RAW for the new DK-44205 roll (fixes 'check roll type'), tested on the printer; system parameter iq.qc_brother_roll switches back to DK-22251. No new fields.",
+    link: "odoo/quality-control/" }
+]);

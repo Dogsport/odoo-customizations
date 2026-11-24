@@ -260,18 +260,30 @@
     <tr><td>v19.18</td><td>Supplier uses the normal check screen (place, photo, label)</td></tr>
     <tr><td>v19.18b</td><td>Results in the normal QC lists and figures (no separate view); fix "By size" table</td></tr>
     <tr><td>v19.18c</td><td>Inspector shown as "Holfelder-Prüfung · Name" everywhere</td></tr>
+    <tr><td>v19.18d (24.11.)</td><td>Supplier packs his defects on the same phone ("Defekte verpacken" / "Verpacken"): only his products, defects and his own boxes (marked "Holfelder-Prüfung" in the list and on the label); no reopening, no handover, IQ boxes hidden. Box numbers stay unique.</td></tr>
+    <tr><td>v19.18e (24.11.)</td><td>Brother labels for the <b>DK-44205</b> roll (black only) – see 11b</td></tr>
   </table>
+
+  <h3>11b. Brother QL-820NWB labels and rolls (since 24.11.2026)</h3>
+  <ul>
+    <li>Defect labels and box labels are sent as Brother RAW raster data via PrintNode to the macOS queue <code>Brother_QL_820NWB_RAW</code> (62 mm continuous, cut after each label).</li>
+    <li><b>Roll in use: DK-44205</b> (62 mm, removable white paper, black only) → <b>single-colour</b> raster: <code>ESC i z</code> flags <code>0x8E</code>, media <code>0x0A</code> (continuous), width 62; <code>ESC i K 0x08</code> (cut at end); one <code>g 00 5A</code> line per dot row. Tested on the printer on 24.11.2026.</li>
+    <li>Old roll <b>DK-22251</b> (red/black): two-colour raster (<code>0xCE</code>, <code>ESC i K 0x09</code>, black + red plane per row). A two-colour job on a black-only roll stops the printer with <b>"check roll type"</b>.</li>
+    <li>Switch without reinstalling: Settings → Technical → System Parameters → <code>iq.qc_brother_roll</code> = <code>DK-44205</code> (or empty, default) / <code>DK-22251</code>.</li>
+    <li>If the printer shows an error: switch it off, delete the waiting jobs in the Mac print queue of the Brother, check the roll, switch on. Do not use the Brother as the Mac's default printer (normal A4 documents also cause "check roll type").</li>
+  </ul>
 
   <h2>11. Install / update (current)</h2>
   <ol>
-    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-23_quality_control_page_v19.18_STAGING.py</code> → Save → Run Manually.</li>
-    <li>Log line: "IQ QC page installed (v19.18c supplier check)".</li>
-    <li>Test, then the same with <code>…_v19.18_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
+    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-24_quality_control_page_v19.18e_STAGING.py</code> → Save → Run Manually.</li>
+    <li>Log line: "IQ QC page installed (v19.18e supplier check + packing + DK-44205)".</li>
+    <li>Test, then the same with <code>…_v19.18e_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
     <li>Calendar (QC Dashboard link, "Ware angekommen", booked = not overdue): <code>fix_2026-11-20d_calendar_arrival_booked.py</code> (one time, same way, same file for staging and production).</li>
   </ol>
   <h3>Code</h3>
   <ul>
-    <li><a href="code/qc_2026-11-23_quality_control_page_v19.18_public.py">qc_2026-11-23_quality_control_page_v19.18_public.py</a> – <b>newest</b>: complete QC page v19.18c incl. supplier check (page, menu, labels, packing, login, report, edit).</li>
+    <li><a href="code/qc_2026-11-24_quality_control_page_v19.18e_public.py">qc_2026-11-24_quality_control_page_v19.18e_public.py</a> – <b>newest</b>: complete QC page v19.18e incl. supplier check + packing and Brother DK-44205 labels (tested on the printer).</li>
+    <li><a href="code/qc_2026-11-23_quality_control_page_v19.18_public.py">qc_2026-11-23_quality_control_page_v19.18_public.py</a> – v19.18c (supplier check).</li>
     <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.10_public.py">qc_2026-11-20_quality_control_page_v19.16.10_public.py</a> – previous version v19.16.10 (page, menu, labels, packing, login, report, edit). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – newest calendar: QC Dashboard link, "Ware angekommen", booked deliveries not overdue (contains all earlier calendar changes)</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – calendar "+ Lieferung eintragen"</li>
