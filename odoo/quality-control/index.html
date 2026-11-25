@@ -262,6 +262,11 @@
     <tr><td>v19.18c</td><td>Inspector shown as "Holfelder-Prüfung · Name" everywhere</td></tr>
     <tr><td>v19.18d (24.11.)</td><td>Supplier packs his defects on the same phone ("Defekte verpacken" / "Verpacken"): only his products, defects and his own boxes (marked "Holfelder-Prüfung" in the list and on the label); no reopening, no handover, IQ boxes hidden. Box numbers stay unique.</td></tr>
     <tr><td>v19.18e (24.11.)</td><td>Brother labels for the <b>DK-44205</b> roll (black only) – see 11b</td></tr>
+    <tr><td>v19.18f–h (24.11.)</td><td>Supplier quick defect (reason only, no drawing/photo/label); Brother label text wrapped; closed defect boxes moved to the defect location in one internal transfer</td></tr>
+    <tr><td>v19.18i–m (25.11.)</td><td>QC overview columns + manager "Rest als OK markieren"; 3-colour bars on dashboard cards; booked counts all receipts of the order; Arrived = all reported batches (booked included), Still expected = ordered − arrived</td></tr>
+    <tr><td>v19.18n (25.11.)</td><td>Defect status per size: In box · In defect location · At partner · Not packed (booking overview, dashboard cards, report PDF)</td></tr>
+    <tr><td>v19.18o (25.11.)</td><td>Filter buttons above the booking overview: All · Delivery · QC · Defects (print always shows all)</td></tr>
+    <tr><td>v19.18p (25.11.)</td><td>IQ logo leads back to Odoo → Goods Receipts for people signed in to Odoo (phones without login unchanged)</td></tr>
   </table>
 
   <h3>11b. Brother QL-820NWB labels and rolls (since 24.11.2026)</h3>
@@ -275,17 +280,20 @@
 
   <h2>11. Install / update (current)</h2>
   <ol>
-    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-24_quality_control_page_v19.18e_STAGING.py</code> → Save → Run Manually.</li>
-    <li>Log line: "IQ QC page installed (v19.18e supplier check + packing + DK-44205)".</li>
-    <li>Test, then the same with <code>…_v19.18e_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
-    <li>Calendar (QC Dashboard link, "Ware angekommen", booked = not overdue): <code>fix_2026-11-20d_calendar_arrival_booked.py</code> (one time, same way, same file for staging and production).</li>
+    <li>Staging first: Settings → Technical → Scheduled Actions → New (Model: Contact, Active off) → paste <code>qc_2026-11-25_quality_control_page_v19.18p_STAGING.py</code> → Save → Run Manually.</li>
+    <li>Log line: "IQ QC page installed (v19.18p logo to Odoo + v19.18o filter buttons + …)".</li>
+    <li>Test, then the same with <code>…_v19.18p_PRODUCTION.py</code>. One file contains everything (earlier v19.x files are not needed). Safe to run again; existing boxes, handovers and drawings stay.</li>
+    <li>Calendar (newest, contains all earlier calendar changes incl. delivery-note reading and logo → Odoo): <code>fix_2026-11-25_calendar_logo_to_odoo.py</code> (one time, same way, same file for staging and production).</li>
+    <li>Defect location: system parameter <code>iq.qc_defect_location</code> = ID of <b>Wareneingang-Beanstandung</b> (internal). The location "Defektlager" is type <i>Inventory Loss</i> (write-off) and must not be the QC target.</li>
   </ol>
   <h3>Code</h3>
   <ul>
-    <li><a href="code/qc_2026-11-24_quality_control_page_v19.18e_public.py">qc_2026-11-24_quality_control_page_v19.18e_public.py</a> – <b>newest</b>: complete QC page v19.18e incl. supplier check + packing and Brother DK-44205 labels (tested on the printer).</li>
+    <li><a href="code/qc_2026-11-25_quality_control_page_v19.18p_public.py">qc_2026-11-25_quality_control_page_v19.18p_public.py</a> – <b>newest</b>: complete QC page v19.18p (defect status, filter buttons, logo → Odoo). Public copy: tech-pack drawings removed, no keys or PINs.</li>
+    <li><a href="code/qc_2026-11-24_quality_control_page_v19.18e_public.py">qc_2026-11-24_quality_control_page_v19.18e_public.py</a> – v19.18e: complete QC page v19.18e incl. supplier check + packing and Brother DK-44205 labels (tested on the printer).</li>
     <li><a href="code/qc_2026-11-23_quality_control_page_v19.18_public.py">qc_2026-11-23_quality_control_page_v19.18_public.py</a> – v19.18c (supplier check).</li>
     <li><a href="code/qc_2026-11-20_quality_control_page_v19.16.10_public.py">qc_2026-11-20_quality_control_page_v19.16.10_public.py</a> – previous version v19.16.10 (page, menu, labels, packing, login, report, edit). Public reference copy: the supplier tech-pack drawings are removed; no keys or PINs are in the file.</li>
-    <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – newest calendar: QC Dashboard link, "Ware angekommen", booked deliveries not overdue (contains all earlier calendar changes)</li>
+    <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-25_calendar_logo_to_odoo.py">fix_2026-11-25_calendar_logo_to_odoo.py</a> – newest calendar: delivery-note reading + logo → Odoo (contains all earlier calendar changes)</li>
+    <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-20d_calendar_arrival_booked.py">fix_2026-11-20d_calendar_arrival_booked.py</a> – earlier calendar: QC Dashboard link, "Ware angekommen", booked deliveries not overdue (contains all earlier calendar changes)</li>
     <li><a href="../wareneingaenge/code/staging-fixes/fix_2026-11-19_calendar_add_deliveries.py">fix_2026-11-19_calendar_add_deliveries.py</a> – calendar "+ Lieferung eintragen"</li>
   </ul>
   <p>To install, use the original STAGING / PRODUCTION files from the local folder <code>~/Documents/odoo-customizations/quality-control/</code> – they also set up the drawings for Wintermantel, Winter Parka and Hundesportweste 4.0.</p>

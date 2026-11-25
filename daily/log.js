@@ -447,3 +447,18 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Supplier mode: 'Defekte verpacken' on the same phone - only his products, defects and own boxes (marked Holfelder-Pruefung), no reopening or handover. Brother QL-820NWB: defect and box labels as single-colour RAW for the new DK-44205 roll (fixes 'check roll type'), tested on the printer; system parameter iq.qc_brother_roll switches back to DK-22251. No new fields.",
     link: "odoo/quality-control/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-24", area: "Odoo", status: "Staging",
+    title: "Calendar 'Ware angekommen' reads the delivery note",
+    summary: "Uploading the Lieferschein (PDF or photo) fills the delivery-note quantities per size automatically; 'Gezählt = Lieferschein' button; still works without a delivery note. No new fields.",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-25", area: "Odoo", status: "Staging",
+    title: "Goods Receipts: arrived vs. booked vs. QC",
+    summary: "Size table shows Booked / Ordered plus Arrived (all reported batches, booked included) and Still expected; kanban cards get a QC line (checked · defect · open). Delivery schedule tab shows only planned deliveries with two new columns Delivery note / Counted, filled by every arrival report (new automation, 2 approved fields).",
+    link: "odoo/wareneingaenge/" },
+  { date: "2026-11-25", area: "Odoo", status: "Staging",
+    title: "QC page v19.18f-p: defect status, filters, logo back to Odoo",
+    summary: "Supplier quick defect, defect boxes moved in one transfer, 'Rest als OK markieren', 3-colour bars, defect status per size (in box · defect location · at partner · not packed) also in the report PDF, filter buttons All/Delivery/QC/Defects, IQ logo leads signed-in Odoo users back to Goods Receipts. Defect boxes now go to the internal location Wareneingang-Beanstandung (system parameter) instead of the write-off location.",
+    link: "odoo/quality-control/" }
+]);
