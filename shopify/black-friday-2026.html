@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Black Friday 2026 | IQ Dogsport</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f5f5f5;color:#202124;font:16px/1.65 system-ui,sans-serif}header{background:#181818;color:white;padding:24px max(24px,calc((100vw - 1000px)/2));border-bottom:5px solid #a51d1b}header a{color:white}main{max-width:1000px;margin:32px auto;background:white;padding:36px 48px;border:1px solid #ddd;border-radius:10px}h1{font-size:2.1rem;line-height:1.2}h2{margin-top:2.2em;border-bottom:1px solid #ddd;padding-bottom:8px;color:#222;line-height:1.3}a{color:#a51d1b;overflow-wrap:anywhere}code{font-family:ui-monospace,monospace;font-size:.87em;background:#f0f0f0;padding:2px 4px;overflow-wrap:anywhere}pre{background:#202124;color:#f5f5f5;padding:18px;overflow:auto;border-radius:6px;line-height:1.5}pre code{background:none;padding:0;overflow-wrap:normal}li{margin:7px 0}nav{display:flex;flex-wrap:wrap;gap:18px}footer{max-width:1000px;margin:24px auto;color:#555;padding:0 20px} @media(max-width:650px){main{margin:12px;padding:20px}h1{font-size:1.6rem}}@media print{header,footer,nav{display:none}main{border:0;margin:0;padding:0;max-width:none}pre{white-space:pre-wrap;background:#eee;color:black}}
+</style></head><body><header><strong>IQ DOGSPORT / SHOPIFY KNOWLEDGE BASE</strong><nav><a href="../index.html">Back to documentation home</a><a href="Black-Friday-2026-runbook.pdf">PDF version</a><a href="Black-Friday-2026-runbook.md">Markdown source</a></nav></header><main><h1>IQ Dogsport | Black Friday 2026</h1>
+<p>Change record and rollback runbook — 27 November 2026</p>
+<h2>Monday 30 November — priority checklist</h2>
+<ul>
+<li>Confirm the automatic Black Friday discount is expired. Do not delete the discount record; retain it for reporting.</li>
+<li>Check an eligible product in the storefront and cart: MFJ 3.0 should return to EUR 279.90, Allround to EUR 127.90, Softshell 2.0 Damen to EUR 89.00, provided no unrelated changes occurred.</li>
+<li>Hide the homepage section named Black friday (Image with text overlay). Re-enable the original Hero section and preserve its previous slide visibility. Save and test desktop/mobile, DE/EN.</li>
+<li>Remove only temporary Black Friday tags (if present): <code>tag__sale_BLACK FRIDAY -15%</code>, <code>tag__sale_-15%</code>. Do not remove unrelated tags.</li>
+<li>Remove campaign navigation/announcement links if added. Hide the collection banner or remove its dedicated template assignment if the collection will remain accessible. Do not modify the default collection template.</li>
+<li>Verify the price and image badges have automatically reverted. If desired, remove the temporary Liquid/CSS via a targeted diff or restore the pre-campaign price snippet version after checking for unrelated edits.</li>
+<li>Test checkout with an eligible and excluded product; verify Odoo import, tax and totals. Check B2B and English storefront separately.</li>
+</ul>
+<h2>1. Campaign controls and direct links</h2>
+<ul>
+<li><a href="https://admin.shopify.com/store/iqdogsport/collections/595074318600">Shopify collection admin</a> — ID 595074318600, manual collection, Black Friday – 15 % Rabatt, handle <code>black-friday-15-rabatt</code>.</li>
+<li><a href="https://iq-dogsport.de/collections/black-friday-15-rabatt">German storefront collection</a> / <a href="https://iq-dogsport.de/en/collections/black-friday-15-rabatt">English storefront collection</a>.</li>
+<li><a href="https://admin.shopify.com/store/iqdogsport/discounts/2190498398472">Discount admin</a> — ID from screenshot filename; <a href="https://admin.shopify.com/store/iqdogsport/discounts">discount list</a>.</li>
+<li><a href="https://admin.shopify.com/store/iqdogsport/themes">Themes</a> — active theme displayed as Arbeitskopie ab 25.11.2026 – Bewertungen. Confirm theme ID before editing; do not assume an older theme ID is current.</li>
+<li><a href="https://iq-dogsport.de/">Homepage</a> / <a href="https://iq-dogsport.de/en/">English homepage</a>.</li>
+</ul>
+<p>Automatic amount-off-products discount: 15%, specific Black Friday collection, no minimum, no combinations with other product/order/shipping discounts, POS excluded, all customers selected. Start 27 Nov 00:00 CET; end 29 Nov 23:59 CET. Schedule restored after temporary early activation test on 26 Nov. Discount applies to eligible products in every collection, not only the campaign page. Existing sale prices receive an additional 15%. B2B exclusion was not confirmed.</p>
+<h2>2. Product scope and chronology</h2>
+<p>26 Nov: collection created, initially 18 products added, then MFJ 3.0 Damen and Unisex added. Initial list: Allround Damen/Unisex; Trainingsjacke 2.0 Damen/Unisex; Zip-In Shell Damen/Unisex; Softshell 2.0 Damen/Unisex; Hundesportweste 3.0; Sommerweste 3.0; Trainer Pants; three Train Hard hoodies; In Dog We Trust hoodie; Train Hard and Logo socks; Magnetizer; two MFJ 3.0 products. Magnetizer was questioned because the handwritten list was ambiguous. Later screenshot shows Zip-Hoodie Damen Grau and still 20 products. Exact final membership and whether Magnetizer was removed are not verified; export current collection if an authoritative inventory is needed. Do not bulk-remove products or change prices as part of rollback.</p>
+<p>26 Nov: automatic discount created, tested early, then rescheduled. Cart screenshot confirmed MFJ 3.0 Damen Schwarz XS EUR 279.90 -&gt; EUR 237.92. Collection and product pages originally retained regular price because automatic discounts do not change price/compare-at fields.</p>
+<p>26–27 Nov: banner, price display, badge styling and text changed iteratively. On 27 Nov Florian requested visible -15% badges. Collection screenshots confirm red promotional prices and image badges; latest requested revision adds crossed-out prices and a detail-only savings badge, but its deployment is not confirmed.</p>
+<h2>3. Homepage banner</h2>
+<p>Location: theme editor &gt; Home page &gt; Black friday / Image with text overlay. Added separate section above Hero; original Hero hidden, not deleted in screenshot. Desktop and mobile images uploaded; removed default Subheading, Heading and Text blocks; retained Button linked via collection picker. Full width; desktop height changed toward Auto, mobile Auto, opacity 0%, parallax off, padding 0. Custom class <code>iq-black-friday-banner</code>.</p>
+<p>Image files observed in HTML: <code>Black-Friday_-15_-Rabatt-auf-Hundesportbekleidung.jpg</code> (1920 x 640) and <code>Black-Friday-Hundessport-Angebot-2.jpg</code> (1173 x 1341). Earlier ZIP contained separate DE/EN hero assets; actual English image assignment not verified. Link picker intended to localize DE/EN paths. Transparent header overlap was observed; verify navigation remains clickable.</p>
+<p>Section-specific CSS recommendation, based on inspected HTML (final save not independently verified):</p>
+<pre><code class="language-css">.image-with-text-ovelay__content {
+  position: absolute !important; inset: 0; z-index: 5;
+}
+.image-with-text-ovelay__content-wrapper,
+.rich-text, motion-element.block.is-animated {
+  position: static !important; transform: none !important;
+}
+.btn--primary {
+  position: absolute !important; inset: 0;
+  width: 100%; height: 100%; opacity: 0;
+  cursor: pointer; z-index: 6;
+}
+</code></pre>
+<p>The misspelling <code>ovelay</code> matches inspected HTML. Earlier pseudo-element CSS was rejected by section CSS validator; absolute link was 80 x 0 px because of nested positioning/transform. Do not restore those failed attempts. Monday: hide the campaign section and re-enable Hero; no shared Liquid change required. If the section is retained hidden, its local CSS can remain for reuse.</p>
+<h2>4. Collection banner and template</h2>
+<p>Created <code>black-friday</code> collection template from Default collection; assigned to campaign collection (confirmed by admin screenshot). Template copied unrelated collection sections; hide those within campaign template only. Used IQ Collection Banner with desktop/mobile artwork. Title duplicated because shared section falls back to <code>collection.title</code>; image cropped due to 16:5 ratio, max-height 550px and object-fit cover. Recommended local CSS hid <code>.iqcb__copy</code> and <code>::before</code>, reset <code>.iqcb</code> aspect-ratio/max-height and <code>.iqcb__picture</code> positioning, set <code>.iqcb__image</code> width 100%, height auto, object-fit contain. Enable Desktop: gesamte Bildhöhe erhalten. Exact saved CSS not confirmed. Monday: hide campaign-specific banner or change this collection's template to Default collection if desired. Keep collection record for reuse; verify any public campaign claims removed. Do not change shared IQ Collection Banner Liquid or other collections.</p>
+<h2>5. Main code change: snippets/price.liquid</h2>
+<p>Location: Themes &gt; Edit code &gt; Snippets &gt; price.liquid. The existing snippet chooses selected variant when <code>use_variant</code>, otherwise product; uses <code>price</code>, <code>compare_at_price</code>, money filters, volume pricing and unit pricing. Preserve those original branches. No actual Shopify prices were changed by this display code.</p>
+<p>The temporary logic uses collection membership, availability and CET epoch timestamps. Latest supplied revision moves it into the opening Liquid block and adds <code>iq-bf-active</code> to the outer <code>f-price</code> class. Earlier revision inserted logic after <code>.f-price__sale</code>, before <code>.f-price__unit-wrapper</code>. Test override used <code>request.design_mode</code>; must be false in production.</p>
+<pre><code class="language-liquid">assign bf_test_mode = false
+assign bf_active = false
+assign bf_eligible = false
+assign bf_now = 'now' | date: '%s' | plus: 0
+assign bf_start = '2026-11-27 00:00:00 +0100' | date: '%s' | plus: 0
+assign bf_end = '2026-11-29 23:59:00 +0100' | date: '%s' | plus: 0
+assign bf_collections = product.collections | map: 'handle'
+if bf_now &gt;= bf_start and bf_now &lt; bf_end
+  assign bf_active = true
+endif
+if bf_test_mode and request.design_mode
+  assign bf_active = true
+endif
+if bf_active and available
+  if bf_collections contains 'black-friday-15-rabatt'
+    assign bf_eligible = true
+  endif
+endif
+if bf_eligible
+  assign bf_price = price | times: 85 | divided_by: 100.0 | round
+endif
+</code></pre>
+<p>This is storefront-only estimated pricing; it cannot read the actual discount eligibility. Verify cart rounding, variants, currency, B2B, other discounts and caching. The end condition is exclusive at 23:59, matching the configured end minute; verify expiration in Shopify.</p>
+<p>Original price blocks are hidden only when <code>.iq-bf-active</code> is present. New <code>.iq-bf-price</code> block prints the calculated price. Latest proposed revision prints <code>.iq-bf-price-row</code>, <code>.iq-bf-discounted-price</code> and <code>.iq-bf-original-price</code> (current pre-BF selling price, crossed out), plus <code>.iq-bf-detail-badge</code> only on product page when <code>use_variant</code> is true. Older versions used <code>.f-price:has(&gt; .iq-bf-price)</code> and included a small cart explanation; it was hidden first on collection cards then everywhere at user request. Recommend retain clear cart-discount explanation and verify legally required lowest 30-day reference price (not established by current price). Do not assume a compare-at price or current selling price meets that requirement.</p>
+<p>Image badge styling is driven by the presence of <code>.iq-bf-price</code> inside the card:</p>
+<pre><code class="language-css">.product-card:has(.iq-bf-price) .product-card__image-wrapper {
+  position: relative;
+}
+.product-card:has(.iq-bf-price) .product-card__badge .f-badge--sale {
+  display: none !important;
+}
+.product-card:has(.iq-bf-price) .product-card__image-wrapper::after {
+  content: &quot;-15%&quot;; position: absolute; top: 12px; left: 12px;
+  z-index: 10; background: #f4a0a0; color: #000;
+  padding: 4px 10px; border-radius: 5px; font-size: 13px;
+  font-weight: 700; line-height: 1.3; pointer-events: none;
+}
+.product-card:has(.iq-bf-active.f-price--on-sale)
+.product-card__image-wrapper::after { content: &quot;Extra -15%&quot;; }
+</code></pre>
+<p>Mobile variant uses 8px offsets and 12px font. Existing badges hidden only for eligible cards. Latest proposed detail badge uses Spare 15% / Save 15%, Extra -15% for existing sale products; separate detail badge snippet may still show old badge. Existing native badge rendering may be suppressed via <code>{% unless bf_eligible %}</code> around sale badge only, retaining sold-out badge. Do not edit auto-generated <code>foxify-product-card.liquid</code>.</p>
+<h2>6. Exact targeted code cleanup (if needed)</h2>
+<p>Preferred: compare price.liquid with the version immediately before the Black Friday edits on 26 Nov. Restore only this file if no unrelated edits would be lost. In GitHub, use a targeted revert/diff on a branch, not a reset of the whole theme. Shopify file history/Timeline availability must be checked.</p>
+<p>Manual alternative: remove all <code>bf_*</code> assignments and eligibility conditions from opening Liquid block; remove conditional <code>iq-bf-active</code> class; remove temporary block from IQ BLACK FRIDAY comment through its closing endif before unit-price wrapper; remove its styles and any separate Black Friday-only CSS; restore original <code>show_sale_badge</code> logic by unwrapping <code>unless bf_eligible</code> or removing campaign-specific branch while preserving original <code>case sale_badge_type</code> and sold-out badge. If older version has code after sale block instead, remove that temporary block only. Search <code>iq-bf-</code>, <code>bf_</code>, <code>black-friday-15-rabatt</code>, <code>Extra -15%</code> for leftovers. If a separate product badges snippet was edited, restore only the original <code>{%- if on_sale and block.settings.show_sale_badge -%}</code> branch and remove BF-only assignments/branch. Separate edit was proposed, not confirmed. Verify syntax and preview before publishing. Do not revert the entire theme, since unrelated review and newsletter work occurred.</p>
+<h2>7. Newsletter work — unrelated, retain</h2>
+<p>Homepage <code>templates/index.json</code> contains <code>iq_home_newsletter</code>, type <code>iq-home-newsletter</code>, instance name IQ Insider – kompakt. Actual file <code>sections/iq-home-newsletter.liquid</code>, schema and preset name IQ Start · Newsletter. No enabled_on restriction. Add via search IQ Start; IQ Insider Anmeldung is a different section. New instance settings lack defaults; copy DE/EN settings from homepage. Form uses customer form with <code>contact[tags]</code> = <code>newsletter,homepage</code>; keep unless tracking change approved. Renaming schema/preset was optional, not confirmed applied. Default page template affects every page assigned to it; use dedicated newsletter template if needed. Do not roll this back with Black Friday.</p>
+<h2>8. Verification and evidence</h2>
+<p>Confirmed by conversation screenshots: 20-item collection and assigned template, scheduled discount with GMT+1, cart discount MFJ 3.0 EUR 237.92, red prices on product and collection pages, -15%/Extra -15% image badges. Latest dual-price/detail badge code provided but not independently verified saved. Banner full-click behavior and final English version require verification. No product price or inventory mutation was requested as part of display fix. Odoo and checkout beyond screenshot not independently tested.</p>
+<p>Test matrix: eligible MFJ 3.0, already reduced Allround, Softshell Damen, socks, excluded MFJ 4.0 (verify membership), multiple sizes/colours, DE/EN, desktop/mobile, B2C/B2B, cart and checkout. After rollback verify original regular/sale badges, homepage Hero, newsletter, navigation, and no stale campaign claims. Keep order records intact.</p>
+<h2>9. GitHub handoff</h2>
+<p>Repository placement for this handoff: <code>shopify/black-friday-2026.html</code> (HTML), with the Markdown and PDF optionally stored alongside it. Suggested branch: <code>docs/black-friday-2026-runbook</code>. Commit message: <code>docs: record Black Friday 2026 Shopify changes and rollback</code>. Upload this Markdown file through GitHub Add file &gt; Upload files, or use a documentation-only pull request. Do not deploy theme code from this runbook. Repository URL, branch and baseline commit are not known; GitHub is not connected in this session, so no repository write was performed. Add actual repository file/commit links once available. Sources: conversation 26–27 November, pasted Liquid/HTML and Shopify screenshots; this is a reconstructed change record, not a verified live code diff.</p>
+</main><footer>Internal change record | 27 November 2026 | Verify against the active theme before rollback.</footer></body></html>
