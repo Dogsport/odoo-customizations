@@ -462,3 +462,10 @@ window.IQ_LOG = (window.IQ_LOG || []).concat([
     summary: "Supplier quick defect, defect boxes moved in one transfer, 'Rest als OK markieren', 3-colour bars, defect status per size (in box · defect location · at partner · not packed) also in the report PDF, filter buttons All/Delivery/QC/Defects, IQ logo leads signed-in Odoo users back to Goods Receipts. Defect boxes now go to the internal location Wareneingang-Beanstandung (system parameter) instead of the write-off location.",
     link: "odoo/quality-control/" }
 ]);
+
+window.IQ_LOG = (window.IQ_LOG || []).concat([
+  { date: "2026-11-26", area: "Shopify", status: "Live",
+    title: "Black Friday 2026: -15% campaign + rollback runbook",
+    summary: "Collection 'Black Friday – 15 % Rabatt', automatic 15% discount (27.11. 00:00 – 29.11. 23:59 CET, POS excluded), homepage banner, sale badges. Runbook with Monday 30.11. rollback checklist (discount expiry, homepage hero, tags, badges, checkout/Odoo test).",
+    link: "shopify/black-friday-2026.html" }
+]);
